@@ -1,0 +1,173 @@
+{
+  "schema": "rp1-g1-public-snapshot-v1",
+  "consumed_handoff_version": "phaseA503_036559d03c4a_sitehandoff_20261013_v1",
+  "consumed_handoff_sha256": "57b12a9ebd7b1f6adf451adf0d9fd763654585aac44991d0f3ac540a7021e5fb",
+  "data_version": "round2-phaseA-036559d03c4a",
+  "generated_utc": "2026-10-13T17:01:43.151757+00:00",
+  "comparison_snapshot_updated_utc": "2026-10-13T09:23:01.848935+00:00",
+  "source": {
+    "site_data_sha256": "218518aa397d938fcd84c630c6dc3a1ee65958439d797a9ce1e3f6759bb715bb",
+    "aggregate_sha256": "036559d03c4a2a3ec8198c6a703b9a09be096c7181eb62d7c0b91ec06bd42210",
+    "adapter_sha256": "a199be0fb34219019a07bc16b8f2f91ad4d7c863f6f22522a7b5b033a5e44f04"
+  },
+  "public_data_sha256": "17e9610a379ace2bd86aa38ea711fafa829e9e14e73edfd5631400eeaa5445d4",
+  "result_rows": 511,
+  "reviewed_source_files": [
+    {
+      "path": "site/dist/index.html",
+      "bytes": 7408,
+      "sha256": "f5ede1cbfb46f5691af94ae6ae8b7b329d588109f3f081e0e28f448cddeeb30c"
+    },
+    {
+      "path": "site/dist/app.js",
+      "bytes": 36050,
+      "sha256": "f2be6d3e897fccd0ef63904cf06c48e2290e6fe9c423a7298ac59dd0fc309a85"
+    },
+    {
+      "path": "site/dist/style.css",
+      "bytes": 15497,
+      "sha256": "25eeb98522f5a4b56b21524f9ef259ff9e93c3be644771243a502ac79da251c3"
+    },
+    {
+      "path": "site/dist/data.json",
+      "bytes": 4149005,
+      "sha256": "218518aa397d938fcd84c630c6dc3a1ee65958439d797a9ce1e3f6759bb715bb"
+    },
+    {
+      "path": "report/aggregate.json",
+      "bytes": 8715444,
+      "sha256": "036559d03c4a2a3ec8198c6a703b9a09be096c7181eb62d7c0b91ec06bd42210"
+    },
+    {
+      "path": "site/build_data.py",
+      "bytes": 33601,
+      "sha256": "a199be0fb34219019a07bc16b8f2f91ad4d7c863f6f22522a7b5b033a5e44f04"
+    }
+  ],
+  "comparison_groups": 14,
+  "projection": "Explicit field whitelist; numbers, CI, coverage, pairing unchanged",
+  "external_link_access": "All Feishu links require organization permissions",
+  "excluded": [
+    "private infrastructure",
+    "internal evidence attachments",
+    "absolute local paths",
+    "checkpoints",
+    "raw data archives"
+  ],
+  "scientific_contract": {
+    "methods": {
+      "runtime": "CPU ONNX, policy50Hz/physics200Hz; native position PD primary. Robot-specific DoF, PD, limits, action scale retained.",
+      "failure": "First single frame with abs reference height error >0.3m OR gravity-Z difference >0.8; strict inequalities; no RECOVER/REJOIN/reset; full raw rollout retained.",
+      "body": "Common14 semantic mapping, RP1 ankle-roll used as counterpart proxy. Positions in pelvis/base XY/yaw-local coordinates retaining world Z; position mm, orientation geodesic rad. This differs from official G1 toe14.",
+      "return": "Official separate torso-link/semantic torso anchor and reward point set; exp(-mean squared position/0.3^2)+exp(-mean squared angle/0.4^2), strict pre-failure numerator and N-1 denominator; one-frame fallback disclosed.",
+      "root": "One initial XY/yaw alignment with Z unchanged, XYZ endpoint at last full raw frame satisfying motion_t<N-1; not failure-truncated. Save actual endpoint time and progress. Unit m.",
+      "n_a": "MotionDecode Dance40/Ground60 root and wrist n/a; Manipulation48 root n/a; do not impute zeros or rank unavailable values.",
+      "aggregation": "Matched full seed sets averaged within motion, motions equally weighted; paired motion bootstrap10000 repetitions seed20261013. No cross-dataset overall score.",
+      "statistics": "CIs conditional on fixed checkpoints and current motions; 7 descriptive CIs unadjusted.30 bit-identical repeat episodes do not expand independent N. No morphology-only causal claim."
+    },
+    "coverage": {
+      "official_target_motions": 388,
+      "G1_native_metadata": 268,
+      "G1_root90_inferred": 90,
+      "PHUMA30_missing_fps": 30,
+      "RP1_public_lafan40": 40,
+      "RP1_non_lafan_missing": 348,
+      "primary_paired_lafan_motions": 40,
+      "G1_supplementary_full_motions": 318
+    },
+    "primary_anchor_values": {
+      "progress_percent": {
+        "rp1": 79.73569223,
+        "g1": 77.26897689,
+        "delta_pp": 2.46671534,
+        "ci95_pp": [
+          -0.53670384,
+          6.98024744
+        ]
+      },
+      "body_mm": {
+        "rp1": 32.1291691,
+        "g1": 34.8602467
+      },
+      "wrist_orientation_rad": {
+        "rp1": 0.165480622,
+        "g1": 0.142316121
+      },
+      "no_threshold_failure": {
+        "rp1": "27/40",
+        "g1": "26/40"
+      },
+      "conclusion": "Completion CI crosses zero; do not claim stable RP1 superiority."
+    }
+  },
+  "files": {
+    "index.html": {
+      "bytes": 7740,
+      "sha256": "18523ee81d65abcb9d0ad8dfbdba354bde7f25ed99f7f07f7ead6eb3b18d1aa2"
+    },
+    "app.js": {
+      "bytes": 42415,
+      "sha256": "cb5882265f2d67295b990b8e4bef4eee245355fcdffb0eac1e0850c8026f4620"
+    },
+    "style.css": {
+      "bytes": 17795,
+      "sha256": "a082a1665a7c0492650e1e21db74751f97243ae0208559d511447ae9b8b4db61"
+    },
+    "data.json": {
+      "bytes": 2588322,
+      "sha256": "17e9610a379ace2bd86aa38ea711fafa829e9e14e73edfd5631400eeaa5445d4"
+    },
+    "README.md": {
+      "bytes": 2639,
+      "sha256": "43a6f8ef57f020ae06add88afc671f228c19c344d503abcce7541edbd5b258ea"
+    },
+    "DATA_PROVENANCE.md": {
+      "bytes": 7638,
+      "sha256": "9f7811ee171c1499f7b7d0509635220c6c9da7964afeb0cbc7a1d9ee544fc2f1"
+    },
+    ".nojekyll": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    ".gitignore": {
+      "bytes": 63,
+      "sha256": "9699853bf8972fc77abfd94bf0af3faee4fbb0c751077d79b68ff4ee8fc2ca13"
+    },
+    "scripts/update_snapshot.py": {
+      "bytes": 15551,
+      "sha256": "7fb440e1e04c371b1cec2d6bb307ec1be706b10a1ac09eae38b5c382252ec3a6"
+    },
+    "scripts/verify_public.py": {
+      "bytes": 31081,
+      "sha256": "3213042135dffc10c045c17024fe85f165bc5bba56d0a3e17588c1572d9f8225"
+    }
+  },
+  "manifest_hash_policy": "This manifest is not self-hashed; commit identity freezes it.",
+  "editorial_revision": {
+    "revision": "v05_20261013",
+    "scientific_data_changed": false,
+    "report_attachment_version": 2,
+    "report_attachment_pages": 10,
+    "native_report_revision_confirmed": true,
+    "uploaded_report_sources": [
+      {
+        "file_name": "RP1_G1_TECHNICAL_REPORT_REVISED.pdf",
+        "bytes": 986775,
+        "sha256": "87b294dfa5cf81cd16e715583bbca7aa886f454b15a20cc714496cda306c1d92",
+        "url": "https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7",
+        "version": 2,
+        "pages": 10,
+        "hash_scope": "local upload source; cloud original bytes not downloaded for hashing"
+      },
+      {
+        "file_name": "RP1_G1_TECHNICAL_REPORT_REVISED.docx",
+        "bytes": 631176,
+        "sha256": "296505d198c914cb5f842c1538c3276b27d4573b01545234e2c74646c71501d6",
+        "url": "https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce",
+        "version": 2,
+        "pages": 10,
+        "hash_scope": "local upload source; cloud original bytes not downloaded for hashing"
+      }
+    ]
+  }
+}

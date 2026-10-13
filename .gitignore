@@ -1,0 +1,9 @@
+.private/
+qa/
+__pycache__/
+.git/
+.agents/
+.codex/
+.aws/
+*.pyc
+

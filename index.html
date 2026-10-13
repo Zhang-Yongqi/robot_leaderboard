@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="description" content="RP1/G1 第二轮评测：共同覆盖、固定协议、逐动作证据与训练成本。">
+  <title>RP1 / G1 · 第二轮评测</title>
+  <link rel="stylesheet" href="./style.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">跳至评测结果</a>
+  <header class="masthead">
+    <div class="wrap topbar"><a class="wordmark" href="#">ROBOT MOTION <span>/ BENCHMARK</span></a><span class="edition">ROUND 02 <span>·</span> RESEARCH REPORT</span></div>
+    <div class="wrap hero">
+      <div><p class="eyebrow">全身动作跟踪 · 可追溯评测</p><h1 id="report-title">RP1 / G1 <span>第二轮评测</span></h1><p id="report-subtitle" class="hero-subtitle">发布权重的固定协议复跑；同配置独立重训尚未正式启动。</p></div>
+      <div class="hero-meta"><span id="report-status" class="badge dark">PENDING</span><p>结果快照 <time id="updated-at">待导入</time></p><span class="small">仿真评测 · 真机结论不在本页范围</span></div>
+    </div>
+    <nav class="wrap navigation" aria-label="报告章节"><a href="#leaderboard">01 / 复跑结果</a><a href="#reference">02 / 官方参考</a><a href="#fairness">03 / 公平条件</a><a href="#evidence">04 / 方法与视频</a></nav>
+  </header>
+
+  <main id="main" class="wrap">
+    <div id="load-notice" class="notice" role="status" aria-live="polite">正在读取结果快照…</div>
+    <section id="overview" class="overview" aria-label="快照概览"></section>
+    <section id="paired-summary" class="panel paired-summary" aria-labelledby="paired-summary-title"></section>
+
+    <section id="leaderboard" class="panel">
+      <div class="section-heading"><div><p class="eyebrow blue">01 / MEASURED RESULTS</p><h2>发布权重复跑与阶段状态</h2><p>只在同一共同覆盖与协议组内排名；列表排序不构成跨组总排名。Phase B 尚无正式重训结果。</p></div><div class="actions"><button id="download-csv" type="button" class="button secondary">筛选结果 CSV ↓</button><button id="download-json" type="button" class="button">公开快照 JSON ↓</button></div></div>
+      <form id="filters" class="filters" aria-label="筛选评测结果">
+        <label>实验阶段<select id="filter-phase" name="phase"><option value="all">全部阶段</option><option value="A">Phase A · 发布权重</option><option value="B">Phase B · 尚未正式启动</option></select></label>
+        <label>机器人<select id="filter-robot" name="robot"><option value="all">全部机器人</option></select></label>
+        <label>数据集<select id="filter-dataset" name="dataset"><option value="all">全部 7 组</option></select></label>
+        <label>条件 / Condition<select id="filter-condition" name="condition"><option value="all">全部条件</option></select></label>
+        <label>执行模式 / Mode<select id="filter-mode" name="mode"><option value="all">全部模式</option></select></label>
+        <label>评测 Seed<select id="filter-seed" name="seed"><option value="all">全部 seed</option></select></label>
+        <label class="search-field">动作或 checkpoint<input id="filter-search" name="search" type="search" placeholder="输入名称或动作 ID" autocomplete="off"></label>
+        <button type="reset" class="reset">重置筛选</button>
+      </form>
+      <div class="table-toolbar"><div class="segmented" role="group" aria-label="结果粒度"><button type="button" id="view-aggregate" aria-pressed="true" data-scope="aggregate">聚合指标</button><button type="button" id="view-per-motion" aria-pressed="false" data-scope="per_motion">逐动作</button></div><div class="sort-controls"><label for="sort-metric">排序 / 图表指标</label><select id="sort-metric"></select><button type="button" id="sort-direction" class="direction" aria-label="切换排序方向">升序 ↑</button></div></div>
+      <p id="result-count" class="result-count" role="status" aria-live="polite"></p>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="可横向滚动的八项指标结果表"><table id="results-table"><caption class="sr-only">每行包含指标值、有效覆盖、区间和原始来源。n/a 不按零计入。</caption><thead id="results-head"></thead><tbody id="results-body"></tbody></table></div>
+      <div id="pagination" class="pagination"></div>
+      <div class="table-footnote"><span><b>↓</b> 误差 / 训练成本越小越好；<b>↑</b> Return / Progress 越大越好。</span><span>CI 和分母见各指标；行内可展开策略、条件与视频。</span></div>
+    </section>
+
+    <div class="two-column">
+      <section class="panel chart-panel" aria-labelledby="motion-chart-title"><div class="section-heading compact"><div><p class="eyebrow blue">MOTION PROFILE</p><h2 id="motion-chart-title">逐动作分布</h2><p id="motion-chart-description">保持当前筛选，展示各动作的实际观测值。</p></div></div><div id="motion-chart"></div></section>
+      <section class="panel chart-panel" aria-labelledby="failure-chart-title"><div class="section-heading compact"><div><p class="eyebrow blue">FAILURE ACCOUNTING</p><h2 id="failure-chart-title">失败与未完成</h2><p>逐记录保留原因与分母；跨模型样本不相加。</p></div></div><div id="failure-chart"></div></section>
+    </div>
+
+    <section id="reference" class="panel reference-panel"><div class="section-heading"><div><p class="eyebrow blue">02 / EXTERNAL REFERENCE</p><h2>外部官方 G1 参考</h2><p>独立展示原来源与评测条件，不加入本页实际复跑排名。此区仅响应数据集筛选。</p></div><span class="badge">独立参考区</span></div><div class="table-scroll" tabindex="0" role="region" aria-label="官方参考指标"><table><thead id="reference-head"></thead><tbody id="reference-body"></tbody></table></div></section>
+
+    <section id="fairness" class="panel"><div class="section-heading"><div><p class="eyebrow blue">03 / COMPARABILITY</p><h2>公平条件与已披露差异</h2><p>共同协议、机器人固有差异、未知项分别记录。响应阶段、条件和执行模式筛选。</p></div></div><div class="table-scroll" tabindex="0" role="region" aria-label="公平条件表"><table class="fairness-table"><thead><tr><th scope="col">条件</th><th scope="col">RP1</th><th scope="col">G1</th><th scope="col">核验状态</th><th scope="col">依据</th></tr></thead><tbody id="fairness-body"></tbody></table></div></section>
+
+    <section id="evidence" class="panel"><div class="section-heading"><div><p class="eyebrow blue">04 / EVIDENCE & STATISTICS</p><h2>评测方法、限制与示例视频</h2><p>训练统计、离线评测、视频示例与真机结果分别解释。</p></div></div><div class="evidence-grid"><div><h3>聚合与置信区间</h3><dl id="statistics"></dl></div><div><h3>来源文档与示例视频</h3><p class="permissions-notice">飞书报告、附件与视频需组织登录及已有访问权限；本站公开不改变这些文件的分享权限。</p><div id="downloads"></div><h3 class="notes-title">限制与备注</h3><ul id="limitations" class="notes"></ul></div></div></section>
+    <footer><p>RP1 / G1 · ROUND 02 <span>共同覆盖决定可比范围，缺失值不替代为零。</span></p><a href="#">返回页首 ↑</a></footer>
+  </main>
+  <noscript><p class="wrap notice">此页面需要 JavaScript 来筛选结果。可直接读取同目录 data.json 获取原始快照。</p></noscript>
+</body>
+</html>
