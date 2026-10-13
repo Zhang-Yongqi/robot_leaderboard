@@ -102,28 +102,28 @@
   },
   "files": {
     "index.html": {
-      "bytes": 7740,
-      "sha256": "18523ee81d65abcb9d0ad8dfbdba354bde7f25ed99f7f07f7ead6eb3b18d1aa2"
+      "bytes": 11502,
+      "sha256": "cc2944b7bfc9b72799b3917ab7f114a3f5a8772d612a44ecf6b5f0c22b5c9955"
     },
     "app.js": {
-      "bytes": 42415,
-      "sha256": "cb5882265f2d67295b990b8e4bef4eee245355fcdffb0eac1e0850c8026f4620"
+      "bytes": 48452,
+      "sha256": "ab1af5477f2c50c85aa600da42271e33f32a119c7768a7a1a36661746ea3a5c6"
     },
     "style.css": {
-      "bytes": 17795,
-      "sha256": "a082a1665a7c0492650e1e21db74751f97243ae0208559d511447ae9b8b4db61"
+      "bytes": 20318,
+      "sha256": "ac8e9d162e36f06ba42504eaccc4a695ae650d74a8e7370f29f387f37712f6ad"
     },
     "data.json": {
       "bytes": 2588322,
       "sha256": "17e9610a379ace2bd86aa38ea711fafa829e9e14e73edfd5631400eeaa5445d4"
     },
     "README.md": {
-      "bytes": 2639,
-      "sha256": "43a6f8ef57f020ae06add88afc671f228c19c344d503abcce7541edbd5b258ea"
+      "bytes": 3689,
+      "sha256": "4ad67b3321d6078cbbfaf02e28d88204cb31c643bcbded8609d01462a4548ec5"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 7638,
-      "sha256": "9f7811ee171c1499f7b7d0509635220c6c9da7964afeb0cbc7a1d9ee544fc2f1"
+      "bytes": 8468,
+      "sha256": "c98dce71ef380feb4e86d87031c4d488eff66b7e819ef653e1b99a49262ca210"
     },
     ".nojekyll": {
       "bytes": 0,
@@ -138,8 +138,16 @@
       "sha256": "7fb440e1e04c371b1cec2d6bb307ec1be706b10a1ac09eae38b5c382252ec3a6"
     },
     "scripts/verify_public.py": {
-      "bytes": 31081,
-      "sha256": "3213042135dffc10c045c17024fe85f165bc5bba56d0a3e17588c1572d9f8225"
+      "bytes": 32213,
+      "sha256": "0e8f5b13590ffabeb4ae5f342640989815c7291d6f0faa6715d52dd8be96bcb8"
+    },
+    "media.json": {
+      "bytes": 173,
+      "sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
+    },
+    "favicon.svg": {
+      "bytes": 279,
+      "sha256": "ac39fd5a6da25a4df96d90c5b315814eae89792d9e900755572b7df089541758"
     }
   },
   "manifest_hash_policy": "This manifest is not self-hashed; commit identity freezes it.",
@@ -169,5 +177,12 @@
         "hash_scope": "local upload source; cloud original bytes not downloaded for hashing"
       }
     ]
+  },
+  "presentation_revision": "public-research-20261014",
+  "public_media_status": {
+    "index": "media.json",
+    "new_published_motions": 0,
+    "expected_common_motions": 40,
+    "status": "awaiting_new_render"
   }
 }

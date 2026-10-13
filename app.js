@@ -53,7 +53,7 @@
   };
   const statusBadge = (status) => `<span class="badge ${Object.hasOwn(STATUS, status) ? escape(status) : "unknown"}">${escape(STATUS[status] || status || "pending")}</span>`;
   const datasetLabel = (id) => ((state.data.datasets || []).find((item) => item.id === id) || {}).label || id || "pending";
-  const phaseLabel = (phase) => phase === "A" ? "A · 发布权重" : phase === "B" ? "B · 独立重训" : "阶段未知";
+  const phaseLabel = (phase) => phase === "A" ? "原版发布策略" : phase === "B" ? "同配置重训" : "来源未知";
   function safeURL(value) {
     if (typeof value !== "string" || !value.trim()) return null;
     try {
@@ -204,16 +204,8 @@
     $("download-csv").disabled = !rows.length;
   }
   function renderOverview() {
-    const phaseCards = ["A", "B"].map((id) => {
-      const phase = state.data.phases[id] || EMPTY.phases[id];
-      const description = id === "A" ? "固定发布权重复跑已记录；七组数据集的双机器人共同覆盖尚未齐全。" : "同配置独立重训尚未开始，暂无 Phase B 成绩。";
-      return `<article class="stat-card"><div class="stat-top"><span>${escape(phase.label || EMPTY.phases[id].label)}</span>${statusBadge(phase.status || "pending")}</div><div class="stat-value">${escape(STATUS[phase.status] || phase.status || "待完成")}</div><p class="stat-description">${escape(description)}</p></article>`;
-    });
-    const displayRows = state.data.results.length;
-    const aggregateRows = state.data.results.filter((row) => row.scope === "aggregate").length;
-    const perMotionRows = state.data.results.filter((row) => row.scope === "per_motion").length;
-    const validComparisons = new Set([...ranksForMetric(state.data, state.metric).values()].filter((value) => value.rank !== null).map((value) => value.comparison)).size;
-    $("overview").innerHTML = phaseCards.join("") + `<article class="stat-card"><div class="stat-top"><span>展示行（含汇总）</span><span class="badge">当前快照</span></div><div class="stat-value">${displayRows || "PENDING"}<span class="subtle">${displayRows ? " 行" : ""}</span></div><p class="stat-description">${aggregateRows} 汇总 + ${perMotionRows} 逐动作；展示行不是独立实验次数。</p></article><article class="stat-card"><div class="stat-top"><span>所选指标可比组</span><span class="badge">严格配对</span></div><div class="stat-value">${validComparisons || "PENDING"}<span class="subtle">${validComparisons ? " 组" : ""}</span></div><p class="stat-description">完整参与者、指标样本身份与共同覆盖核验。</p></article>`;
+    const summary = pairedSummaryFor(state.data);
+    $("overview").innerHTML = summary ? `<div class="scope-item"><strong>40</strong><p><b>共同动作</b>RP1 与 G1 的主要配对范围</p></div><div class="scope-item"><strong>318</strong><p><b>G1 补充动作</b>单系统覆盖，不做双机器人排名</p></div><div class="scope-item"><strong>27 / 26</strong><p><b>未触发失败阈值</b>RP1 / G1，各以 40 动作为分母</p></div>` : emptyHTML("配对结果待核验", "尚未读取可支持结论的完整共同动作组。");
   }
   function pairedSummaryFor(data) {
     const keys = ["progress_pct", "body_pos_mm", "body_ori_rad", "wrist_ori_rad"];
@@ -231,22 +223,28 @@
     }
     return null;
   }
+  const CN_METRICS = { body_pos_mm: "身体位置误差", body_ori_rad: "身体姿态误差", wrist_ori_rad: "手腕姿态误差", wrist_pos_mm: "手腕位置误差", root_pos_m: "根节点端点误差", episode_return: "归一化跟踪回报", progress_pct: "动作完成度" };
+  const signed = (value, digits) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
+  function pairedIntervalSVG(delta, digits, unit, dark = false) {
+    const bound = Math.max(Math.abs(delta.ci95[0]), Math.abs(delta.ci95[1]), Math.abs(delta.value)) * 1.18 || 1;
+    const x = (v) => 155 + v / bound * 129;
+    const color = dark ? "#bfcee3" : delta.value < 0 ? "#4387f5" : "#159b80";
+    return `<svg class="${dark ? "hero-ci" : "ci-svg"}" viewBox="0 0 310 74" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RP1 减 G1 差值 ${escape(signed(delta.value, digits))} ${escape(unit)}，95% 置信区间 ${escape(fmt(delta.ci95[0], digits))} 至 ${escape(fmt(delta.ci95[1], digits))}"><line x1="26" y1="28" x2="284" y2="28" stroke="${dark ? "#46536b" : "#e0e6ef"}"/><line x1="155" y1="7" x2="155" y2="43" stroke="${dark ? "#889bb8" : "#7c8ca3"}" stroke-dasharray="3 3"/><line x1="${x(delta.ci95[0])}" y1="28" x2="${x(delta.ci95[1])}" y2="28" stroke="${color}" stroke-width="4" stroke-linecap="round"/><line x1="${x(delta.ci95[0])}" y1="21" x2="${x(delta.ci95[0])}" y2="35" stroke="${color}"/><line x1="${x(delta.ci95[1])}" y1="21" x2="${x(delta.ci95[1])}" y2="35" stroke="${color}"/><circle cx="${x(delta.value)}" cy="28" r="5" fill="${color}" stroke="${dark ? "#101c30" : "white"}" stroke-width="2"/><text x="26" y="60">−${escape(fmt(bound, digits))}</text><text x="155" y="60" text-anchor="middle">0</text><text x="284" y="60" text-anchor="end">+${escape(fmt(bound, digits))} ${escape(unit)}</text></svg>`;
+  }
   function renderPairedSummary() {
     const summary = pairedSummaryFor(state.data);
     if (!summary) {
-      $("paired-summary").innerHTML = `<div class="section-heading compact"><div><p class="eyebrow blue">PAIRED FINDINGS</p><h2 id="paired-summary-title">共同配对摘要待核验</h2><p>摘要只读取已通过完整参与者、指标样本身份与共同覆盖检查的 40 动作组。</p></div></div>`;
-      return;
+      $("hero-chart").innerHTML = emptyHTML("配对摘要待核验", "尚未读取完整共同动作组。");
+      $("paired-summary").innerHTML = ""; $("paired-all-metrics").innerHTML = ""; return;
     }
-    const { rp1, g1, delta, crossesZero } = summary;
-    // Terminal accounting belongs to this frozen aggregate identity. A future
-    // snapshot must supply its own verified accounting rather than inherit it.
-    const frozenAccounting = state.data.aggregate_sha256 === "036559d03c4a2a3ec8198c6a703b9a09be096c7181eb62d7c0b91ec06bd42210" ? `<p class="paired-accounting">冻结版本核算：503 条计划终态 = 493 个选定结果（488 完整 + 5 删失 smoke）+ 10 条已被修正结果替换的旧时钟记录。另有 2 次基础设施尝试，单独记录。汇总行不新增实验或独立样本。</p>` : "";
-    const values = ["body_pos_mm", "body_ori_rad", "wrist_ori_rad"].map((key) => {
-      const metric = metricDefinition(key), rp = valueOf(rp1, key), g = valueOf(g1, key);
-      const lower = rp < g ? "RP1" : rp > g ? "G1" : "相同";
-      return `<div class="paired-metric"><h3>${escape(metric.label)}</h3><p><span>RP1 <b>${fmt(rp, metric.digits)}</b></span><span>G1 <b>${fmt(g, metric.digits)}</b> ${escape(metric.unit)}</span></p><small>当前配对均值较低：${lower}</small></div>`;
+    const { rp1, g1, comparison, delta, crossesZero } = summary;
+    $("hero-chart").innerHTML = `<p class="eyebrow">COMPLETION / 40 PAIRED MOTIONS</p><h2>完成度接近，差值仍跨零。</h2><p class="chart-context">平均动作推进比例 · 数值越高越好</p>${[rp1,g1].map((row) => `<div class="progress-row"><div class="progress-label"><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,"progress_pct"),2)}<small>%</small></strong></div><div class="progress-track" aria-hidden="true"><div class="progress-fill ${row.robot}" style="width:${valueOf(row,"progress_pct")}%"></div></div></div>`).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value,2)}<small> pp</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp · N = 40</p>${pairedIntervalSVG(delta,2,"pp",true)}<p class="hero-conclusion">${crossesZero ? "区间跨零，无法据此认定完成度稳定优胜。" : "推断范围限于当前固定策略与共同动作。"}</p></div>`;
+    const conclusions = {body_pos_mm:"RP1 均值较低 · 区间上界接近零",body_ori_rad:"RP1 身体姿态误差较低",wrist_ori_rad:"G1 手腕姿态误差较低"};
+    $("paired-summary").innerHTML = ["body_pos_mm","body_ori_rad","wrist_ori_rad"].map((key) => {
+      const m=metricDefinition(key), d=comparison.paired_deltas[key];
+      return `<article class="finding-card"><h3>${CN_METRICS[key]}</h3><p class="metric-caption">${m.label} · 越低越好 · N = ${d.n_motions}</p><div class="finding-values">${[rp1,g1].map(row=>`<div><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,key),m.digits)}<small>${m.unit}</small></strong></div>`).join("")}</div><p class="delta-label">配对差值 RP1 − G1</p>${pairedIntervalSVG(d,m.digits,m.unit)}<p class="delta-ci">${signed(d.value,m.digits)} ${m.unit} · 95% CI [${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}]</p><p class="finding-interpretation">${conclusions[key]}</p></article>`;
     }).join("");
-    $("paired-summary").innerHTML = `<div class="section-heading compact"><div><p class="eyebrow blue">PAIRED FINDINGS · PHASE A</p><h2 id="paired-summary-title">共同 40 段动作的配对结果</h2><p>LAFAN40 · nominal · native_position · Common14。固定快照摘要，不随下方筛选改变。</p></div><span class="badge">40 / 40 motions</span></div><div class="paired-content"><div class="paired-progress"><div><span>RP1 Progress</span><strong>${fmt(valueOf(rp1, "progress_pct"), 3)}<small>%</small></strong></div><div><span>G1 Progress</span><strong>${fmt(valueOf(g1, "progress_pct"), 3)}<small>%</small></strong></div></div><p class="paired-interval">配对差值（RP1 − G1）<b>${delta.value >= 0 ? "+" : ""}${fmt(delta.value, 3)} pp</b> · 95% CI [${fmt(delta.ci95[0], 3)}, ${fmt(delta.ci95[1], 3)}] pp${crossesZero ? "，区间跨零。" : "。"}</p><p class="paired-conclusion">${crossesZero ? "Progress 的配对区间跨零，不能据此认定 RP1 稳定优胜。" : "Progress 差值的推断范围限于此配对动作组。"}不同误差指标各有优势，当前证据不支持稳定的总体赢家。</p><div class="paired-metrics">${values}</div><p class="paired-caveat">Body / wrist 为首个失败阈值前的局部误差均值，存在存活时长选择偏差。Common14 使用 toe → ankle-roll 与 RP1 pelvis / torso 映射。Root endpoint error 取完整原始 rollout 最后 motion_t &lt; N−1 帧的端点误差；初态 XY / yaw 对齐且保留 Z。单 seed 的动作条件区间不能推出跨训练种子或真机性能。</p>${frozenAccounting}<p class="paired-source">${linkHTML({ url: "./DATA_PROVENANCE.md", label: "完整指标定义与来源" })}</p></div>`;
+    $("paired-all-metrics").innerHTML = `<table class="paired-table"><caption class="sr-only">共同 40 动作，RP1 减 G1 配对差值及 95% 置信区间</caption><thead><tr><th>指标</th><th>单位</th><th>RP1 均值</th><th>G1 均值</th><th>RP1 − G1</th><th>95% CI</th><th>N</th></tr></thead><tbody>${METRICS.filter(m=>comparison.paired_deltas[m.key]).map(m=>{const d=comparison.paired_deltas[m.key];return `<tr><td>${CN_METRICS[m.key]}</td><td>${m.unit}</td><td class="number">${fmt(valueOf(rp1,m.key),m.digits)}</td><td class="number">${fmt(valueOf(g1,m.key),m.digits)}</td><td class="number">${signed(d.value,m.digits)} ${d.unit==="pp"?"pp":""}</td><td class="number">[${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}] ${d.unit==="pp"?"pp":m.unit}</td><td>${d.n_motions}</td></tr>`}).join("")}</tbody></table>`;
   }
   function renderMotionChart() {
     const metric = metricDefinition(state.metric);
@@ -260,7 +258,7 @@
     const min = Math.min(0, ...values), max = Math.max(0, ...values), range = max - min || 1;
     const left = 238, right = 658, top = 27, rowHeight = 31, bottom = top + rows.length * rowHeight + 13;
     const x = (value) => left + (value - min) / range * (right - left);
-    const color = (row) => String(row.robot).toLowerCase() === "rp1" ? "#315bbb" : "#159b8a";
+    const color = (row) => String(row.robot).toLowerCase() === "rp1" ? "#4387f5" : "#159b80";
     let svg = `<svg class="motion-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 ${bottom + 32}" role="img" aria-labelledby="motion-svg-title motion-svg-description"><title id="motion-svg-title">逐动作 ${escape(metric.label)}</title><desc id="motion-svg-description">当前筛选 ${valid.length} 个有效值，显示排序后的前 ${rows.length} 条。完整数值和原始分母见逐动作表格。</desc>`;
     for (let i = 0; i <= 4; i += 1) {
       const position = left + i * (right - left) / 4, value = min + i * range / 4;
@@ -271,7 +269,7 @@
       svg += `<g><title>${escape(`${label}; ${row.condition}; ${row.mode}; seed ${row.seed}; ${fmt(value, metric.digits)} ${metric.unit}; ${coverageText((row.metrics[state.metric] || {}).coverage)}`)}</title><text x="0" y="${y + 4}" font-size="11" fill="#50647f">${escape(short)}</text><line x1="${x(0)}" y1="${y}" x2="${x(value)}" y2="${y}" stroke="${color(row)}" stroke-opacity=".25" stroke-width="5"/><circle cx="${x(value)}" cy="${y}" r="4" fill="${color(row)}"/><text x="752" y="${y + 4}" text-anchor="end" font-size="11" fill="#263e5d">${escape(fmt(value, metric.digits))}</text></g>`;
     });
     svg += "</svg>";
-    $("motion-chart").innerHTML = `<div class="legend"><span style="--dot:#315bbb">RP1</span><span style="--dot:#159b8a">G1 / 其他</span></div>${svg}<p class="chart-note">显示 ${rows.length} / ${valid.length} 个有效值；另有 ${source.length - valid.length} 条 n/a。${valid.length > rows.length ? "图表截取前 36 条，完整记录可在逐动作表格或 CSV 中查看。" : "悬停点查看动作、条件、模式、seed 和分母；键盘用户可访问上方数据表。"}</p>`;
+    $("motion-chart").innerHTML = `<div class="legend"><span style="--dot:#4387f5">RP1</span><span style="--dot:#159b80">G1 / 其他</span></div>${svg}<p class="chart-note">显示 ${rows.length} / ${valid.length} 个有效值；另有 ${source.length - valid.length} 条 n/a。${valid.length > rows.length ? "图表截取前 36 条，完整记录可在逐动作表格或 CSV 中查看。" : "悬停点查看动作、条件、模式、seed 和分母；键盘用户可访问上方数据表。"}</p>`;
   }
   function renderFailures(rows) {
     const available = rows.filter((row) => asArray(row.failures).length);
@@ -297,13 +295,48 @@
   }
   function renderEvidence() {
     const statistics = state.data.statistics;
-    $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["推断范围", "ci_scope"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] || "pending")}</dd>`).join("");
-    const publicFiles = [{ url: "./README.md", label: "站点说明" }, { url: "./DATA_PROVENANCE.md", label: "数据溯源与方法" }, { url: "./data.json", label: "公开结果快照 JSON" }, { url: "./RELEASE_MANIFEST.json", label: "发布版本清单" }];
-    const suppliedDownloads = asArray(state.data.downloads);
-    const downloads = [...publicFiles.filter((file) => !suppliedDownloads.some((download) => download.url === file.url)), ...suppliedDownloads];
-    $("downloads").innerHTML = downloads.map((download) => `<div class="download-item"><p>${linkHTML(download)}</p></div>`).join("") + `<p class="chart-note">可下载完整指标、覆盖分母与置信区间；视频仅作为动作示例。</p>`;
+    $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["推断范围", "ci_scope"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] || "待提供")}</dd>`).join("");
+    const all=asArray(state.data.downloads), reports=all.filter(d=>/feishu\.cn\/(docx|file)\//.test(d.url)&&/技术报告/.test(d.label));
+    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>专业改写版正文、PDF / DOCX v2（10 页）均已核验更新；飞书链接需组织权限。</p>`;
+    const historical=all.filter(d=>!reports.includes(d)&&/feishu\.cn/.test(d.url));
+    $("historical-links").innerHTML = `<p>以下为既有组织内报告附录与历史素材，不是本次新增的公开高分辨率视频。原始云端附录尚未全部验收。</p>${historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("")}`;
     const notes = [...asArray(statistics.limitations), ...asArray(state.data.notes)].map(readerNote).filter(Boolean);
-    $("limitations").innerHTML = (notes.length ? notes : ["尚无可支持实验结论的结果快照。", "视频只描述单个例子，训练完成与评测提升分别核验。"]).map((note) => `<li>${escape(note)}</li>`).join("");
+    $("limitations").innerHTML = notes.map((note) => `<li>${escape(note)}</li>`).join("");
+  }
+  function validPublicMedia(input) {
+    if (!input || input.schema !== "rp1-g1-public-media-v1" || input.expected_common_motions !== 40 || !Array.isArray(input.items)) throw new Error("媒体索引格式待核验");
+    const common = new Set(state.data.results.filter(r=>r.scope==="per_motion"&&r.robot==="rp1"&&r.dataset==="lafan40"&&r.condition==="nominal"&&r.mode==="native_position"&&r.seed===0).map(r=>r.motion_id));
+    const seen=new Set();
+    input.items.forEach(item=>{
+      if(!common.has(item.motion_id)||seen.has(item.motion_id)||item.public_release_approved!==true||item.is_new_render!==true||item.full_episode!==true||item.width!==1920||item.height!==1080||!isNumber(item.duration_s)||item.duration_s<=0||!isNumber(item.fps)||!sha256(item.sha256)) throw new Error("媒体身份、授权或完整回放待核验");
+      seen.add(item.motion_id);
+      const url=new URL(item.url,window.location.href), poster=new URL(item.poster,window.location.href);
+      if(url.protocol!=="https:"||url.hostname!=="github.com"||!url.pathname.startsWith("/Zhang-Yongqi/robot_leaderboard/releases/download/")||poster.origin!==window.location.origin||!poster.pathname.includes("/media/posters/")||!item.poster.match(/^\.\/media\/posters\/[a-zA-Z0-9_.-]+\.(?:jpg|webp|png)$/)) throw new Error("媒体公开地址待核验");
+      if(typeof item.label!=="string"||typeof item.credits!=="string"||typeof item.restrictions!=="string"||!Array.isArray(item.source_result_ids)||item.source_result_ids.length!==2)throw new Error("媒体来源或署名待核验");
+      const rows=item.source_result_ids.map(id=>state.data.results.find(r=>r.id===id));
+      if(rows.some(r=>!r||r.motion_id!==item.motion_id||r.scope!=="per_motion"||r.dataset!=="lafan40"||r.mode!=="native_position"||!["nominal","aligned_nominal"].includes(r.condition)||r.seed!==0)||new Set(rows.map(r=>r.robot)).size!==2)throw new Error("媒体源回合不属于共同主选择");
+    });return input;
+  }
+  function selectPublicVideo(item) {
+    const time=`${Math.floor(item.duration_s/60)}:${String(Math.round(item.duration_s%60)).padStart(2,"0")}`;
+    $("video-feature").innerHTML = `<video id="paired-video" class="video-player" controls preload="none" playsinline poster="${escape(item.poster)}"><source src="${escape(item.url)}" type="video/mp4">此浏览器无法播放视频。请使用下方 MP4 下载。</video><div class="video-info"><p class="eyebrow">RP1 / G1 · FULL EPISODE</p><h3>${escape(item.label)}</h3><p class="video-meta">1920 × 1080 · ${escape(fmt(item.fps,0))} fps · ${time} · 1×</p><p>${escape(item.description||"左 RP1 / 右 G1；共同时间轴的完整状态回放。")}</p><a href="${escape(item.url)}">下载完整 MP4 ↗</a><p class="video-credits">${escape(item.credits)} ${escape(item.restrictions)}</p><p id="media-error" class="media-error" role="status"></p></div>`;
+    $("paired-video").addEventListener("error",()=>{$("media-error").textContent="视频暂时无法加载，可尝试下载 MP4。";});
+    document.querySelectorAll(".video-choice").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.motion===item.motion_id)));
+  }
+  async function renderPublicMedia() {
+    const pending=()=>{document.querySelector(".hero-actions .button").textContent="动作回放计划 ↗";$("video-coverage").textContent="0 / 40 新片已发布";$("public-videos").innerHTML=`<div class="video-pending"><strong>共同 40 动作<br>高分辨率回放待交付。</strong><p>新一批 4K 原生渲染与 1080p 网页视频尚未完成。当前没有可公开播放的新片。<br>组织内历史素材可在下方“历史报告与视频”查看。</p></div>`;};
+    pending();
+    try {
+      const response=await fetch("./media.json",{cache:"no-store",credentials:"same-origin"});
+      if(!response.ok)throw new Error("媒体索引读取失败");
+      const media=validPublicMedia(await response.json()); if(!media.items.length)return;
+      $("video-coverage").textContent=`${media.items.length} / 40 新片已发布`;document.querySelector(".hero-actions .button").textContent="查看同步动作 ↗";$("video-intro").textContent="左侧 RP1，右侧 G1。同一动作、共同时间轴与相机尺度；完整回放保留真实失败后的过程。";
+      $("public-videos").innerHTML=`<div id="video-feature" class="video-main"></div><form class="video-filter" id="video-filter"><label>查找共同动作<input id="video-search" type="search" placeholder="输入动作名称" autocomplete="off"></label></form><div id="video-grid" class="video-grid"></div><p class="video-credits">${escape(media.credits||"")}</p>`;
+      const gallery=()=>{const q=$("video-search").value.trim().toLowerCase();const items=media.items.filter(i=>(i.label+" "+i.motion_id).toLowerCase().includes(q));$("video-grid").innerHTML=items.map(i=>`<button type="button" class="video-choice" data-motion="${escape(i.motion_id)}" aria-pressed="false"><img src="${escape(i.poster)}" alt="${escape(i.label)}，RP1 与 G1 同时刻画面" loading="lazy" width="1920" height="1080"><span>${escape(i.label)}<small>${Math.floor(i.duration_s/60)} 分 ${Math.round(i.duration_s%60)} 秒</small></span></button>`).join("")||"<p>没有匹配动作。</p>";};
+      gallery();selectPublicVideo(media.items[0]);
+      $("video-filter").addEventListener("submit",e=>e.preventDefault());$("video-search").addEventListener("input",gallery);
+      $("video-grid").addEventListener("click",e=>{const b=e.target.closest("button[data-motion]");if(b)selectPublicVideo(media.items.find(i=>i.motion_id===b.dataset.motion));});
+    } catch(error) {pending();console.warn("公共视频尚未通过索引核验：",error.message);}
   }
   function render() {
     const rows = filteredRows().sort(compareRows), ranks = ranksForMetric(state.data, state.metric);
@@ -367,8 +400,8 @@
       if (!button || button.disabled) return;
       state.page = Number(button.dataset.page); render(); $("leaderboard").scrollIntoView({ block: "start" });
     });
-    $("download-json").addEventListener("click", () => download(JSON.stringify(state.data, null, 2) + "\n", "rp1-g1-round2-snapshot.json", "application/json;charset=utf-8"));
-    $("download-csv").addEventListener("click", () => download(csvExport(filteredRows().sort(compareRows)), `rp1-g1-round2-${state.scope}.csv`, "text/csv;charset=utf-8"));
+    $("download-json").addEventListener("click", () => download(JSON.stringify(state.data, null, 2) + "\n", "rp1-g1-snapshot.json", "application/json;charset=utf-8"));
+    $("download-csv").addEventListener("click", () => download(csvExport(filteredRows().sort(compareRows)), `rp1-g1-${state.scope}.csv`, "text/csv;charset=utf-8"));
   }
   async function init() {
     let notice = "";
@@ -386,16 +419,15 @@
       notice = `${error.message} 页面保持 pending，不以空值替代实验成绩。`;
       $("load-notice").classList.add("error");
     }
-    if (state.data.title) { document.title = state.data.title; $("report-title").textContent = state.data.title; }
-    if (state.data.subtitle) $("report-subtitle").textContent = state.data.subtitle;
+    // Public presentation title is independent of the frozen scientific snapshot title.
     $("report-status").textContent = String(state.data.status || "pending").toUpperCase();
-    $("updated-at").textContent = state.data.updated_utc || "待导入";
+    $("updated-at").textContent = state.data.updated_utc ? new Date(state.data.updated_utc).toLocaleDateString("zh-CN", {timeZone:"UTC", year:"numeric",month:"long",day:"numeric"}) : "待导入";
     if (state.data.updated_utc) $("updated-at").setAttribute("datetime", state.data.updated_utc);
     const issues = state.issues.length ? ` 有 ${state.issues.length} 处字段缺失或非有限值，已显式标为 n/a；请检查数据生成端。` : "";
     $("load-notice").textContent = notice || `${state.data.status_message || "快照已载入；结论范围以各记录的协议、覆盖与来源为准。"} 数据来源：${state.origin}。${issues}`;
-    populateFilters(); bindEvents(); render();
+    populateFilters(); bindEvents(); render(); await renderPublicMedia();
   }
   /* Pure helpers exposed for offline contract checks; no scores or fixtures are bundled. */
-  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, metrics: METRICS };
+  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, validPublicMedia, pairedIntervalSVG, metrics: METRICS };
   init();
 })();

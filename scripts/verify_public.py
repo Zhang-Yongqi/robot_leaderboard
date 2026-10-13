@@ -30,7 +30,7 @@ METRICS = {'body_pos_mm', 'body_ori_rad', 'root_pos_m', 'gpu_train_hours',
            'wrist_pos_mm', 'wrist_ori_rad', 'episode_return', 'progress_pct'}
 PUBLISH_FILES = {
     '.gitignore', '.nojekyll', 'README.md', 'DATA_PROVENANCE.md',
-    'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json',
+    'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json', 'media.json', 'favicon.svg',
     'scripts/update_snapshot.py', 'scripts/verify_public.py',
 }
 EXCLUDED_DIRS = {'.git', '.agents', '.aws', '.codex', '.private', 'qa', '__pycache__'}
@@ -306,6 +306,21 @@ class Audit:
         require(video.get('cloud_original_sha256_verified') is False,
                 'video must retain unverified cloud byte-hash status')
 
+    def public_media(self):
+        media = read_json(self.root / 'media.json')
+        keys(media, {'schema', 'render_revision', 'expected_common_motions',
+                     'status', 'credits', 'items'}, 'public_media')
+        require(media['schema'] == 'rp1-g1-public-media-v1' and
+                media['expected_common_motions'] == 40, 'public media version/cohort mismatch')
+        require(isinstance(media['items'], list), 'media items must be an array')
+        # No new rendered asset has been accepted yet. A future integration must
+        # add a reviewed asset allowlist and run/source mapping before publishing.
+        require(media['status'] == 'awaiting_new_render' and not media['items'],
+                'new public media assets require a reviewed publication contract')
+        content = (self.root / 'media.json').read_text()
+        require(not SECRET.search(content) and not LOCAL_PATH.search(content) and
+                not INFRA.search(content), 'public media contains private information')
+
     def counts_and_missing(self):
         rows = self.data['results']
         require(len(rows) == 511 and len({row['id'] for row in rows}) == 511, 'expected 511 unique result IDs')
@@ -490,6 +505,7 @@ class Audit:
                           ('public_schema_and_privacy', self.privacy_and_schema),
                           ('row_counts_missing_values_and_phase_boundary', self.counts_and_missing),
                           ('verified_pair_identities_and_nominal_contract', self.pairing_and_nominal),
+                          ('public_media_pending_boundary', self.public_media),
                           ('internal_targets_and_reviewed_https_links', self.links)]:
             self.run_check(label, fn)
         if self.source_path is not None:
