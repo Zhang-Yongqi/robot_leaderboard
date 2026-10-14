@@ -1,12 +1,25 @@
-/* Public v4 UI: frozen full-window values, stable episode identities and explicit completion evidence. */
+/* Verified schema4/schema5 UI: independent body/wrist and synchronized root windows. No scores are bundled. */
 (function () {
   "use strict";
-  const METRICS = [
+  const BASE_METRICS = [
     { key: "full_body_pos_mm", label: "全程身体位置误差", unit: "mm", digits: 2 },
     { key: "full_body_ori_rad", label: "全程身体姿态误差", unit: "rad", digits: 4 },
     { key: "full_wrist_pos_mm", label: "全程手腕位置误差", unit: "mm", digits: 2 },
     { key: "full_wrist_ori_rad", label: "全程手腕姿态误差", unit: "rad", digits: 4 }
   ];
+  const ROOT_METRICS = [
+    { key: "full_root_pos_mm", label: "全程根三维位置误差", unit: "mm", digits: 2 },
+    { key: "full_root_ori_rad", label: "全程根姿态误差", unit: "rad", digits: 4 }
+  ];
+  const METRIC_SPECS = [...BASE_METRICS, ...ROOT_METRICS];
+  const DEFAULT_METRIC = "full_body_pos_mm";
+  const ROOT_SOURCE_SHA = "ac5a4a25fd0235c2472746135de43c66eb1a091e21be72016a7c8e5bf34ace4e";
+  const ROOT_METRIC_WINDOW = "full_replay_50hz_same_time_raw_state_at_reference";
+  const ROOT_WINDOW_LABEL = "50 Hz 参考时刻对应的同刻根状态（来自原 200 Hz 轨迹）";
+  const ROOT_CONTRACT_KEYS = ["status", "source_sha256", "metrics", "window_label"];
+  const ROOT_METHOD_KEYS = ["window", "source", "sampling", "alignment", "position", "orientation", "weighting_and_CI", "old_four_window_unchanged", "completion_unchanged", "completion_does_not_filter_errors", "new_physical_episodes"];
+  const ROOT_METHOD_DEFINITION = {"window": "full_replay_50hz_same_time_raw_state_at_reference", "source": "同一批既有物理回放轨迹，不增加物理实验", "sampling": "在原200Hz物理轨迹中按50Hz参考时刻取已有同刻根姿态；有效参考帧1..Ncommon−1完整保留，包含失控后样本，末后停留不计入", "alignment": "第一个共同有效同刻帧0.02秒作固定XY/yaw对齐锚点；Z保持绝对值。不是reset/frame0对齐；不逐帧重拟合", "position": "全窗三维根位置距离的算术均值，mm", "orientation": "实际与参考wxyz四元数单位化，同一固定yaw左乘实际姿态；相对姿态最短旋转角的全窗算术均值，rad；保留roll/pitch误差，q与−q等价", "weighting_and_CI": "完整固定seed先动作内等权，再动作等权；每组独立沿用配对动作PCG64/20261013/10000次/linear quantile", "old_four_window_unchanged": true, "completion_unchanged": true, "completion_does_not_filter_errors": true, "new_physical_episodes": 0};
+  const ROOT_WINDOW_KEYS = ["metric_window", "recorded_frames", "reference_start_s", "reference_end_s", "physics_start_s", "physics_end_s"];
   const FULL_WINDOW = "full_replay_50hz_first_substep";
   const TOP_KEYS = ["schema_version", "publication_state", "fullwindow_source_sha256", "identity_map_sha256", "counts", "metrics", "results", "comparisons", "datasets", "phase", "primary_comparison_ids", "secondary_comparison_ids", "methods", "completion_contract", "report_downloads", "fairness", "stats"];
   const ROW_KEYS = ["id", "label", "phase", "dataset", "condition", "mode", "robot", "motion_id", "seed", "scope", "matched_seed_set", "metrics", "completion", "coverage", "pairing", "fullwindow", "provenance"];
@@ -21,12 +34,12 @@
   const COMPLETION_COUNT_KEYS = ["completed", "not_completed", "unknown"];
   const COMPLETION_SOURCE_SHA = "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f";
   const REPORTS = [
-    { label: "V6 技术报告正文", url: "https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb" },
-    { label: "V6 全程报告 PDF", url: "https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7" },
-    { label: "V6 全程报告 DOCX", url: "https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce" }
+    { label: "V7 技术报告正文", url: "https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb" },
+    { label: "V7 全程报告 PDF", url: "https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7" },
+    { label: "V7 全程报告 DOCX", url: "https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce" }
   ];
   const EMPTY = { schema_version: 4, results: [], comparisons: [], datasets: [], counts: {}, methods: {}, report_downloads: [], fairness: [], stats: {}, primary_comparison_ids: [], secondary_comparison_ids: [] };
-  const state = { data: EMPTY, scope: "aggregate", metric: METRICS[0].key, direction: "asc", page: 1, pageSize: 25, loaded: false };
+  const state = { data: EMPTY, scope: "aggregate", metric: DEFAULT_METRIC, direction: "asc", page: 1, pageSize: 25, loaded: false };
   const $ = id => document.getElementById(id);
   const escape = value => String(value == null ? "" : value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   const asArray = value => Array.isArray(value) ? value : [];
@@ -36,7 +49,9 @@
   const fmt = (value, digits = 2) => isNumber(value) ? value.toLocaleString("en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits }) : "n/a";
   const signed = (value, digits) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
   const valueOf = (row, key) => isNumber(row?.metrics?.[key]?.value) ? row.metrics[key].value : null;
-  const metricDefinition = key => METRICS.find(metric => metric.key === key) || METRICS[0];
+  const metricsFor = data => (data.schema_version === 5 ? METRIC_SPECS : BASE_METRICS).map(spec => ({ ...spec, label: data.metrics?.[spec.key]?.label || spec.label }));
+  const activeMetrics = () => metricsFor(state.data);
+  const metricDefinition = key => activeMetrics().find(metric => metric.key === key) || activeMetrics().find(metric => metric.key === DEFAULT_METRIC);
   const datasetLabel = id => state.data.datasets.find(item => item.id === id)?.label || id || "待核验";
   const groupKey = row => JSON.stringify([row.phase, row.dataset, row.condition, row.mode]);
   const pairedCaseKey = row => JSON.stringify([row.phase, row.dataset, row.condition, row.mode, row.motion_id, row.seed]);
@@ -102,15 +117,26 @@
     return [...groups.values()].filter(rows => rows.length === 2 && new Set(rows.map(row => row.robot)).size === 2);
   }
   function normalizeData(input) {
-    assertKeys(input, TOP_KEYS, "公开快照");
-    if (input.schema_version !== 4) throw new Error("公开数据版本不兼容，需要 schema_version: 4");
-    if (input.phase !== "A" || input.publication_state !== "fullwindow_semantic_completion_published" || input.fullwindow_source_sha256 !== COMPLETION_SOURCE_SHA || !sha256(input.identity_map_sha256)) throw new Error("公开结果身份或科学来源版本不兼容");
+    const rootEnabled = input?.schema_version === 5;
+    const metricSpecs = rootEnabled ? METRIC_SPECS : BASE_METRICS;
+    const metricKeys = metricSpecs.map(metric => metric.key);
+    assertExactKeys(input, rootEnabled ? [...TOP_KEYS, "root_extension"] : TOP_KEYS, "公开快照");
+    if (![4, 5].includes(input.schema_version)) throw new Error("公开数据版本不兼容，需要 schema_version: 4 或 5");
+    if (rootEnabled) {
+      assertExactKeys(input.root_extension, ROOT_CONTRACT_KEYS, "root 来源合同");
+      if (input.root_extension.status !== "verified" || !sha256(input.root_extension.source_sha256) || input.root_extension.source_sha256 !== ROOT_SOURCE_SHA || !Array.isArray(input.root_extension.metrics) || input.root_extension.metrics.length !== 2 || ROOT_METRICS.some(metric => !input.root_extension.metrics.includes(metric.key)) || input.root_extension.window_label !== ROOT_WINDOW_LABEL) throw new Error("root 来源、指标或独立采样窗未核验");
+    }
+    if (input.phase !== "A" || input.publication_state !== (rootEnabled ? "fullwindow_semantic_completion_root_metrics_published" : "fullwindow_semantic_completion_published") || input.fullwindow_source_sha256 !== COMPLETION_SOURCE_SHA || !sha256(input.identity_map_sha256)) throw new Error("公开结果身份或科学来源版本不兼容");
     ["results", "comparisons", "datasets", "primary_comparison_ids", "secondary_comparison_ids", "report_downloads", "fairness"].forEach(key => { if (!Array.isArray(input[key])) throw new Error(`缺少公开数组 ${key}`); });
     const counts = { episode_records: 180, paired_cases: 90, unique_motions: 45, comparison_groups: 5, aggregate_rows: 10, result_rows: 190 };
     if (Object.entries(counts).some(([key, count]) => input.counts?.[key] !== count) || input.results.length !== 190 || input.comparisons.length !== 5 || input.datasets.length !== 2) throw new Error("公开配对数量不一致");
-    if (Object.keys(input.metrics || {}).length !== 4 || METRICS.some(metric => input.metrics[metric.key]?.unit !== metric.unit || input.metrics[metric.key]?.higher_is_better !== false)) throw new Error("全程四项指标定义不一致");
+    if (Object.keys(input.metrics || {}).length !== metricSpecs.length || metricSpecs.some(metric => input.metrics[metric.key]?.unit !== metric.unit || input.metrics[metric.key]?.higher_is_better !== false)) throw new Error("全程指标白名单、单位或方向不一致");
     assertKeys(input.counts, Object.keys(counts), "公开数量");
-    assertExactKeys(input.methods, ["fullwindow", "units", "weighting", "bootstrap", "completion"], "方法");
+    assertExactKeys(input.methods, ["fullwindow", "units", "weighting", "bootstrap", "completion", ...(rootEnabled ? ["root"] : [])], "方法");
+    if (rootEnabled) {
+      assertExactKeys(input.methods.root, ROOT_METHOD_KEYS, "root 独立方法");
+      if (ROOT_METHOD_KEYS.some(key => input.methods.root[key] !== ROOT_METHOD_DEFINITION[key])) throw new Error("root 定义与采样窗未提供");
+    }
     assertExactKeys(input.methods.completion, COMPLETION_DEFINITION_KEYS, "任务完成定义");
     assertExactKeys(input.methods.completion.statuses, ["completed", "not_completed", "unknown"], "任务完成状态定义");
     assertExactKeys(input.methods.completion.reason_codes, ["terminal_tracking_complete", "persistent_fall_unable_to_resume", "unknown_evidence"], "任务完成依据定义");
@@ -119,35 +145,42 @@
     assertExactKeys(input.completion_contract, ["status", "rule_version", "source_sha256"], "完成判定版本");
     if (input.completion_contract.status !== "verified" || input.completion_contract.rule_version !== input.methods.completion.criterion_id || input.completion_contract.source_sha256 !== COMPLETION_SOURCE_SHA) throw new Error("完成判定来源或版本不匹配");
     input.datasets.forEach(dataset => assertKeys(dataset, ["id", "label", "expected_motions"], "数据集"));
-    METRICS.forEach(metric => assertKeys(input.metrics[metric.key], ["unit", "label", "higher_is_better"], "指标定义"));
+    metricSpecs.forEach(metric => {
+      assertExactKeys(input.metrics[metric.key], ["unit", "label", "higher_is_better"], "指标定义");
+      if (typeof input.metrics[metric.key].label !== "string" || !input.metrics[metric.key].label.trim()) throw new Error("指标名称未提供");
+    });
     input.report_downloads.forEach(report => assertKeys(report, ["label", "url", "access"], "报告链接"));
     input.fairness.forEach(item => assertKeys(item, ["item", "rp1", "g1", "status", "evidence", "phase", "condition", "mode"], "公平条件"));
     assertKeys(input.stats, ["report_status", "updated_utc", "notes", "limitations"], "公开说明");
     const ids = new Set(), cases = new Set(), runs = new Map();
     input.results.forEach(row => {
-      assertKeys(row, ROW_KEYS, "公开记录");
+      assertKeys(row, rootEnabled ? [...ROW_KEYS, "rootwindow"] : ROW_KEYS, "公开记录");
       if (typeof row.id !== "string" || ids.has(row.id) || row.phase !== "A" || !["rp1", "g1"].includes(row.robot) || !["aggregate", "per_motion"].includes(row.scope)) throw new Error("公开记录身份无效");
       ids.add(row.id); validateCompletion(row.completion, row.scope);
       if (row.scope === "per_motion" && row.completion.reason !== input.methods.completion.reason_codes[row.completion.reason_code]) throw new Error("判定依据文字须保持来源定义");
       assertKeys(row.provenance, PROVENANCE_KEYS, "记录来源身份");
       if (Object.keys(row.provenance).length !== PROVENANCE_KEYS.length || PROVENANCE_KEYS.some(key => row.provenance[key] !== null && !sha256(row.provenance[key]))) throw new Error("记录来源摘要须为 SHA256 或原缺失 null");
       if (!Array.isArray(row.matched_seed_set) || row.matched_seed_set.some(seed => !Number.isSafeInteger(seed) || seed < 0)) throw new Error("seed 集无效");
-      assertKeys(row.metrics, METRICS.map(metric => metric.key), "全程指标");
-      METRICS.forEach(metric => {
+      assertKeys(row.metrics, metricKeys, "全程指标");
+      metricSpecs.forEach(metric => {
         const cell = row.metrics[metric.key]; assertKeys(cell, ["value", "unit", "ci95", "n_motions"], "指标单元格");
         if (!isNumber(cell.value) || cell.unit !== metric.unit || !knownCount(cell.n_motions) || cell.n_motions < 1 || (row.scope === "aggregate" ? !validCI(cell.ci95) : cell.ci95 !== null || cell.n_motions !== 1)) throw new Error("全程指标数值或区间无效");
       });
       assertKeys(row.coverage, ["numerator", "denominator", "unit"], "覆盖");
-      if (!knownCount(row.coverage.numerator) || row.coverage.numerator !== row.coverage.denominator || row.coverage.numerator !== (row.scope === "per_motion" ? 1 : row.metrics[METRICS[0].key].n_motions) || row.coverage.unit !== (row.scope === "per_motion" ? "episodes" : "motions")) throw new Error("覆盖分母无效");
+      if (!knownCount(row.coverage.numerator) || row.coverage.numerator !== row.coverage.denominator || row.coverage.numerator !== (row.scope === "per_motion" ? 1 : row.metrics[DEFAULT_METRIC].n_motions) || row.coverage.unit !== (row.scope === "per_motion" ? "episodes" : "motions")) throw new Error("覆盖分母无效");
       assertKeys(row.pairing, ["comparison_id", "sample_set_sha256", "case_id"], "配对身份");
       if (!sha256(row.pairing.sample_set_sha256)) throw new Error("配对集合身份无效");
       if (row.scope === "per_motion") {
         assertKeys(row.fullwindow, WINDOW_KEYS, "全程评分窗口");
         if (!Number.isSafeInteger(row.seed) || row.seed < 0 || row.matched_seed_set.length !== 1 || row.matched_seed_set[0] !== row.seed || !row.motion_id || row.fullwindow.metric_window !== FULL_WINDOW || row.fullwindow.full_recorded_frames !== row.fullwindow.reference_common_frames - 1) throw new Error("全程回合窗口或 seed 身份无效");
         if (typeof row.fullwindow.run_id !== "string" || runs.has(row.fullwindow.run_id) || row.fullwindow.case_id !== row.pairing.case_id || !isNumber(row.fullwindow.reference_start_s) || !isNumber(row.fullwindow.reference_end_s) || row.fullwindow.reference_start_s > row.fullwindow.reference_end_s) throw new Error("评分窗口来源身份无效");
+        if (rootEnabled) {
+          assertExactKeys(row.rootwindow, ROOT_WINDOW_KEYS, "root 独立回合窗口");
+          if (row.rootwindow.metric_window !== ROOT_METRIC_WINDOW || !Number.isInteger(row.rootwindow.recorded_frames) || row.rootwindow.recorded_frames !== row.fullwindow.full_recorded_frames || ROOT_WINDOW_KEYS.filter(key => key.endsWith("_s")).some(key => !isNumber(row.rootwindow[key])) || row.rootwindow.reference_start_s !== row.fullwindow.reference_start_s || row.rootwindow.reference_end_s !== row.fullwindow.reference_end_s || row.rootwindow.reference_start_s > row.rootwindow.reference_end_s || row.rootwindow.physics_start_s > row.rootwindow.physics_end_s || row.rootwindow.physics_start_s !== row.rootwindow.reference_start_s || row.rootwindow.physics_end_s !== row.rootwindow.reference_end_s) throw new Error("root 独立回合采样窗无效");
+        }
         runs.set(row.fullwindow.run_id, row);
         const identity = JSON.stringify([pairedCaseKey(row), row.robot]); if (cases.has(identity)) throw new Error("重复机器人回合"); cases.add(identity);
-      } else if (row.seed !== null || row.fullwindow != null) throw new Error("聚合行接口无效");
+      } else if (row.seed !== null || row.fullwindow != null || row.rootwindow != null) throw new Error("聚合行接口无效");
     });
     const pairs = pairedMotionCases(input), motions = new Set(pairs.map(rows => JSON.stringify([rows[0].dataset, rows[0].motion_id])));
     if (pairs.length !== 90 || motions.size !== 45 || cases.size !== 180 || input.results.filter(row => row.scope === "aggregate").length !== 10) throw new Error("实际回合配对数量不一致");
@@ -164,7 +197,7 @@
         if (JSON.stringify(row.completion.summary) !== JSON.stringify(summary) || summary.expected_motion_denominator !== comparison.n_unique_motions || summary.expected_seeds_per_motion !== comparison.matched_seed_set.length) throw new Error("聚合完成率须保持比较组原汇总");
       });
       const episodes = input.results.filter(row => row.scope === "per_motion" && groupKey(row) === groupKey(comparison));
-      if (episodes.length !== comparison.episode_records || episodes.length !== comparison.paired_cases * 2 || new Set(episodes.map(row => row.motion_id)).size !== comparison.n_unique_motions || members.some(row => METRICS.some(metric => row.metrics[metric.key].n_motions !== comparison.n_unique_motions))) throw new Error("比较组分母不一致");
+      if (episodes.length !== comparison.episode_records || episodes.length !== comparison.paired_cases * 2 || new Set(episodes.map(row => row.motion_id)).size !== comparison.n_unique_motions || members.some(row => metricSpecs.some(metric => row.metrics[metric.key].n_motions !== comparison.n_unique_motions))) throw new Error("比较组分母不一致");
       const selectedRuns = new Set();
       comparison.sample_set.forEach(sample => {
         assertKeys(sample, ["scientific_selected_case_id", "motion_id", "seed", "participants"], "配对样本");
@@ -176,14 +209,14 @@
         });
       });
       if (selectedRuns.size !== episodes.length) throw new Error("配对样本存在缺失回合");
-      assertKeys(comparison.paired_motion_values, METRICS.map(metric => metric.key), "动作级统计");
-      METRICS.forEach(metric => {
+      assertKeys(comparison.paired_motion_values, metricKeys, "动作级统计");
+      metricSpecs.forEach(metric => {
         const values = comparison.paired_motion_values[metric.key];
         if (!Array.isArray(values) || values.length !== comparison.n_unique_motions) throw new Error("动作级统计分母无效");
         values.forEach(value => { assertKeys(value, ["motion_id", "rp1", "g1", "delta_rp1_minus_g1", "seeds", "repeats_per_robot"], "动作级数值"); if (![value.rp1, value.g1, value.delta_rp1_minus_g1].every(isNumber) || !Array.isArray(value.seeds)) throw new Error("动作级数值无效"); });
       });
-      assertKeys(comparison.paired_deltas, METRICS.map(metric => metric.key), "全程配对差");
-      METRICS.forEach(metric => { const delta = comparison.paired_deltas[metric.key]; assertKeys(delta, ["value", "ci95", "unit", "n_motions"], "配对差值"); if (!isNumber(delta.value) || !validCI(delta.ci95) || delta.unit !== metric.unit || delta.n_motions !== comparison.n_unique_motions) throw new Error("全程配对区间无效"); });
+      assertKeys(comparison.paired_deltas, metricKeys, "全程配对差");
+      metricSpecs.forEach(metric => { const delta = comparison.paired_deltas[metric.key]; assertKeys(delta, ["value", "ci95", "unit", "n_motions"], "配对差值"); if (!isNumber(delta.value) || !validCI(delta.ci95) || delta.unit !== metric.unit || delta.n_motions !== comparison.n_unique_motions) throw new Error("全程配对区间无效"); });
     });
     if (aggregateIds.size !== 10 || input.primary_comparison_ids.length !== 2 || input.secondary_comparison_ids.length !== 3 || [...input.primary_comparison_ids, ...input.secondary_comparison_ids].some(id => !comparisonIds.has(id))) throw new Error("主组与敏感性组身份不一致");
     const output = JSON.parse(JSON.stringify(input));
@@ -237,7 +270,7 @@
     $("overview").innerHTML = state.loaded ? `<div class="scope-item"><strong>${counts.unique_motions}</strong><p><b>共同动作</b>两套主数据集分别报告</p></div><div class="scope-item"><strong>${counts.paired_cases}</strong><p><b>条件与 seed 配对</b>${counts.episode_records} 个机器人回合</p></div><div class="scope-item"><strong>${counts.comparison_groups}</strong><p><b>独立评测组</b>重复 seed 不增加动作数</p></div>` : emptyHTML("公开结果待载入", "当前未读取通过版本核验的共同配对数据。");
   }
   function fullFindingCards(group) {
-    return METRICS.map(metric => {
+    return activeMetrics().map(metric => {
       const delta = group.comparison.paired_deltas[metric.key];
       const interpretation = delta.ci95[1] < 0 ? "RP1 全程误差较低，配对区间低于零。" : delta.ci95[0] > 0 ? "G1 全程误差较低，配对区间高于零。" : "配对区间跨零，当前样本未支持明确方向。";
       return `<article class="finding-card"><h3>${metric.label}</h3><p class="metric-caption">越低越好 · ${delta.n_motions} 个配对动作（N=${delta.n_motions}）</p><div class="finding-values">${["rp1", "g1"].map(robot => `<div><span><i class="dot ${robot}"></i>${robot.toUpperCase()}</span><strong>${fmt(valueOf(group.rows.find(row => row.robot === robot), metric.key), metric.digits)}<small>${metric.unit}</small></strong></div>`).join("")}</div><p class="delta-label">全程配对差值 RP1 − G1</p>${pairedIntervalSVG(delta, metric.digits, metric.unit)}<p class="delta-ci">${signed(delta.value, metric.digits)} ${metric.unit} · 95% CI [${fmt(delta.ci95[0], metric.digits)}, ${fmt(delta.ci95[1], metric.digits)}]</p><p class="finding-interpretation">${interpretation}</p></article>`;
@@ -252,7 +285,7 @@
   function renderPairedSummary() {
     const group = fullGroup("lafan40");
     if (!group) { $("hero-chart").innerHTML = emptyHTML("全程配对摘要暂未载入", "请检查公开快照及载入状态。"); $("paired-summary").innerHTML = emptyHTML("全程指标暂未载入", "没有生成示例成绩。"); return; }
-    const key = METRICS[0].key, delta = group.comparison.paired_deltas[key], maximum = Math.max(...group.rows.map(row => valueOf(row, key))) || 1;
+    const key = DEFAULT_METRIC, delta = group.comparison.paired_deltas[key], maximum = Math.max(...group.rows.map(row => valueOf(row, key))) || 1;
     $("hero-chart").innerHTML = `<p class="eyebrow">FULL WINDOW / 40 PAIRED MOTIONS</p><h2>全程身体位置误差</h2><p class="chart-context">全部评分序列 · 越低越好</p>${["rp1", "g1"].map(robot => { const value = valueOf(group.rows.find(row => row.robot === robot), key); return `<div class="bar-row"><div class="bar-label"><span><i class="dot ${robot}"></i>${robot.toUpperCase()}</span><strong>${fmt(value, 2)}<small>mm</small></strong></div><div class="bar-track" aria-hidden="true"><div class="bar-fill ${robot}" style="width:${value / maximum * 100}%"></div></div></div>`; }).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value, 2)}<small> mm</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0], 2)}, ${fmt(delta.ci95[1], 2)}] mm · ${delta.n_motions} 个配对动作（N=${delta.n_motions}）</p>${pairedIntervalSVG(delta, 2, "mm", true)}<p class="hero-conclusion">${delta.ci95[1] < 0 ? "RP1 全程身体位置误差较低。" : "结论以全程配对区间为准。"}</p></div>`;
     $("paired-summary").innerHTML = fullFindingCards(group);
   }
@@ -273,19 +306,22 @@
   function rowEvidence(row) {
     if (!row.fullwindow) return "";
     const full = row.fullwindow;
-    return `<details><summary>评分窗口</summary><div class="record-evidence"><p>${full.full_recorded_frames} 个 50 Hz 首物理子步评分样本；共同参考帧 ${full.reference_common_frames}。</p><p>参考时间 ${fmt(full.reference_start_s, 3)}–${fmt(full.reference_end_s, 3)} s。</p><p>${row.provenance.execution_protocol_sha256 === null ? "此记录原未记录执行版本。" : "原执行版本身份已保留。"}</p></div></details>`;
+    const rootWindow = row.rootwindow;
+    const rootText = rootWindow ? `<p>root 窗口合同；${rootWindow.recorded_frames} 个名义有效参考帧。</p><p>名义参考窗界 ${fmt(rootWindow.reference_start_s, 3)}–${fmt(rootWindow.reference_end_s, 3)} s；同刻物理对应窗界 ${fmt(rootWindow.physics_start_s, 3)}–${fmt(rootWindow.physics_end_s, 3)} s（合同投影）。</p>` : "";
+    return `<details><summary>评分窗口</summary><div class="record-evidence"><p>${full.full_recorded_frames} 个 50 Hz 首物理子步评分样本；共同参考帧 ${full.reference_common_frames}。</p><p>参考时间 ${fmt(full.reference_start_s, 3)}–${fmt(full.reference_end_s, 3)} s。</p>${rootText}<p>${row.provenance.execution_protocol_sha256 === null ? "此记录原未记录执行版本。" : "原执行版本身份已保留。"}</p></div></details>`;
   }
   function metricHTML(row, metric) {
     const cell = row.metrics[metric.key];
     return `<td class="metric ${state.metric === metric.key ? "highlight" : ""}"><span class="metric-value">${fmt(cell.value, metric.digits)}</span><span class="metric-detail">${row.scope === "aggregate" ? `${cell.n_motions} 个配对动作` : "1 个机器人回合"}</span>${validCI(cell.ci95) ? `<span class="metric-detail">95% CI [${fmt(cell.ci95[0], metric.digits)}, ${fmt(cell.ci95[1], metric.digits)}]</span>` : `<span class="metric-detail">单回合不计算动作区间</span>`}</td>`;
   }
   function renderHeaders() {
-    $("results-head").innerHTML = `<tr><th scope="col">组内名次<span class="unit">按所选全程误差</span></th><th scope="col">策略 / 动作<span class="unit">机器人 · 数据集 · 条件</span></th><th scope="col">覆盖<span class="unit">独立动作与配对回合</span></th><th scope="col">Motion 跟踪任务完成<span class="unit">聚合完成率 / 逐动作判定</span></th>${METRICS.map(metric => `<th scope="col" aria-sort="${state.metric === metric.key ? state.direction === "asc" ? "ascending" : "descending" : "none"}"><button type="button" data-sort="${metric.key}">${metric.label} ${state.metric === metric.key ? state.direction === "asc" ? "↑" : "↓" : "↕"}<span class="unit">${metric.unit} · 越低越好 ↓</span></button></th>`).join("")}</tr>`;
+    $("results-table").setAttribute("data-metric-count", String(activeMetrics().length));
+    $("results-head").innerHTML = `<tr><th scope="col">组内名次<span class="unit">按所选全程误差</span></th><th scope="col">策略 / 动作<span class="unit">机器人 · 数据集 · 条件</span></th><th scope="col">覆盖<span class="unit">独立动作与配对回合</span></th><th scope="col">Motion 跟踪任务完成<span class="unit">聚合完成率 / 逐动作判定</span></th>${activeMetrics().map(metric => `<th scope="col" aria-sort="${state.metric === metric.key ? state.direction === "asc" ? "ascending" : "descending" : "none"}"><button type="button" data-sort="${metric.key}">${metric.label} ${state.metric === metric.key ? state.direction === "asc" ? "↑" : "↓" : "↕"}<span class="unit">${metric.unit} · 越低越好 ↓</span></button></th>`).join("")}</tr>`;
   }
   function renderRows(rows, ranks) {
     const pages = Math.max(1, Math.ceil(rows.length / state.pageSize)); state.page = Math.min(state.page, pages);
     const current = rows.slice((state.page - 1) * state.pageSize, state.page * state.pageSize);
-    $("results-body").innerHTML = current.length ? current.map(row => { const rank = ranks.get(row.id); return `<tr><td class="rank-cell"><span class="rank-number">${rank?.rank || "—"}</span><span class="rank-note">${escape(rank?.reason || "配对待核验")}</span></td><td class="row-heading"><div class="record-label">${escape(row.label)}</div>${row.scope === "per_motion" ? `<span class="record-meta">${escape(row.motion_id)}</span>` : ""}<span class="record-meta">${escape(datasetLabel(row.dataset))}</span><span class="record-meta">${escape(row.condition)} · ${escape(row.mode)}</span><span class="record-meta">${row.scope === "aggregate" ? "完整匹配 seed 集" : "seed"} ${escape(row.matched_seed_set.join(", "))}</span><div class="record-badges"><span class="badge">${row.robot.toUpperCase()}</span><span class="badge">发布学生策略</span></div>${rowEvidence(row)}</td><td><span class="coverage-primary">${coverageText(row.coverage)}</span><span class="coverage-secondary">${row.scope === "aggregate" ? "同动作 seed 内平均，动作等权" : "已纳入共同配对"}</span></td><td class="completion-cell">${completionHTML(row)}</td>${METRICS.map(metric => metricHTML(row, metric)).join("")}</tr>`; }).join("") : `<tr><td class="empty-cell" colspan="8"><strong>${state.loaded ? "当前筛选没有匹配记录" : "公开结果待载入"}</strong><p>${state.loaded ? "可切换结果粒度或重置筛选。" : "等待通过版本核验的 data.json。"}</p></td></tr>`;
+    $("results-body").innerHTML = current.length ? current.map(row => { const rank = ranks.get(row.id); return `<tr><td class="rank-cell"><span class="rank-number">${rank?.rank || "—"}</span><span class="rank-note">${escape(rank?.reason || "配对待核验")}</span></td><td class="row-heading"><div class="record-label">${escape(row.label)}</div>${row.scope === "per_motion" ? `<span class="record-meta">${escape(row.motion_id)}</span>` : ""}<span class="record-meta">${escape(datasetLabel(row.dataset))}</span><span class="record-meta">${escape(row.condition)} · ${escape(row.mode)}</span><span class="record-meta">${row.scope === "aggregate" ? "完整匹配 seed 集" : "seed"} ${escape(row.matched_seed_set.join(", "))}</span><div class="record-badges"><span class="badge">${row.robot.toUpperCase()}</span><span class="badge">发布学生策略</span></div>${rowEvidence(row)}</td><td><span class="coverage-primary">${coverageText(row.coverage)}</span><span class="coverage-secondary">${row.scope === "aggregate" ? "同动作 seed 内平均，动作等权" : "已纳入共同配对"}</span></td><td class="completion-cell">${completionHTML(row)}</td>${activeMetrics().map(metric => metricHTML(row, metric)).join("")}</tr>`; }).join("") : `<tr><td class="empty-cell" colspan="${4 + activeMetrics().length}"><strong>${state.loaded ? "当前筛选没有匹配记录" : "公开结果待载入"}</strong><p>${state.loaded ? "可切换结果粒度或重置筛选。" : "等待通过版本核验的 data.json。"}</p></td></tr>`;
     $("pagination").innerHTML = pages > 1 ? `<span>第 ${state.page} / ${pages} 页 · 每页 ${state.pageSize} 条</span><button type="button" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""}>上一页</button><button type="button" data-page="${state.page + 1}" ${state.page === pages ? "disabled" : ""}>下一页</button>` : "";
     $("result-count").textContent = `${rows.length} 条${state.scope === "aggregate" ? "聚合" : "逐动作"}记录 · ${rows.filter(row => ranks.get(row.id)?.rank != null).length} 条有组内名次${state.scope === "aggregate" ? " · seed 筛选选择包含该 seed 的完整组，均值不重算" : ""}`;
     $("download-csv").disabled = !rows.length; $("download-json").disabled = !state.loaded;
@@ -307,11 +343,15 @@
     $("fairness-body").innerHTML = rows.length ? rows.map(row => `<tr><td>${escape(row.item)}</td><td>${escape(row.rp1)}</td><td>${escape(row.g1)}</td><td>${escape(row.status === "matched" ? "已核验一致" : row.status === "disclosed_difference" ? "已披露差异" : "待核验")}</td><td>${escape(row.evidence)}</td></tr>`).join("") : `<tr><td colspan="5">评测条件按上方方法说明；各模型控制参数见逐关节表。</td></tr>`;
   }
   function renderEvidence() {
-    $("statistics").innerHTML = `<dt>评分窗口</dt><dd>全部 50 Hz 首物理子步样本，motion_t=1..Ncommon−1，包含失跟后的评分记录。初始化帧与 200 Hz 末端 hold 不增加评分样本。</dd><dt>误差聚合</dt><dd>完整相同 seed 先在动作内平均，再对动作等权；每组独立报告。</dd><dt>误差置信区间</dt><dd>10,000 次配对动作百分位 bootstrap，PCG64 seed 20261013，95% 线性分位数。四项误差的均值与配对差值区间直接读取冻结统计。</dd><dt>完成判据</dt><dd>${escape(state.data.methods.completion?.definition || "任务完成定义暂未载入。")}</dd><dt>完成比例</dt><dd>单 seed 主组按完成动作数 / 动作数报告；三个敏感性组按同动作 seed 判定平均，再对动作等权，报告完成比例与完成动作当量。未知标签保留原动作分母，点估计为 null，另示逻辑上下界；完成率不提供统计置信区间。</dd><dt>判定证据</dt><dd>判定来自参考几何、完整轨迹及有效末端；接触力未直接记录。两条失败时间轴表示最终持续未恢复区间的几何观察起点，参考动作中的翻滚和起身已区别处理。</dd><dt>条件覆盖</dt><dd>Common40 主组：40 动作 / 40 对 / 80 回合；Extreme5：5 / 5 / 10。敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。共 45 个不同动作、90 对、180 回合。</dd>`;
+    $("statistics").innerHTML = `<dt>身体／手腕窗口</dt><dd>全部 50 Hz 首物理子步样本，motion_t=1..Ncommon−1，包含失跟后的评分记录。初始化帧与 200 Hz 末端 hold 不增加评分样本。</dd><dt>误差聚合</dt><dd>完整相同 seed 先在动作内平均，再对动作等权；每组独立报告。</dd><dt>误差置信区间</dt><dd>10,000 次配对动作百分位 bootstrap，PCG64 seed 20261013，95% 线性分位数。已载入全程指标的均值与配对差值区间直接读取冻结统计。</dd><dt>完成判据</dt><dd>${escape(state.data.methods.completion?.definition || "任务完成定义暂未载入。")}</dd><dt>完成比例</dt><dd>单 seed 主组按完成动作数 / 动作数报告；三个敏感性组按同动作 seed 判定平均，再对动作等权，报告完成比例与完成动作当量。未知标签保留原动作分母，点估计为 null，另示逻辑上下界；完成率不提供统计置信区间。</dd><dt>判定证据</dt><dd>判定来自参考几何、完整轨迹及有效末端；接触力未直接记录。两条失败时间轴表示最终持续未恢复区间的几何观察起点，参考动作中的翻滚和起身已区别处理。</dd><dt>条件覆盖</dt><dd>Common40 主组：40 动作 / 40 对 / 80 回合；Extreme5：5 / 5 / 10。敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。共 45 个不同动作、90 对、180 回合。</dd>`;
+    if (state.data.schema_version === 5) {
+      const root = state.data.methods.root;
+      $("statistics").innerHTML += `<dt>root 独立窗口</dt><dd>${escape(root.sampling)}</dd><dt>root 定义</dt><dd>${escape(root.alignment)} ${escape(root.position)} ${escape(root.orientation)}</dd><dt>root 窗界说明</dt><dd>逐回合窗界为名义参考时刻的合同投影；公开包未提供逐样本 raw 时间戳数组。</dd>`;
+    }
     const reports = state.data.report_downloads.length ? state.data.report_downloads : REPORTS;
-    const reportStatus = state.data.stats.report_status || "V6 已同步：正文、PDF 和 DOCX 已更新至原地址。";
+    const reportStatus = state.data.stats.report_status || "V7 已同步：正文、PDF 和 DOCX 已更新至原地址。";
     $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>${escape(reportStatus)} 资料需飞书组织权限。</p>`;
-    const notes = ["区间描述固定发布策略与当前仿真动作。训练数据、重定向和控制参数不同；完整历史训练日志、GPU 训练小时及真机验证待补充。", "Common14 使用 ankle-roll 语义映射。四项全程描述性区间未作多重比较校正。", "公开重定向的动作名与时长已对齐，原始 BVH 输入哈希血缘仍有缺口。", "30 个确定性重复回合逐值一致，独立动作数仍为 5。"];
+    const notes = ["区间描述固定发布策略与当前仿真动作。训练数据、重定向和控制参数不同；完整历史训练日志、GPU 训练小时及真机验证待补充。", "Common14 使用 ankle-roll 语义映射。全程描述性区间未作多重比较校正。", "公开重定向的动作名与时长已对齐，原始 BVH 输入哈希血缘仍有缺口。", "30 个确定性重复回合逐值一致，独立动作数仍为 5。"];
     $("limitations").innerHTML = notes.map(note => `<li>${escape(note)}</li>`).join("");
   }
   function validPublicMedia(input) {
@@ -366,9 +406,30 @@
       $("hardware-table").innerHTML = `<table class="hardware-table"><thead><tr><th>解剖关节 / 轴与控制明细</th><th>RP1 模型限位 / ROM</th><th>G1 模型限位 / ROM</th><th>RP1 配置力矩上限</th><th>G1 配置力矩上限</th></tr></thead><tbody>${data.joint_rows.map(row=>`<tr><td><details><summary>${escape(row.joint_name)}</summary><div class="joint-details">${describe(row,"rp1")}${describe(row,"g1")}</div></details></td><td>${summaryCell(row.rp1)}</td><td>${summaryCell(row.g1)}</td><td>${fmt(row.rp1.policy_control?.effort_limit_config_Nm,1)} N·m</td><td>${fmt(row.g1.policy_control?.effort_limit_config_Nm,1)} N·m</td></tr>`).join("")}</tbody></table>`;
     } catch (error) { $("hardware-overview").innerHTML=emptyHTML("模型参数暂时无法载入",error.message); }
   }
+  function renderMetricScope() {
+    const rootEnabled = state.data.schema_version === 5;
+    const group = fullGroup("lafan40");
+    if (rootEnabled && group) {
+      const deltas = group.comparison.paired_deltas;
+      const fiveSupportRP1 = [...BASE_METRICS.map(metric => metric.key), "full_root_ori_rad"].every(key => deltas[key].ci95[1] < 0);
+      const rootPositionCrossesZero = deltas.full_root_pos_mm.ci95[0] <= 0 && deltas.full_root_pos_mm.ci95[1] >= 0;
+      $("report-subtitle").textContent = fiveSupportRP1 && rootPositionCrossesZero ? "Common40 的身体、手腕四项及根姿态误差支持 RP1 较低；根位置误差区间跨零。Extreme5 独立报告。" : "Common40 六项全程误差分别依据配对区间解释；Extreme5 独立报告。";
+    } else {
+      $("report-subtitle").textContent = "共同 40 动作中，RP1 的四项全程身体与手腕误差较低。空翻与转体组独立报告。";
+    }
+    const sensitivity = state.data.comparisons.find(item => item.condition === "explicit_sensitivity");
+    const rootDelta = rootEnabled && sensitivity?.paired_deltas.full_root_pos_mm;
+    $("root-sensitivity-note").textContent = rootDelta ? `显式执行敏感性组（N=${rootDelta.n_motions}）的根位置配对差值 RP1 − G1 的 95% CI 为 [${fmt(rootDelta.ci95[0], 2)}, ${fmt(rootDelta.ci95[1], 2)}] mm。${rootDelta.ci95[0] > 0 ? "支持 G1 误差较低。" : rootDelta.ci95[1] < 0 ? "支持 RP1 误差较低。" : "区间跨零。"}各条件组独立解释。` : "";
+    $("root-sensitivity-note").hidden = !rootDelta;
+    $("results-title").textContent = rootEnabled ? "全程身体、手腕与根节点跟踪误差。" : "全程身体与手腕跟踪误差。";
+    $("metric-result-note").textContent = `${rootEnabled ? "六项" : "四项"}均值与全程配对区间直接来自冻结统计，各条件组分别报告。`;
+    $("metric-method-description").textContent = rootEnabled ? "身体与手腕四项保留全部 50 Hz 首物理子步评分窗；根节点位置与姿态从原 200 Hz 轨迹选取与参考同刻的状态，完整有效窗包含失控后记录，排除参考末后的 hold。中途摔倒后自行恢复并跟踪到末尾算完成。" : "四项误差取全部 50 Hz 首物理子步评分记录。任务完成判定检查是否因摔倒无法继续后续跟踪；中途摔倒后自行恢复并跟踪到末尾算完成。参考动作中的翻滚和起身须一并核验。";
+    $("metric-data-description").textContent = `全程${rootEnabled ? "六项" : "四项"}与任务完成判定共用既有 180 回合、90 个条件／seed 配对和 45 个不同动作 ID，分为 5 个独立条件组。详细报告需原有访问权限。`;
+    $("metric-download-description").textContent = `${rootEnabled ? "六项" : "四项"}全程误差、任务完成状态与五组统计；共 180 个机器人回合。`;
+  }
   function render() {
     const rows = filteredRows().sort(compareRows), ranks = ranksForMetric(state.data, state.metric);
-    renderHeaders(); renderRows(rows, ranks); renderOverview(); renderPairedSummary(); renderExtension(); renderCompletion(); renderMotionChart(); renderFairness(); renderEvidence();
+    renderMetricScope(); renderHeaders(); renderRows(rows, ranks); renderOverview(); renderPairedSummary(); renderExtension(); renderCompletion(); renderMotionChart(); renderFairness(); renderEvidence();
     $("view-aggregate").setAttribute("aria-pressed", String(state.scope === "aggregate")); $("view-per-motion").setAttribute("aria-pressed", String(state.scope === "per_motion"));
     $("sort-direction").textContent = state.direction === "asc" ? "升序 ↑" : "降序 ↓"; $("sort-metric").value = state.metric;
   }
@@ -377,13 +438,15 @@
     options("dataset", state.data.datasets.map(dataset => [dataset.id, dataset.label]), "全部数据集");
     ["robot", "condition", "mode"].forEach(key => { const values = [...new Set(state.data.results.map(row => row[key]))].sort(); options(key, values.map(value => [value, key === "robot" ? value.toUpperCase() : value]), { robot: "全部机器人", condition: "全部条件", mode: "全部模式" }[key]); });
     options("seed", [...new Set(state.data.results.flatMap(row => row.matched_seed_set))].sort((a, b) => a - b).map(seed => [seed, seed]), "全部 seed");
-    $("sort-metric").innerHTML = METRICS.map(metric => `<option value="${metric.key}">${metric.label} (${metric.unit})</option>`).join("");
+    $("sort-metric").innerHTML = activeMetrics().map(metric => `<option value="${metric.key}">${metric.label} (${metric.unit})</option>`).join("");
   }
   function csvCell(value) { let cell = value == null ? "" : String(value); if (/^[\s]*[=+\-@]/.test(cell) && !isNumber(value)) cell = "'" + cell; return '"' + cell.replace(/"/g, '""') + '"'; }
-  function csvExport(rows) {
+  function csvExport(rows, data = state.data) {
+    const metrics = metricsFor(data);
+    const rootFields = data.schema_version === 5 ? ["root_window_metadata_json"] : [];
     const base = ["id", "label", "phase", "dataset", "condition", "mode", "robot", "motion_id", "seed", "scope"];
-    const header = [...base, "matched_seed_set_json", "coverage_json", "comparison_id", "sample_set_sha256", "case_id", ...PROVENANCE_KEYS, ...WINDOW_KEYS.map(key => "window_" + key), ...COMPLETION_KEYS.map(key => "completion_" + key), ...METRICS.flatMap(metric => [metric.key, metric.key + "_unit", metric.key + "_ci95_json", metric.key + "_n_motions"])];
-    return "\uFEFF" + [header, ...rows.map(row => [...base.map(key => row[key]), JSON.stringify(row.matched_seed_set), JSON.stringify(row.coverage), row.pairing.comparison_id, row.pairing.sample_set_sha256, row.pairing.case_id, ...PROVENANCE_KEYS.map(key => row.provenance[key]), ...WINDOW_KEYS.map(key => row.fullwindow?.[key]), ...COMPLETION_KEYS.map(key => ["ci95", "summary"].includes(key) ? JSON.stringify(row.completion[key]) : row.completion[key]), ...METRICS.flatMap(metric => { const cell = row.metrics[metric.key]; return [cell.value, cell.unit, cell.ci95 === null ? null : JSON.stringify(cell.ci95), cell.n_motions]; })])].map(line => line.map(csvCell).join(",")).join("\r\n") + "\r\n";
+    const header = [...base, "matched_seed_set_json", "coverage_json", "comparison_id", "sample_set_sha256", "case_id", ...PROVENANCE_KEYS, ...WINDOW_KEYS.map(key => "window_" + key), ...COMPLETION_KEYS.map(key => "completion_" + key), ...rootFields, ...metrics.flatMap(metric => [metric.key, metric.key + "_unit", metric.key + "_ci95_json", metric.key + "_n_motions"])];
+    return "\uFEFF" + [header, ...rows.map(row => [...base.map(key => row[key]), JSON.stringify(row.matched_seed_set), JSON.stringify(row.coverage), row.pairing.comparison_id, row.pairing.sample_set_sha256, row.pairing.case_id, ...PROVENANCE_KEYS.map(key => row.provenance[key]), ...WINDOW_KEYS.map(key => row.fullwindow?.[key]), ...COMPLETION_KEYS.map(key => ["ci95", "summary"].includes(key) ? JSON.stringify(row.completion[key]) : row.completion[key]), ...rootFields.map(() => JSON.stringify(row.rootwindow || null)), ...metrics.flatMap(metric => { const cell = row.metrics[metric.key]; return [cell.value, cell.unit, cell.ci95 === null ? null : JSON.stringify(cell.ci95), cell.n_motions]; })])].map(line => line.map(csvCell).join(",")).join("\r\n") + "\r\n";
   }
   function publicExport(data) { return normalizeData(data); }
   function download(contents, name, type) {
@@ -398,20 +461,20 @@
     $("sort-direction").addEventListener("click", () => { state.direction = state.direction === "asc" ? "desc" : "asc"; state.page = 1; render(); });
     $("results-head").addEventListener("click", event => { const button = event.target.closest("button[data-sort]"); if (!button) return; state.direction = state.metric === button.dataset.sort && state.direction === "asc" ? "desc" : "asc"; state.metric = button.dataset.sort; state.page = 1; render(); });
     $("pagination").addEventListener("click", event => { const button = event.target.closest("button[data-page]"); if (!button || button.disabled) return; state.page = Number(button.dataset.page); render(); $("leaderboard").scrollIntoView({ block: "start" }); });
-    $("download-json").addEventListener("click", () => download(JSON.stringify(publicExport(state.data), null, 2) + "\n", "rp1-g1-public-v4.json", "application/json;charset=utf-8"));
+    $("download-json").addEventListener("click", () => download(JSON.stringify(publicExport(state.data), null, 2) + "\n", `rp1-g1-public-v${state.data.schema_version}.json`, "application/json;charset=utf-8"));
     $("download-csv").addEventListener("click", () => download(csvExport(filteredRows().sort(compareRows)), `rp1-g1-${state.scope}.csv`, "text/csv;charset=utf-8"));
   }
   async function init() {
     try {
       const response = await fetch("./data.json", { cache: "no-store", credentials: "same-origin" }); if (!response.ok) throw new Error(`公开快照读取失败（HTTP ${response.status}）`);
       state.data = normalizeData(await response.json()); state.loaded = true;
-      $("load-notice").textContent = "已载入四项全程误差：45 个共同动作、90 个配对、180 个既有机器人回合、5 个独立比较组。Motion 跟踪任务完成率及逐动作判定已核验。";
+      $("load-notice").textContent = `已载入${activeMetrics().length === 6 ? "六项" : "四项"}全程误差：45 个共同动作、90 个配对、180 个既有机器人回合、5 个独立比较组。Motion 跟踪任务完成率及逐动作判定已核验。`;
       $("report-status").textContent = "全程误差已载入 · 任务完成率已核验";
     } catch (error) { state.data = EMPTY; $("load-notice").textContent = `${error.message}。公开结果保持待载入。`; $("load-notice").classList.add("error"); }
     const updated = state.data.stats.updated_utc;
     $("updated-at").textContent = updated ? new Date(updated).toLocaleDateString("zh-CN", { timeZone: "UTC", year: "numeric", month: "long", day: "numeric" }) : "2026年10月14日";
     populateFilters(); bindEvents(); render(); await Promise.all([renderPublicMedia(), renderHardware()]);
   }
-  window.LeaderboardUtils = { normalizeData, publicExport, ranksForMetric, csvExport, valueOf, safeURL, linkHTML, coverageText, pairedCaseKey, pairedMotionCases, validPublicMedia, pairedIntervalSVG, metrics: METRICS, fullMetrics: METRICS, completionHTML, validateCompletion, validateCompletionSummary };
+  window.LeaderboardUtils = { normalizeData, publicExport, ranksForMetric, csvExport, valueOf, safeURL, linkHTML, coverageText, pairedCaseKey, pairedMotionCases, validPublicMedia, pairedIntervalSVG, get metrics() { return activeMetrics(); }, get fullMetrics() { return activeMetrics(); }, metricsFor, rootMetrics: ROOT_METRICS, completionHTML, validateCompletion, validateCompletionSummary };
   init();
 })();

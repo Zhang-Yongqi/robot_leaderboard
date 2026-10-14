@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit reviewed full-window v3 pending or v4 semantic completion contracts.
+"""Audit reviewed full-window v3/v4 and six-error schema-5 contracts.
 
 --preview permits internal pending/null completion inspection. It never enables
 publication. The full four-error contract may be published independently; new
@@ -18,19 +18,24 @@ from pathlib import Path, PurePosixPath
 import re
 import sys
 from urllib.parse import unquote, urlsplit
+from source_contract import (protect_baseline, framework_status, reviewed_root_adapter, prepare_schema5,
+    ROOT_METRICS, ROOT_SOURCE_SHA, ROOT_CSV_SHA, ROOT_WINDOW, ROOT_WINDOW_LABEL,
+    ROOT_PUBLIC_STATE, ROOT_PREVIEW_STATE, ROOT_METHOD_FIELDS, ROOTWINDOW_FIELDS, rootwindow_from_baseline)
 from update_snapshot import (COMPLETION_CONTRACT, COMPARISON_COLUMNS, COUNTS,
     EPISODE_COLUMNS, FULL4, FULL_SOURCE_SHA, IDENTITY_SHA, PENDING, PREVIEW_STATE, PUBLIC_STATE,
     PROVENANCE_FIELDS, PROVENANCE_SHA, WINDOW, csv_bytes, episode_key, group_key,
-    project, provenance_digest, read_json, seed, sha, csv_columns, completion_digest, read_completion,
+    project, provenance_digest, read_json, parse_json, seed, sha, csv_columns, completion_digest, read_completion,
     COMPLETION_SOURCE_SHA, COMPLETION_CSV_SHA, CRITERION_ID, COMPLETION_PUBLIC_STATE,
     COMPLETION_PREVIEW_STATE, COMPLETION_ROW_FIELDS, COMPLETION_DEFINITION_FIELDS,
     COMPLETION_GROUP_FIELDS, COMPLETION_SUMMARY_FIELDS, COMPLETION_MOTION_FIELDS)
 COMPLETION_PROJECTION_SHA = '1f60098e6bf38fece043474847d55936ff4aad0a6d576a7b728cfe6a42d9639b'
 
-PUBLISH_FILES = {'.gitignore', '.nojekyll', 'README.md', 'DATA_PROVENANCE.md',
+PUBLISH_FILES_V4 = {'.gitignore', '.nojekyll', 'README.md', 'DATA_PROVENANCE.md',
     'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json', 'media.json',
     'favicon.svg', 'hardware.json', 'hardware.csv', 'episodes.csv', 'comparisons.csv',
     'scripts/update_snapshot.py', 'scripts/verify_public.py'}
+PUBLISH_FILES = PUBLISH_FILES_V4 | {'scripts/source_contract.py'}
+PUBLISH_FILES_V5 = PUBLISH_FILES
 DATA_FILES = {'data.json', 'episodes.csv', 'comparisons.csv'}
 EXCLUDED_DIRS = {'.git', '.private', '.agents', '.aws', '.codex', 'qa', '__pycache__'}
 HARDWARE_SHA = {'hardware.json': '5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af',
@@ -115,15 +120,22 @@ class Links(HTMLParser):
 
 
 class Audit:
-    def __init__(self, root, preview=False, source=None, identities=None, completion=None):
+    def __init__(self, root, preview=False, source=None, identities=None, completion=None,
+                 source_root=None, root_adapter=None):
         self.root = Path(root).resolve()
         self.preview = preview
         self.source = source
         self.identities = identities
         self.completion_source = completion
+        self.root_source, self.root_adapter = source_root, root_adapter
         self.data = read_json(self.root / 'data.json')
+        self.has_root = self.data.get('schema_version') == 5
+        self.metrics = FULL4 + ROOT_METRICS if self.has_root else FULL4
+        self.publish_files = PUBLISH_FILES if self.has_root else PUBLISH_FILES_V4
+        self.root_source_verified = False
         self.checked, self.errors = [], []
         self.value_checks = {'episode_values': 0, 'aggregate_scalars': 0, 'paired_delta_scalars': 0}
+        self.root_value_checks = {'episode_values': 0, 'aggregate_scalars': 0, 'paired_delta_scalars': 0}
         self.provenance_checks = {'hash_values': 0, 'null_values': 0, 'source_fields': 0}
         self.completion_checks = {'episode_labels': 0, 'aggregate_summaries': 0, 'motion_summaries': 0}
         self.episodes, self.cases, self.aliases, self.by_id = {}, {}, {}, {}
@@ -137,11 +149,12 @@ class Audit:
 
     def schema(self):
         d = self.data
-        exact_keys(d, TOP_KEYS, 'data')
-        require(type(d['schema_version']) is int and d['schema_version'] in (3, 4) and
+        exact_keys(d, TOP_KEYS | ({'root_extension'} if self.has_root else set()), 'data')
+        require(type(d['schema_version']) is int and d['schema_version'] in (3, 4, 5) and
                 d['phase'] == 'A' and d['counts'] == COUNTS, 'Reviewed schema/physical scope differs')
-        semantic = d['schema_version'] == 4
-        expected_state = ((COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE) if semantic else
+        semantic = d['schema_version'] in (4, 5)
+        expected_state = ((ROOT_PREVIEW_STATE if self.preview else ROOT_PUBLIC_STATE) if self.has_root else
+                          (COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE) if semantic else
                           (PREVIEW_STATE if self.preview else PUBLIC_STATE))
         expected_contract = ({'status': 'verified', 'rule_version': CRITERION_ID,
                               'source_sha256': COMPLETION_SOURCE_SHA} if semantic else COMPLETION_CONTRACT)
@@ -150,13 +163,22 @@ class Audit:
         require(d['fullwindow_source_sha256'] == (COMPLETION_SOURCE_SHA if semantic else FULL_SOURCE_SHA) and
                 d['identity_map_sha256'] == IDENTITY_SHA,
                 'Reviewed projection source identities differ')
-        require(set(d['metrics']) == set(FULL4), 'Exactly four full-window metrics are reviewed')
+        require(set(d['metrics']) == set(self.metrics), 'Reviewed full-window metric set differs')
         for name, definition in d['metrics'].items():
             exact_keys(definition, {'unit', 'label', 'higher_is_better'}, 'metric definition')
             require(definition['unit'] == ('mm' if name.endswith('_mm') else 'rad')
                     and definition['higher_is_better'] is False, 'Full-window units/direction differ')
         exact_keys(d['methods'], {'fullwindow', 'units', 'weighting', 'bootstrap'} |
-                   ({'completion'} if semantic else set()), 'methods')
+                   ({'completion'} if semantic else set()) | ({'root'} if self.has_root else set()), 'methods')
+        if self.has_root:
+            require(d['root_extension'] == {'status': 'verified', 'source_sha256': ROOT_SOURCE_SHA,
+                'metrics': list(ROOT_METRICS), 'window_label': ROOT_WINDOW_LABEL}, 'Root source extension differs')
+            exact_keys(d['methods']['root'], ROOT_METHOD_FIELDS, 'Root full-window method')
+            method = d['methods']['root']
+            require(method['window'] == ROOT_WINDOW and method['old_four_window_unchanged'] is True and
+                method['completion_unchanged'] is True and method['completion_does_not_filter_errors'] is True and
+                type(method['new_physical_episodes']) is int and method['new_physical_episodes'] == 0,
+                'Independent root window or no-new-experiment preservation differs')
         require(d['methods']['bootstrap'] == BOOTSTRAP, 'Paired motion bootstrap protocol differs')
         require(len(d['datasets']) == 2 and {(x['id'], x['expected_motions']) for x in d['datasets']} ==
                 {('lafan40', 40), ('extreme5', 5)}, 'Two datasets must remain separate')
@@ -176,7 +198,8 @@ class Audit:
         episodes, cases, aliases = {}, {}, {}
         for row in rows:
             is_episode = row['scope'] == 'per_motion'
-            exact_keys(row, ROW_KEYS | ({'fullwindow'} if is_episode else set()), 'result')
+            exact_keys(row, ROW_KEYS | ({'fullwindow'} if is_episode else set()) |
+                       ({'rootwindow'} if self.has_root and is_episode else set()), 'result')
             require(row['phase'] == 'A' and row['robot'] in {'rp1', 'g1'} and group_key(row) in COHORTS,
                     'Unreviewed result identity')
             if self.data['schema_version'] == 3:
@@ -189,21 +212,22 @@ class Audit:
             exact_keys(row['coverage'], {'numerator', 'denominator', 'unit'}, 'coverage')
             exact_keys(row['pairing'], {'comparison_id', 'sample_set_sha256', 'case_id'}, 'pairing')
             require(HASH.fullmatch(row['pairing']['sample_set_sha256']), 'Malformed paired sample identity')
-            require(set(row['metrics']) == set(FULL4), 'Result contains an unreviewed metric')
+            require(set(row['metrics']) == set(self.metrics), 'Result contains an unreviewed metric')
             n = 1 if is_episode else COHORTS[group_key(row)][1]
             require(row['coverage'] == {'numerator': n, 'denominator': n,
                     'unit': 'episodes' if is_episode else 'motions'}, 'Coverage unit/denominator differs')
             for name, cell in row['metrics'].items():
+                counters = self.root_value_checks if name in ROOT_METRICS else self.value_checks
                 exact_keys(cell, {'value', 'unit', 'ci95', 'n_motions'}, 'metric cell')
                 number(cell['value'], 'full-window value')
                 require(cell['value'] >= 0 and cell['unit'] == self.data['metrics'][name]['unit']
                         and cell['n_motions'] == n, 'Full-window value/unit/motion denominator differs')
                 if is_episode:
                     require(cell['ci95'] is None, 'Individual episode cannot invent a group interval')
-                    self.value_checks['episode_values'] += 1
+                    counters['episode_values'] += 1
                 else:
                     bounds(cell['ci95'], 'aggregate interval')
-                    self.value_checks['aggregate_scalars'] += 3
+                    counters['aggregate_scalars'] += 3
             if is_episode:
                 require(type(row['seed']) is int and row['seed'] >= 0 and row['matched_seed_set'] == [row['seed']],
                         'Episode seed must remain a strict integer')
@@ -225,6 +249,11 @@ class Audit:
                 require(type(frames) is int and frames > 2 and fw['full_recorded_frames'] == frames - 1 and
                         fw['reference_start_s'] == .02 and math.isclose(fw['reference_end_s'],
                         (frames - 1) / 50, rel_tol=0, abs_tol=1e-10), 'Complete 50Hz first-substep window differs')
+                if self.has_root:
+                    rw = row['rootwindow']
+                    exact_keys(rw, ROOTWINDOW_FIELDS, 'Independent root window metadata')
+                    require(type(rw['recorded_frames']) is int and rw == rootwindow_from_baseline(row),
+                        'Root nominal semantic window differs from valid 1..Ncommon-1 reference contract')
             else:
                 require(row['seed'] is None and row['motion_id'] is None and row['pairing']['case_id'] is None
                         and row['matched_seed_set'] == COHORTS[group_key(row)][2], 'Aggregate seed pool differs')
@@ -286,17 +315,18 @@ class Audit:
                             row['fullwindow']['case_id'] == sample['scientific_selected_case_id'] and
                             row['pairing']['comparison_id'] == c['id'] and
                             row['pairing']['sample_set_sha256'] == c['sample_set_sha256'], 'Sample/run binding differs')
-            require(set(c['paired_deltas']) == set(c['paired_motion_values']) == set(FULL4),
-                    'Comparison must contain only four reviewed errors')
+            require(set(c['paired_deltas']) == set(c['paired_motion_values']) == set(self.metrics),
+                    'Comparison reviewed error set differs')
             robot_means = {r['robot']: r for r in members}
-            for metric in FULL4:
+            for metric in self.metrics:
                 delta = c['paired_deltas'][metric]
                 exact_keys(delta, {'value', 'ci95', 'unit', 'n_motions'}, 'paired delta')
                 number(delta['value'], 'paired value')
                 bounds(delta['ci95'], 'paired interval')
                 require(delta['unit'] == self.data['metrics'][metric]['unit'] and delta['n_motions'] == motions,
                         'Paired interval units/denominator differ')
-                self.value_checks['paired_delta_scalars'] += 3
+                counters = self.root_value_checks if metric in ROOT_METRICS else self.value_checks
+                counters['paired_delta_scalars'] += 3
                 values = c['paired_motion_values'][metric]
                 require(len(values) == len({x['motion_id'] for x in values}) == motions,
                         'Repeated seeds cannot increase motion denominator')
@@ -329,7 +359,7 @@ class Audit:
         for name, scope, n in [('episodes.csv', 'per_motion', 180), ('comparisons.csv', 'aggregate', 10)]:
             columns = csv_columns(self.data, scope)
             raw = (self.root / name).read_bytes()
-            require(raw == csv_bytes(self.data, scope), 'CSV is not the exact canonical v3 export: ' + name)
+            require(raw == csv_bytes(self.data, scope), 'CSV is not the exact canonical reviewed export: ' + name)
             with (self.root / name).open(encoding='utf-8', newline='') as handle:
                 reader = csv.DictReader(handle, strict=True)
                 rows = list(reader)
@@ -483,7 +513,7 @@ class Audit:
                 'Both reviewed private inputs are required for the independent source comparison')
         raw, identity_raw = Path(self.source).read_bytes(), Path(self.identities).read_bytes()
         require(sha(raw) == FULL_SOURCE_SHA and sha(identity_raw) == IDENTITY_SHA, 'Unreviewed source identity')
-        identities = read_json(self.identities)
+        identities = parse_json(identity_raw)
         original_by_id = {row['id']: row for row in identities['results']}
         for row in self.data['results']:
             original = original_by_id[row['id']].get('provenance', {})
@@ -493,8 +523,21 @@ class Audit:
                 self.provenance_checks['source_fields'] += 1
         require(self.provenance_checks['source_fields'] == 760, 'Incomplete scientific provenance source comparison')
         completion = read_completion(self.completion_source) if self.completion_source else None
-        require((self.data['schema_version'] == 4) == (completion is not None), 'Completion source/schema differs')
-        expected = project(read_json(self.source), identities, publication=not self.preview, completion=completion)
+        require((self.data['schema_version'] in (4, 5)) == (completion is not None), 'Completion source/schema differs')
+        expected = project(parse_json(raw), identities, publication=not self.preview, completion=completion)
+        if self.data['schema_version'] == 4:
+            protect_baseline(expected, self.data)
+        if self.has_root:
+            require(self.root_source is not None, 'Schema 5 requires the reviewed root JSON/CSV source comparison')
+            adapter = reviewed_root_adapter(self.root_adapter)
+            protect_baseline(expected, self.data, root_metric_units=adapter.root_metric_units,
+                top_fields=adapter.public_top_fields, row_fields=adapter.public_row_fields,
+                method_fields=adapter.public_method_fields)
+            expected = prepare_schema5(expected, self.root_source, self.root_adapter, not self.preview)
+            require(self.data['root_extension'] == expected['root_extension'] and
+                    self.data['methods']['root'] == expected['methods']['root'], 'Root source method/identity differs')
+        else:
+            require(self.root_source is None, 'Root source requires a schema-5 public projection')
         for name in ('schema_version', 'publication_state', 'fullwindow_source_sha256', 'identity_map_sha256',
                      'counts', 'metrics', 'results', 'comparisons', 'phase', 'primary_comparison_ids',
                      'secondary_comparison_ids', 'completion_contract'):
@@ -505,6 +548,7 @@ class Audit:
             require(read_completion(self.completion_source) == completion, 'Completion input changed during audit')
         require(Path(self.source).read_bytes() == raw and Path(self.identities).read_bytes() == identity_raw,
                 'Private input changed during audit')
+        self.root_source_verified = self.has_root
 
     def privacy(self):
         for value in walk(self.data):
@@ -518,10 +562,10 @@ class Audit:
                     except ValueError:
                         continue
                     require(not (address.is_private or address.is_loopback), 'Internal IP in public projection')
-        for name in (DATA_FILES if self.preview else PUBLISH_FILES):
+        for name in (DATA_FILES if self.preview else self.publish_files):
             content = (self.root / name).read_text(encoding='utf-8')
             require(not SECRET.search(content), 'Possible credential in public file')
-            if name not in {'scripts/verify_public.py', 'scripts/update_snapshot.py', 'README.md'}:
+            if name not in {'scripts/verify_public.py', 'scripts/update_snapshot.py', 'scripts/source_contract.py', 'README.md'}:
                 require(not LOCAL_PATH.search(content), 'Absolute path in public file')
                 scanned = content.replace('.hostname', '') if name == 'app.js' else content
                 require(not INFRA.search(scanned), 'Private infrastructure in public file')
@@ -538,11 +582,11 @@ class Audit:
         require(not path.startswith('/') and '..' not in PurePosixPath(path).parts and '%' not in path,
                 'Unsafe local link')
         target = self.root / (path or 'index.html')
-        require(target.is_file() and target.relative_to(self.root).as_posix() in PUBLISH_FILES,
-                'Link target is outside the v3 publication allowlist')
+        require(target.is_file() and target.relative_to(self.root).as_posix() in self.publish_files,
+                'Link target is outside the publication allowlist')
 
     def bundle(self):
-        for name in (DATA_FILES if self.preview else PUBLISH_FILES):
+        for name in (DATA_FILES if self.preview else self.publish_files):
             path = self.root / name
             require(path.is_file() and not path.is_symlink(), 'Missing or symlink public file: ' + name)
         for path in self.root.rglob('*'):
@@ -550,23 +594,26 @@ class Audit:
             if any(x in EXCLUDED_DIRS for x in rel.parts):
                 continue
             if path.is_file():
-                require(rel.as_posix() in PUBLISH_FILES, 'File is outside the v3 publication allowlist')
+                require(rel.as_posix() in self.publish_files, 'File is outside the publication allowlist')
         if self.preview:
             return
         manifest = read_json(self.root / 'RELEASE_MANIFEST.json')
         require(manifest['schema_version'] == self.data['schema_version'] and manifest['public_data_sha256'] ==
                 sha((self.root / 'data.json').read_bytes()) and manifest['counts'] == COUNTS,
-                'Manifest v3 data identity/counts differ')
+                'Manifest data identity/counts differ')
         require(manifest['publication_state'] == self.data['publication_state'],
                 'Manifest publication state differs')
         require(manifest['fullwindow_source_sha256'] == self.data['fullwindow_source_sha256'] and
                 manifest['identity_map_sha256'] == IDENTITY_SHA and
                 manifest['completion_contract'] == self.data['completion_contract'], 'Manifest source closure differs')
-        if self.data['schema_version'] == 4:
+        if self.data['schema_version'] in (4, 5):
             require(manifest['completion_source_csv_sha256'] == COMPLETION_CSV_SHA,
                     'Manifest public completion CSV source identity differs')
+        if self.has_root:
+            require(manifest['root_extension'] == self.data['root_extension'] and
+                    manifest['root_source_csv_sha256'] == ROOT_CSV_SHA, 'Manifest root JSON/CSV source closure differs')
         files = manifest['files']
-        require(set(files) == PUBLISH_FILES - {'RELEASE_MANIFEST.json'}, 'Manifest file allowlist differs')
+        require(set(files) == self.publish_files - {'RELEASE_MANIFEST.json'}, 'Manifest file allowlist differs')
         for name, record in files.items():
             raw = (self.root / name).read_bytes()
             require(record['sha256'] == sha(raw) and record['bytes'] == len(raw), 'Manifest file identity differs')
@@ -599,6 +646,13 @@ class Audit:
                 self.link(value)
 
     def publication_gate(self):
+        if not self.preview and self.data['schema_version'] in (4, 5):
+            require(self.source is not None and self.identities is not None and self.completion_source is not None and
+                    'frozen_source_720_values_and_original_ID_mapping' in self.checked,
+                    'Private framework publication eligibility requires the complete frozen source comparison')
+        if self.has_root:
+            require(self.root_source is not None and self.root_source_verified,
+                    'Schema 5 requires the complete reviewed six-error JSON/CSV source comparison')
         if self.data['schema_version'] == 3:
             require(self.data['publication_state'] == (PREVIEW_STATE if self.preview else PUBLIC_STATE)
                     and self.data['completion_contract'] == COMPLETION_CONTRACT,
@@ -606,8 +660,9 @@ class Audit:
             for obj in self.data['results'] + self.data['comparisons']:
                 pending(obj['completion'])
         else:
-            require(self.data['schema_version'] == 4 and self.data['publication_state'] ==
-                    (COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE) and
+            expected_state = ((ROOT_PREVIEW_STATE if self.preview else ROOT_PUBLIC_STATE) if self.has_root else
+                             (COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE))
+            require(self.data['schema_version'] in (4, 5) and self.data['publication_state'] == expected_state and
                     self.data['completion_contract'] == {'status': 'verified', 'rule_version': CRITERION_ID,
                     'source_sha256': COMPLETION_SOURCE_SHA}, 'Only the frozen semantic completion contract is eligible')
 
@@ -618,14 +673,15 @@ class Audit:
                          ('canonical_csv_exports', self.exports), ('publication_file_allowlist', self.bundle),
                          ('privacy', self.privacy)]:
             self.check(name, fn)
-        if self.source is not None or self.identities is not None or self.completion_source is not None:
+        if any(arg is not None for arg in (self.source, self.identities, self.completion_source, self.root_source)):
             self.check('frozen_source_720_values_and_original_ID_mapping', self.sources)
         self.check('reviewed_completion_publication_gate', self.publication_gate)
         return {'ok': not self.errors, 'publication_allowed': not self.errors and not self.preview,
-            'completion_ready': not self.errors and self.data.get('schema_version') == 4, 'preview_only': self.preview,
+            'completion_ready': not self.errors and self.data.get('schema_version') in (4, 5), 'preview_only': self.preview,
             'schema_version': self.data.get('schema_version'), 'counts': self.data.get('counts'),
             'completion_status': self.data.get('completion_contract', {}).get('status'),
-            'value_checks': self.value_checks, 'provenance_checks': self.provenance_checks,
+            'value_checks': self.value_checks, 'root_value_checks': self.root_value_checks,
+            'root_source_compared': self.root_source_verified, 'provenance_checks': self.provenance_checks,
             'completion_checks': self.completion_checks,
             'source_compared': 'frozen_source_720_values_and_original_ID_mapping' in self.checked,
             'completion_source_compared': self.completion_source is not None and
@@ -642,12 +698,20 @@ def main():
     parser.add_argument('--source-fullwindow', type=Path)
     parser.add_argument('--identity-map', type=Path)
     parser.add_argument('--source-completion', type=Path)
+    parser.add_argument('--source-root', type=Path,
+                        help='reviewed six-error public JSON with its SHA-bound sibling public episode CSV')
+    parser.add_argument('--root-adapter', help='code-registered reviewed root adapter ID')
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
     try:
-        report = Audit(args.repo_root, args.preview, args.source_fullwindow, args.identity_map, args.source_completion).run()
+        require(not args.root_adapter or args.source_root, '--root-adapter requires --source-root')
+        if args.source_root:
+            reviewed_root_adapter(args.root_adapter)
+        report = Audit(args.repo_root, args.preview, args.source_fullwindow, args.identity_map, args.source_completion,
+                       args.source_root, args.root_adapter).run()
     except (ValueError, TypeError, KeyError, IndexError, OSError) as error:
         report = {'ok': False, 'publication_allowed': False, 'errors': [str(error)]}
+    report['framework'] = framework_status()
     text = json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + '\n'
     if args.report:
         args.report.write_text(text, encoding='utf-8')

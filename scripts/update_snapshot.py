@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build reviewed full-window staging with pending or frozen semantic completion.
+"""Build reviewed full-window staging with semantic completion and optional ROOT2.
 
 Inputs are read only. Only explicit identity and full-window fields are selected.
 Each result retains only four frozen provenance hashes; absent hashes are null.
@@ -17,6 +17,8 @@ import math
 from pathlib import Path
 import re
 import tempfile
+from source_contract import (prepare_schema5, reviewed_root_adapter, framework_status,
+    ROOT_METRICS, ROOTWINDOW_FIELDS, ROOT_WINDOW)
 
 FULL_SOURCE_SHA = '119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd'
 IDENTITY_SHA = 'd7c902304aba5ca0588275b4b366f7bb799ee6e5a243c1bc8866ad059fb12aa4'
@@ -73,6 +75,12 @@ EPISODE_COLUMNS_V4 = EPISODE_COLUMNS[:-6] + COMPLETION_COLUMNS_V4
 COMPARISON_COLUMNS_V4 = COMPARISON_COLUMNS[:-6] + COMPLETION_COLUMNS_V4 + [
     'completion_possible_fraction_low', 'completion_possible_fraction_high',
     'completion_possible_pct_low', 'completion_possible_pct_high', 'completion_summary_json']
+ROOTWINDOW_COLUMNS = ['root_' + field for field in ROOTWINDOW_FIELDS]
+EPISODE_COLUMNS_V5 = EPISODE_COLUMNS[:-6] + list(ROOT_METRICS) + ROOTWINDOW_COLUMNS + COMPLETION_COLUMNS_V4
+COMPARISON_COLUMNS_V5 = COMPARISON_COLUMNS[:-6] + [field for metric in ROOT_METRICS for field in
+    (metric, metric + '_ci95_low', metric + '_ci95_high')] + ['root_metric_window'] + COMPLETION_COLUMNS_V4 + [
+    'completion_possible_fraction_low', 'completion_possible_fraction_high',
+    'completion_possible_pct_low', 'completion_possible_pct_high', 'completion_summary_json']
 
 
 def require(ok, message):
@@ -84,7 +92,8 @@ def sha(raw):
     return hashlib.sha256(raw).hexdigest()
 
 
-def read_json(path):
+def parse_json(raw):
+    """Parse the bytes whose identity was checked, rejecting ambiguous JSON."""
     def unique(pairs):
         obj = {}
         for key, value in pairs:
@@ -93,8 +102,12 @@ def read_json(path):
         return obj
     def invalid(value):
         raise ValueError('Non-finite JSON number')
-    return json.loads(Path(path).read_text(encoding='utf-8'), object_pairs_hook=unique,
+    return json.loads(raw.decode('utf-8'), object_pairs_hook=unique,
                       parse_constant=invalid)
+
+
+def read_json(path):
+    return parse_json(Path(path).read_bytes())
 
 
 def seed(value):
@@ -232,10 +245,10 @@ def project(full, identities, publication=False, completion=None):
                     'weighting': full['methods']['weighting'], 'bootstrap': deepcopy(full['methods']['bootstrap'])},
         'completion_contract': deepcopy(COMPLETION_CONTRACT),
         'report_downloads': [
-            {'label': 'V6 技术报告正文', 'url': 'https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb', 'access': '需飞书组织权限'},
-            {'label': 'V6 全程报告 PDF', 'url': 'https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7', 'access': '需飞书组织权限'},
-            {'label': 'V6 全程报告 DOCX', 'url': 'https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce', 'access': '需飞书组织权限'}],
-        'fairness': [], 'stats': {'report_status': 'V6 已同步：RP1与G1全程跟踪精度与动作完成率，正文、PDF 和 DOCX 已更新至原地址。'}}
+            {'label': 'V7 技术报告正文', 'url': 'https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb', 'access': '需飞书组织权限'},
+            {'label': 'V7 全程报告 PDF', 'url': 'https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7', 'access': '需飞书组织权限'},
+            {'label': 'V7 全程报告 DOCX', 'url': 'https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce', 'access': '需飞书组织权限'}],
+        'fairness': [], 'stats': {'report_status': 'V7 已同步：RP1与G1全程跟踪精度与动作完成率，正文、PDF 和 DOCX 已更新至原地址。'}}
     if completion is not None:
         apply_completion(data, full, completion, publication)
     return data
@@ -251,7 +264,7 @@ def read_completion(path):
     raw, csv_raw = path.read_bytes(), csv_path.read_bytes()
     require(sha(raw) == COMPLETION_SOURCE_SHA and sha(csv_raw) == COMPLETION_CSV_SHA,
             'Unreviewed public completion JSON/CSV identity')
-    obj = read_json(path)
+    obj = parse_json(raw)
     handle = io.StringIO(newline='')
     writer = csv.DictWriter(handle, fieldnames=COMPLETION_EPISODE_FIELDS, lineterminator='\r\n')
     writer.writeheader()
@@ -375,6 +388,8 @@ def completion_columns(completion):
 
 
 def csv_columns(data, scope):
+    if data['schema_version'] == 5:
+        return EPISODE_COLUMNS_V5 if scope == 'per_motion' else COMPARISON_COLUMNS_V5
     if data['schema_version'] == 4:
         return EPISODE_COLUMNS_V4 if scope == 'per_motion' else COMPARISON_COLUMNS_V4
     return EPISODE_COLUMNS if scope == 'per_motion' else COMPARISON_COLUMNS
@@ -382,6 +397,7 @@ def csv_columns(data, scope):
 
 def csv_records(data, scope):
     comparisons = {c['id']: c for c in data['comparisons']}
+    metrics = FULL4 + ROOT_METRICS if data['schema_version'] == 5 else FULL4
     records = []
     for row in data['results']:
         if row['scope'] != scope:
@@ -394,16 +410,20 @@ def csv_records(data, scope):
             record.update(motion_id=row['motion_id'], seed=row['seed'])
             record.update({k: row['fullwindow'][k] for k in ('run_id', 'case_id', 'full_recorded_frames',
                           'reference_common_frames', 'reference_start_s', 'reference_end_s')})
-            record.update({name: row['metrics'][name]['value'] for name in FULL4})
+            record.update({name: row['metrics'][name]['value'] for name in metrics})
+            if data['schema_version'] == 5:
+                record.update({'root_' + key: row['rootwindow'][key] for key in ROOTWINDOW_FIELDS})
         else:
             comparison = comparisons[row['pairing']['comparison_id']]
             record.update(matched_seed_set='|'.join(map(str, row['matched_seed_set'])),
                           n_unique_motions=comparison['n_unique_motions'], paired_cases=comparison['paired_cases'])
-            for name in FULL4:
+            for name in metrics:
                 cell = row['metrics'][name]
                 record.update({name: cell['value'], name + '_ci95_low': cell['ci95'][0],
                                name + '_ci95_high': cell['ci95'][1]})
-        if data['schema_version'] == 4:
+            if data['schema_version'] == 5:
+                record['root_metric_window'] = ROOT_WINDOW
+        if data['schema_version'] in (4, 5):
             obj = row['completion']
             record.update(completion_status=obj['status'], motion_completed=(json.dumps(obj['completed'])
                 if obj['completed'] is not None else None),
@@ -443,7 +463,14 @@ def main():
                         help='stage the publication state for the selected reviewed contract')
     parser.add_argument('--source-completion', type=Path,
                         help='optional frozen public completion JSON with its sibling public episode CSV')
+    parser.add_argument('--source-root', type=Path,
+                        help='reviewed six-error public JSON with its SHA-bound sibling public episode CSV')
+    parser.add_argument('--root-adapter', help='code-registered reviewed root adapter ID; no arbitrary module loading')
     args = parser.parse_args()
+    require(not args.root_adapter or args.source_root, '--root-adapter requires --source-root')
+    if args.source_root:
+        require(args.source_completion is not None, '--source-root requires the frozen schema-4 completion input')
+        reviewed_root_adapter(args.root_adapter)
     raw = args.fullwindow_source.read_bytes()
     identity_raw = args.identity_map.read_bytes()
     require(sha(raw) == FULL_SOURCE_SHA and sha(identity_raw) == IDENTITY_SHA, 'Unreviewed input identity')
@@ -451,7 +478,9 @@ def main():
     require('.private' in dest.parts or dest.is_relative_to(Path(tempfile.gettempdir()).resolve()),
             'Generate only in a private staging or temporary directory')
     completion = read_completion(args.source_completion) if args.source_completion else None
-    data = project(read_json(args.fullwindow_source), read_json(args.identity_map), args.publication, completion)
+    data = project(parse_json(raw), parse_json(identity_raw), args.publication, completion)
+    if args.source_root:
+        data = prepare_schema5(data, args.source_root, args.root_adapter, args.publication)
     outputs = {'data.json': (json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode(),
                'episodes.csv': csv_bytes(data, 'per_motion'), 'comparisons.csv': csv_bytes(data, 'aggregate')}
     require(args.fullwindow_source.read_bytes() == raw and args.identity_map.read_bytes() == identity_raw,
@@ -462,8 +491,9 @@ def main():
     for name, content in outputs.items():
         (dest / name).write_bytes(content)
     print(json.dumps({'schema_version': data['schema_version'], 'publication_contract_eligible': args.publication,
-        'completion_ready': data['schema_version'] == 4, 'publication_state': data['publication_state'], 'counts': COUNTS,
-        'files': {name: {'bytes': len(content), 'sha256': sha(content)} for name, content in outputs.items()}},
+        'completion_ready': data['schema_version'] in (4, 5), 'publication_state': data['publication_state'], 'counts': COUNTS,
+        'files': {name: {'bytes': len(content), 'sha256': sha(content)} for name, content in outputs.items()},
+        'framework': framework_status()},
         ensure_ascii=False))
 
 

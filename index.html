@@ -3,12 +3,12 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="RP1 与 G1 的配对仿真对比：Common40 与 Extreme5 全程身体、手腕误差，Motion 跟踪任务完成率、置信区间与模型参数。">
+  <meta name="description" content="RP1 与 G1 的配对仿真对比：Common40 与 Extreme5 全程身体、手腕与根节点六项误差，Motion 跟踪任务完成率、误差置信区间与模型参数。">
   <meta name="theme-color" content="#101c30">
   <title>RP1 × G1 · 机器人动作对比研究</title>
-  <link rel="stylesheet" href="./style.css?v=ab5c202d1735">
+  <link rel="stylesheet" href="./style.css?v=c7496974c4cd">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <script src="./app.js?v=b56abf71dac6" defer></script>
+  <script src="./app.js?v=5bf0c3ed013f" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#results">跳到研究结果</a>
@@ -26,7 +26,8 @@
     <section id="results" class="section wrap" aria-labelledby="results-title">
       <div class="section-heading"><div><p class="eyebrow">01 / PAIRED RESULTS</p><h2 id="results-title">全程身体与手腕跟踪误差。</h2><p>40 个配对 LAFAN 动作（N=40），使用各自发布学生策略。误差覆盖完整评分序列，包含失跟后的记录；位置为 mm，姿态为 rad。</p></div><span class="scope-label">40 / 40 共同动作</span></div>
       <div id="paired-summary" class="finding-grid full-finding-grid"></div>
-      <p class="result-note">四项均值与全程配对区间直接来自冻结统计，各条件组分别报告。</p>
+      <p id="metric-result-note" class="result-note">四项均值与全程配对区间直接来自冻结统计，各条件组分别报告。</p>
+      <p id="root-sensitivity-note" class="result-note" hidden></p>
       <div id="extreme-results" class="extension-results" aria-live="polite"></div>
       <section class="completion-section" aria-labelledby="completion-title"><div class="section-heading compact"><div><h3 id="completion-title">Motion 跟踪任务完成率</h3><p>跟踪时因摔倒而无法继续后续动作记为未完成，未发生则完成；中途摔倒后自行恢复并跟踪到末尾算完成。完成比例与逐动作判定来自完整轨迹核验。</p></div><span class="scope-label">按固定动作分母</span></div><div id="completion-summary" class="completion-grid" aria-live="polite"></div><div id="completion-secondary"></div></section>
     </section>
@@ -43,13 +44,13 @@
     </section>
     <section id="method" class="section wrap" aria-labelledby="method-title">
       <div class="section-heading"><div><p class="eyebrow">04 / READING THE EVIDENCE</p><h2 id="method-title">共同协议，逐项比较。</h2><p>采用两套发布学生策略，保留各自的训练数据、重定向与控制参数。</p></div></div>
-      <div class="method-grid"><article><span class="method-number">01</span><h3>同一组动作</h3><p>共同 40 段 LAFAN 动作，CPU ONNX 推理，策略 50 Hz、物理 200 Hz。使用原生位置控制，连续记录完整回合，不做额外干预或重置。</p></article><article><span class="method-number">02</span><h3>全程误差与任务完成</h3><p>四项误差取全部 50 Hz 首物理子步评分记录。任务完成判定检查是否因摔倒无法继续后续跟踪；中途摔倒后自行恢复并跟踪到末尾算完成。参考动作中的翻滚和起身须一并核验。</p></article><article><span class="method-number">03</span><h3>以动作为统计单位</h3><p>Common40 主组为 40 个配对动作、80 回合；Extreme5 为 5 个配对动作、10 回合，独立统计。全程误差采用配对 bootstrap 10,000 次；完成比例按动作等权。三个敏感性组各为 5 个动作，重复 seed 不增加动作分母。</p></article></div>
+      <div class="method-grid"><article><span class="method-number">01</span><h3>同一组动作</h3><p>共同 40 段 LAFAN 动作，CPU ONNX 推理，策略 50 Hz、物理 200 Hz。使用原生位置控制，连续记录完整回合，不做额外干预或重置。</p></article><article><span class="method-number">02</span><h3>全程误差与任务完成</h3><p id="metric-method-description">四项误差取全部 50 Hz 首物理子步评分记录。任务完成判定检查是否因摔倒无法继续后续跟踪；中途摔倒后自行恢复并跟踪到末尾算完成。参考动作中的翻滚和起身须一并核验。</p></article><article><span class="method-number">03</span><h3>以动作为统计单位</h3><p>Common40 主组为 40 个配对动作、80 回合；Extreme5 为 5 个配对动作、10 回合，独立统计。全程误差采用配对 bootstrap 10,000 次；完成比例按动作等权。三个敏感性组各为 5 个动作，重复 seed 不增加动作分母。</p></article></div>
       <div class="boundary"><h3>策略与评测范围</h3><p>RP1 为原版 28 DoF ROA 学生策略，G1 为 29 DoF v1.1；RP1 发布包使用原版名称。发布方声明两者的训练规模为 8 卡 × 每卡 8192 环境。</p><p>各动作、条件与 seed 按真实身份配对，失败与删失保留原因和分母。主基线初速度为零，实际未启用观测／动作噪声、随机延迟、push 或域随机化。初态扰动组仅扰动根部 vx、vy 和局部 yaw 角速度，标准差分别为 0.05 m/s、0.05 m/s、0.05 rad/s。同配置重训尚未开始。</p></div>
       <details class="disclosure"><summary>完整方法与评测条件<span>统计口径 · 适用范围 · 公平条件</span></summary><div class="detail-content"><div class="evidence-grid"><div><h3>聚合与置信区间</h3><dl id="statistics"></dl></div><div><h3>适用范围与局限</h3><ul id="limitations" class="notes"></ul></div></div><div id="fairness"><h3>公平条件与已披露差异</h3><p class="subtle">此表响应下方数据区的策略、条件与执行模式筛选。</p><div class="table-scroll" tabindex="0" role="region" aria-label="公平条件表"><table class="fairness-table"><thead><tr><th>条件</th><th>RP1</th><th>G1</th><th>核验状态</th><th>依据</th></tr></thead><tbody id="fairness-body"></tbody></table></div></div></div></details>
     </section>
     <section id="data" class="section data-section wrap" aria-labelledby="data-title">
-      <div class="section-heading"><div><p class="eyebrow">05 / OPEN RESEARCH</p><h2 id="data-title">结论有出处，数据可检查。</h2><p>全程四项与任务完成判定共用既有 180 回合、90 个条件／seed 配对和 45 个不同动作 ID，分为 5 个独立条件组。详细报告需原有访问权限。</p></div></div>
-      <div class="resource-grid"><a href="./data.json" target="_blank" rel="noopener noreferrer"><span>01 / DATA</span><h3>全程指标数据 <b>↗</b></h3><p>四项全程误差、任务完成状态与五组统计；共 180 个机器人回合。</p></a><a href="./DATA_PROVENANCE.md" target="_blank" rel="noopener noreferrer"><span>02 / METHODS</span><h3>方法与来源 <b>↗</b></h3><p>指标定义、科学数据版本与更新方法。</p></a><a href="https://github.com/Zhang-Yongqi/robot_leaderboard" target="_blank" rel="noopener noreferrer"><span>03 / REPOSITORY</span><h3>项目仓库 <b>↗</b></h3><p>网站源码与版本记录，便于检查引用。</p></a></div>
+      <div class="section-heading"><div><p class="eyebrow">05 / OPEN RESEARCH</p><h2 id="data-title">结论有出处，数据可检查。</h2><p id="metric-data-description">全程四项与任务完成判定共用既有 180 回合、90 个条件／seed 配对和 45 个不同动作 ID，分为 5 个独立条件组。详细报告需原有访问权限。</p></div></div>
+      <div class="resource-grid"><a href="./data.json" target="_blank" rel="noopener noreferrer"><span>01 / DATA</span><h3>全程指标数据 <b>↗</b></h3><p id="metric-download-description">四项全程误差、任务完成状态与五组统计；共 180 个机器人回合。</p></a><a href="./DATA_PROVENANCE.md" target="_blank" rel="noopener noreferrer"><span>02 / METHODS</span><h3>方法与来源 <b>↗</b></h3><p>指标定义、科学数据版本与更新方法。</p></a><a href="https://github.com/Zhang-Yongqi/robot_leaderboard" target="_blank" rel="noopener noreferrer"><span>03 / REPOSITORY</span><h3>项目仓库 <b>↗</b></h3><p>网站源码与版本记录，便于检查引用。</p></a></div>
       <div class="report-links"><a href="./episodes.csv" download>180 回合 CSV ↓</a> <a href="./comparisons.csv" download>10 条聚合记录 CSV ↓</a> <a href="./data.json" target="_blank" rel="noopener noreferrer">完整配对 JSON ↗</a></div><div id="downloads" class="report-links"></div>
       <details id="explorer" class="disclosure data-disclosure"><summary>探索共同配对记录<span>筛选 · 逐动作图表 · CSV 下载</span></summary><div class="detail-content">
         <section id="leaderboard"><div class="section-heading compact"><div><h3>评测记录</h3><p>按指标浏览记录；名次在完整的同条件配对组内计算。</p></div><div class="actions"><button id="download-csv" type="button" class="button secondary">筛选 CSV ↓</button><button id="download-json" type="button" class="button secondary">全部配对 JSON ↓</button></div></div>
