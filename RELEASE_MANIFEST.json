@@ -126,16 +126,16 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 15608,
-      "sha256": "8aac2c46a9a36572304d3ec5ff4ab2f44e2fa948c2425f4d1eb5519c6de78051"
+      "bytes": 15550,
+      "sha256": "36705c063709965d7577fa5604a9800684f293eb264494ee745b90b87bd3966b"
     },
     "README.md": {
-      "bytes": 7958,
-      "sha256": "db49c7a55a6fd07b7bc12c9cc3017094c59b3db4690f65a6cdc087ed30956cb8"
+      "bytes": 7900,
+      "sha256": "4fe19f267fc6f72c3259dd37c5eab21d7ed2a2a8cf1dac412b5037a922b30f6a"
     },
     "app.js": {
-      "bytes": 74180,
-      "sha256": "24a13bcb04b4575b29286309c1af7a67cd80deac992cc2f61fe5be81c8269253"
+      "bytes": 74123,
+      "sha256": "fbc4501c7d65f5b8e04c34fde61e123ea38fc1addb7352a1b5e6e2bec00fbc5e"
     },
     "data.json": {
       "bytes": 894089,
@@ -178,8 +178,8 @@
       "sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
     },
     "scripts/update_snapshot.py": {
-      "bytes": 28811,
-      "sha256": "7b74527f55a736b3c36b6275310234d3a519f33610732fe18d7f6002aa6ed6b0"
+      "bytes": 28844,
+      "sha256": "c6917a7d6670d54c099a86bd1e71372dd3c436b27f0646bf26bc2065d501391f"
     },
     "scripts/verify_public.py": {
       "bytes": 88919,
@@ -193,7 +193,7 @@
   "report_revision": "common_v07_20261014",
   "report_scope_receipt_sha256": "c1c438e46fc9092e728ce07dd9a436ff6ad0f2640e501b2db04fa69ecfd77928",
   "presentation_revision": "20261014-fullwindow-primary-with-original-diagnostics",
-  "presentation_updated_utc": "2026-10-14T10:40:34.944427+00:00",
+  "presentation_updated_utc": "2026-10-14T10:53:11.302614+00:00",
   "display_scope": {
     "datasets": 2,
     "unique_motion_ids": 45,
@@ -231,5 +231,5 @@
     },
     "handoff_sha256": "6afe9c674cc85df00d67016cedb0dfb0da23d27705b09adf00c79c0ac9e30cd2"
   },
-  "expanded_report_update_status": "18-page PDF / DOCX uploaded as version 4; native Feishu body synchronization and readback in progress"
+  "expanded_report_update_status": "18-page fullwindow PDF / DOCX uploaded as version 5; native Feishu body synchronization and readback in progress"
 }

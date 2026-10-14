@@ -371,7 +371,7 @@ def reviewed_extensions(dest, handoff_path=None, fullwindow_receipt=None):
     metadata = dict(extensions=deepcopy(EXTENSIONS), display_scope=deepcopy(DISPLAY_SCOPE))
     # These are already public version labels, not the private handoff body.
     for name in ('report_revision', 'report_scope_receipt_sha256',
-                 'presentation_revision', 'presentation_updated_utc'):
+                 'presentation_revision', 'presentation_updated_utc', 'expanded_report_update_status'):
         if name in previous:
             assert isinstance(previous[name], str) and not PRIVATE.search(previous[name]), (
                 'Private or invalid public revision metadata')

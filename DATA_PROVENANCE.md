@@ -133,7 +133,7 @@ Common40 全程主组以 **40 对动作**、Extreme5 以 **5 对动作**为重�
 
 ## 报告与资料
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。飞书正文与 18 页 PDF / DOCX 当前均为 **版本 4**，涵盖 Common40、Extreme5 与机器人参数；新增全程四项的版本 5 尚待云端更新。全程数值以 [fullwindow.json](fullwindow.json) / [fullwindow.csv](fullwindow.csv) 为准；原评分与硬件资料保留既有冻结附件。相关飞书资料需要组织访问权限。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。18 页全程报告 PDF / DOCX 已在原链接更新为 **版本 5**，飞书正文正在同步核对。全程数值以 [fullwindow.json](fullwindow.json) / [fullwindow.csv](fullwindow.csv) 为准；原评分与硬件资料保留既有冻结附件。相关飞书资料需要组织访问权限。
 
 既有同步视频的两侧来源回合均对应 Common40 共有数据。新公开视频为 **0/40**，索引见 [media.json](media.json)；Extreme5 的 5 个视频尚未制作。
 
