@@ -1,120 +1,41 @@
 {
-  "schema": "rp1-g1-public-snapshot-v1",
-  "consumed_handoff_version": "phaseA503_036559d03c4a_sitehandoff_20261013_v1",
-  "consumed_handoff_sha256": "57b12a9ebd7b1f6adf451adf0d9fd763654585aac44991d0f3ac540a7021e5fb",
-  "data_version": "round2-phaseA-036559d03c4a",
-  "generated_utc": "2026-10-14T06:26:49.307250+00:00",
-  "comparison_snapshot_updated_utc": "2026-10-13T09:23:01.848935+00:00",
-  "source": {
-    "site_data_sha256": "218518aa397d938fcd84c630c6dc3a1ee65958439d797a9ce1e3f6759bb715bb",
-    "aggregate_sha256": "036559d03c4a2a3ec8198c6a703b9a09be096c7181eb62d7c0b91ec06bd42210",
-    "adapter_sha256": "a199be0fb34219019a07bc16b8f2f91ad4d7c863f6f22522a7b5b033a5e44f04"
+  "schema_version": 3,
+  "public_data_sha256": "3850075100a33d8df4957e1b3976714c97f6d65ef0363958b220a909a507a009",
+  "counts": {
+    "episode_records": 180,
+    "paired_cases": 90,
+    "unique_motions": 45,
+    "comparison_groups": 5,
+    "aggregate_rows": 10,
+    "result_rows": 190
   },
-  "public_data_sha256": "d5b57ae624ae57599b89612cc5841871eb41f8373fb4a3054efff88a3db93f89",
-  "result_rows": 178,
-  "reviewed_source_files": [
-    {
-      "path": "site/dist/index.html",
-      "bytes": 7408,
-      "sha256": "f5ede1cbfb46f5691af94ae6ae8b7b329d588109f3f081e0e28f448cddeeb30c"
-    },
-    {
-      "path": "site/dist/app.js",
-      "bytes": 36050,
-      "sha256": "f2be6d3e897fccd0ef63904cf06c48e2290e6fe9c423a7298ac59dd0fc309a85"
-    },
-    {
-      "path": "site/dist/style.css",
-      "bytes": 15497,
-      "sha256": "25eeb98522f5a4b56b21524f9ef259ff9e93c3be644771243a502ac79da251c3"
-    },
-    {
-      "path": "site/dist/data.json",
-      "bytes": 4149005,
-      "sha256": "218518aa397d938fcd84c630c6dc3a1ee65958439d797a9ce1e3f6759bb715bb"
-    },
-    {
-      "path": "report/aggregate.json",
-      "bytes": 8715444,
-      "sha256": "036559d03c4a2a3ec8198c6a703b9a09be096c7181eb62d7c0b91ec06bd42210"
-    },
-    {
-      "path": "site/build_data.py",
-      "bytes": 33601,
-      "sha256": "a199be0fb34219019a07bc16b8f2f91ad4d7c863f6f22522a7b5b033a5e44f04"
-    }
-  ],
-  "comparison_groups": 4,
-  "projection": "Explicit public whitelist and exact RP1/G1 pairing intersection; retained metrics, CI and denominators unchanged",
-  "external_link_access": "All Feishu links require organization permissions",
-  "excluded": [
-    "private infrastructure",
-    "internal evidence attachments",
-    "absolute local paths",
-    "checkpoints",
-    "raw data archives"
-  ],
-  "public_scope": {
-    "unique_motions": 40,
-    "paired_cases": 85,
-    "episodes": 170,
-    "aggregate_rows": 8,
-    "result_rows": 178,
-    "comparison_groups": 4,
-    "pairing_key": [
-      "phase",
-      "dataset",
-      "condition",
-      "mode",
-      "motion_id",
-      "seed",
-      "protocol_sha256",
-      "runtime"
-    ],
-    "rule": "Exact RP1/G1 identity intersection; condition is canonical effective condition; no status or success filtering; original raw records preserved."
+  "fullwindow_source_sha256": "119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd",
+  "identity_map_sha256": "d7c902304aba5ca0588275b4b366f7bb799ee6e5a243c1bc8866ad059fb12aa4",
+  "completion_contract": {
+    "status": "pending",
+    "rule_version": null,
+    "source_sha256": null
   },
-  "scientific_contract": {
-    "methods": {
-      "runtime": "CPU ONNX, policy50Hz/physics200Hz; native position PD primary. Robot-specific DoF, PD, limits, action scale retained.",
-      "failure": "First single frame with abs reference height error >0.3m OR gravity-Z difference >0.8; strict inequalities; no RECOVER/REJOIN/reset; full raw rollout retained.",
-      "body": "Common14 semantic mapping, RP1 ankle-roll used as counterpart proxy. Positions in pelvis/base XY/yaw-local coordinates retaining world Z; position mm, orientation geodesic rad. This differs from official G1 toe14.",
-      "return": "Official separate torso-link/semantic torso anchor and reward point set; exp(-mean squared position/0.3^2)+exp(-mean squared angle/0.4^2), strict pre-failure numerator and N-1 denominator; one-frame fallback disclosed.",
-      "root": "One initial XY/yaw alignment with Z unchanged, XYZ endpoint at last full raw frame satisfying motion_t<N-1; not failure-truncated. Save actual endpoint time and progress. Unit m.",
-      "n_a": "Missing or censored paired scores retain null and their reasons; never impute zeros or rank unavailable values.",
-      "aggregation": "Matched full seed sets averaged within motion, motions equally weighted; paired motion bootstrap10000 repetitions seed20261013. No cross-dataset overall score.",
-      "statistics": "CIs conditional on fixed checkpoints and current motions; 7 descriptive CIs unadjusted.30 bit-identical repeat episodes do not expand independent N. No morphology-only causal claim."
-    },
-    "primary_anchor_values": {
-      "progress_percent": {
-        "rp1": 79.73569223,
-        "g1": 77.26897689,
-        "delta_pp": 2.46671534,
-        "ci95_pp": [
-          -0.53670384,
-          6.98024744
-        ]
-      },
-      "body_mm": {
-        "rp1": 32.1291691,
-        "g1": 34.8602467
-      },
-      "wrist_orientation_rad": {
-        "rp1": 0.165480622,
-        "g1": 0.142316121
-      },
-      "no_threshold_failure": {
-        "rp1": "27/40",
-        "g1": "26/40"
-      },
-      "conclusion": "Completion CI crosses zero; do not claim stable RP1 superiority."
-    },
-    "coverage": {
-      "unique_common_motions": 40,
-      "paired_cases": 85,
-      "paired_episodes": 170,
-      "aggregate_rows": 8,
-      "comparison_groups": 4
-    }
+  "publication_state": "fullwindow_published_completion_pending",
+  "generated_utc": "2026-10-14T11:55:17.175522+00:00",
+  "media_state": {
+    "public_new_common40": 0,
+    "public_new_extreme5": 0,
+    "source_media_sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
+  },
+  "report_state": {
+    "existing_urls_retained_in_source": true,
+    "latest_public_V5_sync_received": true,
+    "latest_user_scope": "full errors plus fall-unable-to-continue task completion metric",
+    "new_completion_scope_report": "pending owner frozen labels and statistics; original report owner updating",
+    "human_recovery_rule": "恢复并跟踪到末尾算完成"
+  },
+  "hardware": {
+    "json": "hardware.json",
+    "csv": "hardware.csv",
+    "source_sha256": "7c3ab345adbaf55d12fe6a5bc8a3923dab7257bd7df82b248c46e651214cce8c",
+    "json_sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af",
+    "csv_sha256": "78972776c7640ec62e03bffda14caf0fb530a170ca3751109e66a79ac57614de"
   },
   "files": {
     ".gitignore": {
@@ -125,111 +46,61 @@
       "bytes": 0,
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
-    "DATA_PROVENANCE.md": {
-      "bytes": 15652,
-      "sha256": "415510600966ae8627a09318271006bc6b0e785b2873fa7ae9b6f0c170590f59"
-    },
-    "README.md": {
-      "bytes": 8002,
-      "sha256": "1d300220f22cec61f513b66f657977700ac38ad274db9bb6c8af127ef5651eb8"
+    "index.html": {
+      "bytes": 13138,
+      "sha256": "12db8ca63a0f4f3c185e4b71bb04e33577af4a8226077767993fdffbbb8061f9"
     },
     "app.js": {
-      "bytes": 74327,
-      "sha256": "2f7af7aca303edcbaec9d42346bb7c868d75ba8edd2c2da5723efd913a42e5b7"
+      "bytes": 51998,
+      "sha256": "dc8899c57ec505d7cc3fe25a7b18d7580656b3a0f526844cdd1008df0fa7af9b"
+    },
+    "style.css": {
+      "bytes": 22040,
+      "sha256": "6ab17dc471e156f70f3fb170752c6b44a8dc594b0bd647b03573ca834c0b36cd"
     },
     "data.json": {
-      "bytes": 894089,
-      "sha256": "d5b57ae624ae57599b89612cc5841871eb41f8373fb4a3054efff88a3db93f89"
+      "bytes": 468480,
+      "sha256": "3850075100a33d8df4957e1b3976714c97f6d65ef0363958b220a909a507a009"
     },
-    "extreme5.csv": {
-      "bytes": 2785,
-      "sha256": "34fc4c3e1d08b3c8f30757f21efa8675e4e090ba050221e5a5d7d219c04473c1"
+    "episodes.csv": {
+      "bytes": 82632,
+      "sha256": "4e4184721a22584a28e7d66abbc317757bf9e4b9fe808ad412d2a640931dd9bf"
     },
-    "extreme5.json": {
-      "bytes": 68083,
-      "sha256": "a2d3e11f3f05737b89d4332fc384a95d93eefd819f3ff76eb203a2b4c5b3803e"
-    },
-    "favicon.svg": {
-      "bytes": 279,
-      "sha256": "ac39fd5a6da25a4df96d90c5b315814eae89792d9e900755572b7df089541758"
-    },
-    "fullwindow.csv": {
-      "bytes": 88651,
-      "sha256": "894a5b836fb1473202c3c3da08b11f9280fe3b572f589279dd00e444ea7e2ff4"
-    },
-    "fullwindow.json": {
-      "bytes": 407473,
-      "sha256": "119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd"
-    },
-    "hardware.csv": {
-      "bytes": 23613,
-      "sha256": "78972776c7640ec62e03bffda14caf0fb530a170ca3751109e66a79ac57614de"
-    },
-    "hardware.json": {
-      "bytes": 222643,
-      "sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af"
-    },
-    "index.html": {
-      "bytes": 13478,
-      "sha256": "069648285881c1d04312f7a38749efb20096da4ff0677974a9ca88d8424fb3fe"
+    "comparisons.csv": {
+      "bytes": 5862,
+      "sha256": "7b00755251ea9327975b0795a41aaa90988eebffa1f4156f90b4bf5744a5961c"
     },
     "media.json": {
       "bytes": 173,
       "sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
     },
+    "hardware.json": {
+      "bytes": 222643,
+      "sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af"
+    },
+    "hardware.csv": {
+      "bytes": 23613,
+      "sha256": "78972776c7640ec62e03bffda14caf0fb530a170ca3751109e66a79ac57614de"
+    },
+    "README.md": {
+      "bytes": 6618,
+      "sha256": "e3d88147655622675f23798458b10c4af09dca1614ae1363c2e131a36ac45e0f"
+    },
+    "DATA_PROVENANCE.md": {
+      "bytes": 11431,
+      "sha256": "6611620de09b880344a72acf90ca0dc2c2cef60b314cc44ee59361859b1a437e"
+    },
+    "favicon.svg": {
+      "bytes": 279,
+      "sha256": "ac39fd5a6da25a4df96d90c5b315814eae89792d9e900755572b7df089541758"
+    },
     "scripts/update_snapshot.py": {
-      "bytes": 28844,
-      "sha256": "c6917a7d6670d54c099a86bd1e71372dd3c436b27f0646bf26bc2065d501391f"
+      "bytes": 14228,
+      "sha256": "c79c7a46d05f7875ef54fa83b87a5fd57f8b4d440ddb5c6962f05d4fc7108bf2"
     },
     "scripts/verify_public.py": {
-      "bytes": 89148,
-      "sha256": "a9e3c2d0a2f71890f8b604be7b065ac7f9e81848c2007941461fba6f7de724da"
-    },
-    "style.css": {
-      "bytes": 21315,
-      "sha256": "4cca825b6743af9225bf2d632877f0796dec3dcd336e1c59c6f9299e7fb28414"
+      "bytes": 29381,
+      "sha256": "724cebcad34afd7fa82ac6e9f29a2feb56e443bb28908eb865cbe9b5b8bf9eb4"
     }
-  },
-  "report_revision": "common_v07_20261014",
-  "report_scope_receipt_sha256": "c1c438e46fc9092e728ce07dd9a436ff6ad0f2640e501b2db04fa69ecfd77928",
-  "presentation_revision": "20261014-fullwindow-primary-with-original-diagnostics",
-  "presentation_updated_utc": "2026-10-14T11:04:26.897701+00:00",
-  "display_scope": {
-    "datasets": 2,
-    "unique_motion_ids": 45,
-    "paired_cases": 90,
-    "episodes": 180,
-    "aggregate_rows": 10,
-    "result_rows": 190,
-    "comparison_groups": 5,
-    "groups_remain_separate": true
-  },
-  "extensions": {
-    "extreme5": {
-      "json": "extreme5.json",
-      "csv": "extreme5.csv",
-      "aggregate_sha256": "086c0fa83a2eae58156c23610dd55d430fb53e4f14f5b18f7d17e6d19513544b",
-      "json_sha256": "a2d3e11f3f05737b89d4332fc384a95d93eefd819f3ff76eb203a2b4c5b3803e",
-      "csv_sha256": "34fc4c3e1d08b3c8f30757f21efa8675e4e090ba050221e5a5d7d219c04473c1"
-    },
-    "hardware": {
-      "json": "hardware.json",
-      "csv": "hardware.csv",
-      "source_sha256": "7c3ab345adbaf55d12fe6a5bc8a3923dab7257bd7df82b248c46e651214cce8c",
-      "json_sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af",
-      "csv_sha256": "78972776c7640ec62e03bffda14caf0fb530a170ca3751109e66a79ac57614de"
-    },
-    "fullwindow": {
-      "json": "fullwindow.json",
-      "csv": "fullwindow.csv",
-      "json_sha256": "119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd",
-      "csv_sha256": "894a5b836fb1473202c3c3da08b11f9280fe3b572f589279dd00e444ea7e2ff4",
-      "metric_window": "full_replay_50hz_first_substep",
-      "final_receipt_sha256": "c3698c7e99ebba4167ef8cb2254f10b82aa7e4884efd97cd3745796540ced47b",
-      "independent_audit_sha256": "01a10684520c13dd9e00d7b0329389e3000a37e3dc7f69d985501bc486a44b57",
-      "historical_handoff_sha256": "6c7707db561524f260f5a33527b6b6d61ee1c807f25fff7412e900578b44b7fd"
-    },
-    "handoff_sha256": "6afe9c674cc85df00d67016cedb0dfb0da23d27705b09adf00c79c0ac9e30cd2"
-  },
-  "expanded_report_update_status": "V5 synchronized at original native Feishu/PDF/DOCX URLs; native15tables888cells full readback passed;4original diagnostic figures and8source links retained;PDF18pages"
+  }
 }

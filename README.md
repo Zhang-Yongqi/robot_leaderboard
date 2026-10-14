@@ -1,27 +1,26 @@
 # RP1 / G1 Robot Motion Benchmark
 
-RP1 与 G1 固定发布学生策略的离线仿真比较，以全程身体与手腕的位置、姿态误差为四项主指标。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试；原评分与首次失败信息作为辅助诊断，并提供冻结硬件模型与控制参数对比。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
+RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全程身体与手腕的位置、姿态四项误差。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试；motion 跟踪任务完成率正在离线核验。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
 
 ## 评测条件
 
-| 条件 / 执行模式 | 配对动作数 | 条件/seed 配对数 | 机器人回合数 |
-| --- | ---: | ---: | ---: |
-| nominal / native_position | 40 | 40 | 80 |
-| explicit_sensitivity / explicit_deploy | 5 | 5 | 10 |
-| repeat_nominal / native_position | 5 | 15 | 30 |
-| robust_initial_velocity / native_position | 5 | 25 | 50 |
+| 数据组 | 条件 / 执行模式 | 配对动作数 | 条件/seed 配对数 | 机器人回合数 |
+| --- | --- | ---: | ---: | ---: |
+| Common40 主组 | nominal / native_position | 40 | 40 | 80 |
+| Extreme5 主组 | nominal / native_position | 5 | 5 | 10 |
+| Common40 部署敏感性 | explicit_sensitivity / explicit_deploy | 5 | 5 | 10 |
+| Common40 名义重复 | repeat_nominal / native_position | 5 | 15 | 30 |
+| Common40 初态扰动 | robust_initial_velocity / native_position | 5 | 25 | 50 |
 
-以上 Common40 四组分别报告，共 85 个条件/seed 配对、170 条机器人回合及 8 条聚合记录，即 178 个展示行；动作去重后为 40 个。其 `data.json` 字节、原评分指标与区间保持原冻结版本。
+共有 **45 个动作、90 个条件/seed 配对、180 个机器人回合和 5 个评测组**。公开 JSON 的 190 条记录由 180 条回合记录与 10 条机器人聚合记录构成；各组独立统计，重复 seed 保持原独立动作数。
 
-Extreme5 为 nominal / native_position、seed=0 的独立动作组：5 个配对动作、5 对、10 个机器人回合、2 条聚合记录，10 个回合均触发失败阈值。网页组合展示两套附件后，共 45 个动作、90 对、180 个机器人回合、10 条聚合记录、190 个展示行及 5 个评测组；各组分别计算，硬件表的 29 个槽位另行展示。
-
-全程四项按既有回合身份关联，沿用上述覆盖统计。配对依据实际动作、有效条件、模式、seed 和协议身份的交集，保留阈值失败及可配对删失的 null 与原因。历史原始实验数据及旧版本保留在来源项目和 Git 历史中。
+配对依据实际动作、有效条件、模式、seed 和协议身份的交集，入选不根据任务结局筛选。缺失或删失成绩保留 null 与原因。历史原始实验数据及旧版本保留在来源项目和 Git 历史中。
 
 两个主组使用参考初态与零初速；本次主评测未启用观测噪声、域随机化、外力 push 或随机动作延迟。初态扰动组向根节点 vx、vy 及本地 yaw 角速度施加扰动，标准差分别为 0.05 m/s、0.05 m/s、0.05 rad/s。
 
-## 评测结果与分析
+## 全程误差结果与分析
 
-四项全程指标使用既有轨迹全部 **50 Hz 首次物理子步**评分样本，`motion_t=1..N_common−1`，包含首次失败及其后样本；`N_common` 为共同参考帧数。frame0 用于初始化，200 Hz 末端 hold 不增加评分样本。位置为 mm，姿态为 rad，均为越低越好。
+四项误差使用既有轨迹全部 **50 Hz 首次物理子步**评分样本，`motion_t=1..N_common−1`，覆盖完整保存轨迹；`N_common` 为共同参考帧数。frame0 用于初始化，200 Hz 末端 hold 不增加评分样本。位置为 mm，姿态为 rad，均为越低越好。
 
 | 组 / 指标 | RP1 | G1 | RP1−G1 | 95% 配对区间 | 单位 |
 | --- | ---: | ---: | ---: | --- | --- |
@@ -36,15 +35,11 @@ Extreme5 为 nominal / native_position、seed=0 的独立动作组：5 个配对
 
 Common40 的四项全程误差均值均为 RP1 较低，配对差值区间均位于零以下。Extreme5 的身体与手腕位置均值为 G1 较低、姿态均值为 RP1 较低；仅手腕姿态差值区间位于零以下，另三项跨零。三个敏感性组各以 5 个动作为统计单位，四项全程差值区间均跨零。
 
-统计先在同动作的完整相同 seed 集内平均，再对动作等权；95% 区间采用 10,000 次配对动作 bootstrap。30 条确定性重复保持原独立动作数。完整均值、区间、逐回合数值与评分窗口见[全程 JSON](fullwindow.json)及[评测说明](DATA_PROVENANCE.md)。
+统计先在同动作的完整相同 seed 集内平均，再对动作等权；95% 区间采用 10,000 次配对动作 bootstrap。完整均值、区间、逐回合数值与评分窗口见[公开 JSON](data.json)及[评测说明](DATA_PROVENANCE.md)。
 
-### 辅助：原评分与首次失败诊断
+## Motion 跟踪任务完成率
 
-Common40 原 Progress 为 RP1 **79.736%**、G1 **77.269%**；RP1−G1 的 95% 配对区间为 **[−0.537, 6.980] pp**。原前缀窗口中 RP1 身体误差均值较低，G1 手腕姿态误差均值较低。
-
-Extreme5 原 Progress 为 **55.167% / 56.543%**；差值 **−1.376 pp**，95% 区间 **[−2.202, −0.747] pp**。原前缀身体位置误差为 **35.817 / 29.087 mm**，手腕位置为 **37.619 / 27.051 mm**（RP1 / G1）。两侧各 5 个动作均触发失败阈值。
-
-Progress 记录首次阈值位置，未触发时取参考末端；完整回放与该诊断分别呈现。原身体／手腕前缀指标、Return 和最后有效策略帧 root endpoint 保持既有评分口径；新增全程指标为上述四项误差。Phase B 正式重训尚未开始。
+摔倒导致无法继续后续动作跟踪，记为未完成；未发生这类不可继续中断，记为完成。中途摔倒后恢复并跟踪到动作末尾，仍记为完成。核验需对照参考动作，区分参考翻滚、倒地起身与摔倒后无法继续。正式回合标签、判定证据及多 seed 动作统计正在离线核验，完成率保持 `null/pending`，**当前不展示百分比**。
 
 ## 硬件模型与控制参数
 
@@ -54,15 +49,15 @@ Progress 记录首次阈值位置，未触发时取参考末端；完整回放�
 
 ## 数据与报告
 
-- 全程四项主指标：[JSON](fullwindow.json) / [180 回合 CSV](fullwindow.csv)
-- [Common40 原评分数据](data.json)
-- Extreme5：[JSON](extreme5.json) / [CSV](extreme5.csv)
-- 硬件模型与控制参数：[JSON](hardware.json) / [CSV](hardware.csv)
-- [条件、指标与结果分析](DATA_PROVENANCE.md)
-- [版本与 SHA256 清单](RELEASE_MANIFEST.json)
+- [公开配对结果 JSON](data.json)：190 条记录，四项全程误差及任务完成率状态。
+- [逐回合 CSV](episodes.csv)：180 条机器人回合。
+- [聚合比较 CSV](comparisons.csv)：10 条机器人聚合记录。
+- 硬件模型与控制参数：[JSON](hardware.json) / [CSV](hardware.csv)。
+- [条件、指标与结果分析](DATA_PROVENANCE.md)。
+- [版本与 SHA256 清单](RELEASE_MANIFEST.json)。
 - [新公开视频索引](media.json)：当前 0/40。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。18 页全程报告的飞书正文、PDF / DOCX 已在原链接同步为 **版本 5（V5 已同步）**；正文 15 表、888 单元格完整回读通过，4 张原版诊断图和 8 个来源链接保留。当前数值见全程 JSON / CSV。报告及既有同步视频需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。原链接正在按“全程误差与跟踪任务完成率”的新口径更新；完成率的正式回合标签、判定证据和多 seed 动作统计待冻结。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
 ## 本地预览
 
@@ -74,22 +69,15 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 ## 可重复更新
 
-从冻结来源运行标准库投影脚本：
+从已冻结的全程科学来源与私有身份映射生成公开字段投影，参数以脚本 `--help` 为准：
 
 ```sh
 python3 scripts/update_snapshot.py \
-  --source-data /path/to/reviewed/site/dist/data.json \
-  --expected-source-sha 218518aa397d938fcd84c630c6dc3a1ee65958439d797a9ce1e3f6759bb715bb \
-  --expected-aggregate-sha 036559d03c4a2a3ec8198c6a703b9a09be096c7181eb62d7c0b91ec06bd42210 \
-  --handoff /path/to/reviewed/MANIFEST.json \
-  --expected-handoff-sha 57b12a9ebd7b1f6adf451adf0d9fd763654585aac44991d0f3ac540a7021e5fb \
-  --output-dir .
-python3 scripts/verify_public.py
-node --check app.js
+  --source-fullwindow /path/to/reviewed/public_fullwindow.json \
+  --identity-map /path/to/private/identity-map.json \
+  --output-dir /path/to/preview
 ```
 
-已有发布目录中的冻结扩展附件会先按固定摘要核验，再保留到新清单。初始化新目录时，增加 `--extensions-manifest /path/to/reviewed/WEBSITE_HANDOFF_MANIFEST.json`，从已冻结交接的白名单复制原四附件，同时增加 `--fullwindow-receipt /path/to/reviewed/PUBLIC_FULLWINDOW_FINAL_RECEIPT.json`，从正式终态白名单复制全程两附件；缺失或不符时在写入前停止。
+全程科学输入 SHA256 为 `119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd`。公开投影保留四项误差、均值、区间、分母与配对身份；输出 `data.json`、`episodes.csv`、`comparisons.csv`，文件摘要见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)及发布清单。私有身份映射不进入公开目录。
 
-以上命令和 SHA 对应 Common40 冻结版本。脚本核验来源，以字段白名单和精确配对交集生成其公开快照；保留行的指标、CI、分母、失败状态及身份保持一致。Extreme5、硬件与全程资料作为冻结扩展附件载入，文件摘要见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)。聚合只在原输入群体完整保留时复用，科学版本变更需同步更新版本契约。
-
-完成静态检查及桌面、手机浏览器 QA 后，提交发布白名单内的公开文件。GitHub Pages 发布源为 `main / (root)`。
+四项全程误差可先独立正式发布，发布前完成静态检查及桌面、手机浏览器 QA。完成率保持 `null/pending`，待正式回合标签、判定证据与多 seed 动作统计冻结后更新。GitHub Pages 发布源为 `main / (root)`。
