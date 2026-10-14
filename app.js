@@ -9,7 +9,8 @@
   ];
   const FULL_WINDOW = "full_replay_50hz_first_substep";
   const TOP_KEYS = ["schema_version", "publication_state", "fullwindow_source_sha256", "identity_map_sha256", "counts", "metrics", "results", "comparisons", "datasets", "phase", "primary_comparison_ids", "secondary_comparison_ids", "methods", "completion_contract", "report_downloads", "fairness", "stats"];
-  const ROW_KEYS = ["id", "label", "phase", "dataset", "condition", "mode", "robot", "motion_id", "seed", "scope", "matched_seed_set", "metrics", "completion", "coverage", "pairing", "fullwindow"];
+  const ROW_KEYS = ["id", "label", "phase", "dataset", "condition", "mode", "robot", "motion_id", "seed", "scope", "matched_seed_set", "metrics", "completion", "coverage", "pairing", "fullwindow", "provenance"];
+  const PROVENANCE_KEYS = ["protocol_sha256", "execution_protocol_sha256", "config_sha256", "source_sha256"];
   const COMPARISON_KEYS = ["id", "label", "phase", "dataset", "condition", "mode", "role", "metric_window", "n_unique_motions", "paired_cases", "episode_records", "matched_seed_set", "expected_participants", "expected_paired_motions", "sample_set", "sample_set_sha256", "paired_deltas", "paired_motion_values", "completion", "fullwindow_comparison_id"];
   const WINDOW_KEYS = ["run_id", "case_id", "metric_window", "full_recorded_frames", "reference_common_frames", "reference_start_s", "reference_end_s"];
   const COMPLETION_KEYS = ["status", "completed", "rate_pct", "ci95", "reason"];
@@ -79,6 +80,8 @@
       assertKeys(row, ROW_KEYS, "公开记录");
       if (typeof row.id !== "string" || ids.has(row.id) || row.phase !== "A" || !["rp1", "g1"].includes(row.robot) || !["aggregate", "per_motion"].includes(row.scope)) throw new Error("公开记录身份无效");
       ids.add(row.id); validateCompletion(row.completion, "动作跟踪完成判定");
+      assertKeys(row.provenance, PROVENANCE_KEYS, "记录来源身份");
+      if (Object.keys(row.provenance).length !== PROVENANCE_KEYS.length || PROVENANCE_KEYS.some(key => row.provenance[key] !== null && !sha256(row.provenance[key]))) throw new Error("记录来源摘要须为 SHA256 或原缺失 null");
       if (!Array.isArray(row.matched_seed_set) || row.matched_seed_set.some(seed => !Number.isSafeInteger(seed) || seed < 0)) throw new Error("seed 集无效");
       assertKeys(row.metrics, METRICS.map(metric => metric.key), "全程指标");
       METRICS.forEach(metric => {
@@ -130,7 +133,9 @@
       METRICS.forEach(metric => { const delta = comparison.paired_deltas[metric.key]; assertKeys(delta, ["value", "ci95", "unit", "n_motions"], "配对差值"); if (!isNumber(delta.value) || !validCI(delta.ci95) || delta.unit !== metric.unit || delta.n_motions !== comparison.n_unique_motions) throw new Error("全程配对区间无效"); });
     });
     if (aggregateIds.size !== 10 || input.primary_comparison_ids.length !== 2 || input.secondary_comparison_ids.length !== 3 || [...input.primary_comparison_ids, ...input.secondary_comparison_ids].some(id => !comparisonIds.has(id))) throw new Error("主组与敏感性组身份不一致");
-    return JSON.parse(JSON.stringify(input));
+    const output = JSON.parse(JSON.stringify(input));
+    output.results = output.results.map(row => ({ ...row, provenance: pick(row.provenance, PROVENANCE_KEYS) }));
+    return output;
   }
   function filters() { return Object.fromEntries(["phase", "robot", "dataset", "condition", "mode", "seed", "search"].map(key => [key, $("filter-" + key).value])); }
   function filteredRows(scope = state.scope) {
@@ -199,7 +204,7 @@
   function rowEvidence(row) {
     if (!row.fullwindow) return "";
     const full = row.fullwindow;
-    return `<details><summary>评分窗口</summary><div class="record-evidence"><p>${full.full_recorded_frames} 个 50 Hz 首物理子步评分样本；共同参考帧 ${full.reference_common_frames}。</p><p>参考时间 ${fmt(full.reference_start_s, 3)}–${fmt(full.reference_end_s, 3)} s。</p></div></details>`;
+    return `<details><summary>评分窗口</summary><div class="record-evidence"><p>${full.full_recorded_frames} 个 50 Hz 首物理子步评分样本；共同参考帧 ${full.reference_common_frames}。</p><p>参考时间 ${fmt(full.reference_start_s, 3)}–${fmt(full.reference_end_s, 3)} s。</p><p>${row.provenance.execution_protocol_sha256 === null ? "此记录原未记录执行版本。" : "原执行版本身份已保留。"}</p></div></details>`;
   }
   function metricHTML(row, metric) {
     const cell = row.metrics[metric.key];
@@ -308,8 +313,8 @@
   function csvCell(value) { let cell = value == null ? "" : String(value); if (/^[\s]*[=+\-@]/.test(cell) && !isNumber(value)) cell = "'" + cell; return '"' + cell.replace(/"/g, '""') + '"'; }
   function csvExport(rows) {
     const base = ["id", "label", "phase", "dataset", "condition", "mode", "robot", "motion_id", "seed", "scope"];
-    const header = [...base, "matched_seed_set_json", "coverage_json", "comparison_id", "sample_set_sha256", "case_id", ...WINDOW_KEYS.map(key => "window_" + key), ...COMPLETION_KEYS.map(key => "completion_" + key), ...METRICS.flatMap(metric => [metric.key, metric.key + "_unit", metric.key + "_ci95_json", metric.key + "_n_motions"])];
-    return "\uFEFF" + [header, ...rows.map(row => [...base.map(key => row[key]), JSON.stringify(row.matched_seed_set), JSON.stringify(row.coverage), row.pairing.comparison_id, row.pairing.sample_set_sha256, row.pairing.case_id, ...WINDOW_KEYS.map(key => row.fullwindow?.[key]), ...COMPLETION_KEYS.map(key => key === "ci95" ? JSON.stringify(row.completion[key]) : row.completion[key]), ...METRICS.flatMap(metric => { const cell = row.metrics[metric.key]; return [cell.value, cell.unit, cell.ci95 === null ? null : JSON.stringify(cell.ci95), cell.n_motions]; })])].map(line => line.map(csvCell).join(",")).join("\r\n") + "\r\n";
+    const header = [...base, "matched_seed_set_json", "coverage_json", "comparison_id", "sample_set_sha256", "case_id", ...PROVENANCE_KEYS, ...WINDOW_KEYS.map(key => "window_" + key), ...COMPLETION_KEYS.map(key => "completion_" + key), ...METRICS.flatMap(metric => [metric.key, metric.key + "_unit", metric.key + "_ci95_json", metric.key + "_n_motions"])];
+    return "\uFEFF" + [header, ...rows.map(row => [...base.map(key => row[key]), JSON.stringify(row.matched_seed_set), JSON.stringify(row.coverage), row.pairing.comparison_id, row.pairing.sample_set_sha256, row.pairing.case_id, ...PROVENANCE_KEYS.map(key => row.provenance[key]), ...WINDOW_KEYS.map(key => row.fullwindow?.[key]), ...COMPLETION_KEYS.map(key => key === "ci95" ? JSON.stringify(row.completion[key]) : row.completion[key]), ...METRICS.flatMap(metric => { const cell = row.metrics[metric.key]; return [cell.value, cell.unit, cell.ci95 === null ? null : JSON.stringify(cell.ci95), cell.n_motions]; })])].map(line => line.map(csvCell).join(",")).join("\r\n") + "\r\n";
   }
   function publicExport(data) { return normalizeData(data); }
   function download(contents, name, type) {

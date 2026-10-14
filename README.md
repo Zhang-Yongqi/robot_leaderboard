@@ -78,6 +78,6 @@ python3 scripts/update_snapshot.py \
   --output-dir /path/to/preview
 ```
 
-全程科学输入 SHA256 为 `119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd`。公开投影保留四项误差、均值、区间、分母与配对身份；输出 `data.json`、`episodes.csv`、`comparisons.csv`，文件摘要见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)及发布清单。私有身份映射不进入公开目录。
+全程科学输入 SHA256 为 `119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd`。公开投影保留四项误差、均值、区间、分母与配对身份；输出 `data.json`、`episodes.csv`、`comparisons.csv`，文件摘要见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)及发布清单。JSON 与 CSV 保留原科学协议、执行协议、配置和来源摘要；原未记录字段为 null。私有身份映射不进入公开目录。
 
 四项全程误差可先独立正式发布，发布前完成静态检查及桌面、手机浏览器 QA。完成率保持 `null/pending`，待正式回合标签、判定证据与多 seed 动作统计冻结后更新。GitHub Pages 发布源为 `main / (root)`。

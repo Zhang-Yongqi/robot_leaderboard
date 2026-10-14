@@ -2,6 +2,7 @@
 """Build the reviewed four-error v3 staging payload without estimating completion.
 
 Inputs are read only. Only explicit identity and full-window fields are selected.
+Each result retains only four frozen provenance hashes; absent hashes are null.
 Four frozen errors may be published with honest pending/null completion. New
 completion values remain unsupported until their separate contract is reviewed.
 """
@@ -23,6 +24,8 @@ WINDOW = 'full_replay_50hz_first_substep'
 FULL4 = ('full_body_pos_mm', 'full_body_ori_rad', 'full_wrist_pos_mm', 'full_wrist_ori_rad')
 JOIN = ('dataset', 'condition', 'mode', 'robot', 'motion_id', 'seed')
 IDENTITY_FIELDS = ('id', 'label', 'phase', 'dataset', 'condition', 'mode', 'robot', 'motion_id', 'scope')
+PROVENANCE_FIELDS = ('protocol_sha256', 'execution_protocol_sha256', 'config_sha256', 'source_sha256')
+PROVENANCE_SHA = '5d30b618a4300469439d2845b51c3dca0b7c18336abf43b0940d9b9484a6e7ad'
 COUNTS = {'episode_records': 180, 'paired_cases': 90, 'unique_motions': 45,
           'comparison_groups': 5, 'aggregate_rows': 10, 'result_rows': 190}
 PREVIEW_STATE = 'internal_preview_completion_pending'
@@ -31,12 +34,12 @@ PENDING = {'status': 'pending', 'completed': None, 'rate_pct': None, 'ci95': Non
            'reason': '等待正式完成判据和标签冻结'}
 COMPLETION_CONTRACT = {'status': 'pending', 'rule_version': None, 'source_sha256': None}
 EPISODE_COLUMNS = ['id', 'label', 'phase', 'dataset', 'condition', 'mode', 'robot', 'motion_id',
-    'seed', 'scope', 'comparison_id', 'sample_set_sha256', 'run_id', 'case_id', 'metric_window',
+    'seed', 'scope', *PROVENANCE_FIELDS, 'comparison_id', 'sample_set_sha256', 'run_id', 'case_id', 'metric_window',
     'full_recorded_frames', 'reference_common_frames', 'reference_start_s', 'reference_end_s',
     *FULL4, 'completion_status', 'motion_completed', 'motion_completion_pct',
     'completion_ci95_low', 'completion_ci95_high', 'completion_reason']
 COMPARISON_COLUMNS = ['id', 'label', 'comparison_id', 'phase', 'dataset', 'condition', 'mode',
-    'robot', 'scope', 'matched_seed_set', 'n_unique_motions', 'paired_cases', 'sample_set_sha256',
+    'robot', 'scope', *PROVENANCE_FIELDS, 'matched_seed_set', 'n_unique_motions', 'paired_cases', 'sample_set_sha256',
     'metric_window', *[field for metric in FULL4 for field in
     (metric, metric + '_ci95_low', metric + '_ci95_high')],
     'completion_status', 'motion_completed', 'motion_completion_pct',
@@ -83,6 +86,23 @@ def group_key(row):
     return tuple(row[key] for key in ('dataset', 'condition', 'mode'))
 
 
+def provenance(identity):
+    """Select frozen scientific hashes; an absent source field stays null."""
+    original = identity.get('provenance', {})
+    require(type(original) is dict, 'Invalid frozen provenance')
+    selected = {name: deepcopy(original.get(name)) for name in PROVENANCE_FIELDS}
+    require(all(value is None or (type(value) is str and re.fullmatch(r'[0-9a-f]{64}', value))
+                for value in selected.values()), 'Scientific provenance must be SHA256 or null')
+    return selected
+
+
+def provenance_digest(rows):
+    records = [{'id': row['id'], 'provenance': row['provenance']}
+               for row in sorted(rows, key=lambda row: row['id'])]
+    return sha(json.dumps(records, ensure_ascii=False, sort_keys=True,
+                          separators=(',', ':'), allow_nan=False).encode())
+
+
 def metric_cell(value, unit, ci, n):
     require(type(value) in (int, float) and math.isfinite(value) and value >= 0,
             'Full-window error must be finite and nonnegative')
@@ -125,6 +145,7 @@ def project(full, identities, publication=False):
     results = []
     for identity in original_rows:
         row = {name: deepcopy(identity[name]) for name in IDENTITY_FIELDS}
+        row['provenance'] = provenance(identity)
         g = group_key(identity)
         source_group = groups[g]
         n = source_group['n_unique_motions']
@@ -151,6 +172,7 @@ def project(full, identities, publication=False):
             row['metrics'] = {name: metric_cell(source_group['robot_means'][name][row['robot']]['value'],
                 units[name], source_group['robot_means'][name][row['robot']]['ci95'], n) for name in FULL4}
         results.append(row)
+    require(provenance_digest(results) == PROVENANCE_SHA, 'Frozen scientific provenance differs')
     comparisons = []
     for source_group in full['comparisons']:
         g = group_key(source_group)
@@ -198,6 +220,7 @@ def csv_records(data, scope):
         if row['scope'] != scope:
             continue
         record = {k: row[k] for k in ('id', 'label', 'phase', 'dataset', 'condition', 'mode', 'robot', 'scope')}
+        record.update(row['provenance'])
         record.update(comparison_id=row['pairing']['comparison_id'], sample_set_sha256=row['pairing']['sample_set_sha256'],
                       metric_window=WINDOW)
         if scope == 'per_motion':

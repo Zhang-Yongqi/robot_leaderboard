@@ -4,6 +4,7 @@
 --preview permits internal pending/null completion inspection. It never enables
 publication. The full four-error contract may be published independently; new
 completion values need a separate reviewed contract. Private inputs bind values.
+Four provenance fields are exactly bound to frozen original row identities.
 """
 import argparse
 from collections import Counter
@@ -19,7 +20,8 @@ import sys
 from urllib.parse import unquote, urlsplit
 from update_snapshot import (COMPLETION_CONTRACT, COMPARISON_COLUMNS, COUNTS,
     EPISODE_COLUMNS, FULL4, FULL_SOURCE_SHA, IDENTITY_SHA, PENDING, PREVIEW_STATE, PUBLIC_STATE,
-    WINDOW, csv_bytes, episode_key, group_key, project, read_json, seed, sha)
+    PROVENANCE_FIELDS, PROVENANCE_SHA, WINDOW, csv_bytes, episode_key, group_key,
+    project, provenance_digest, read_json, seed, sha)
 
 PUBLISH_FILES = {'.gitignore', '.nojekyll', 'README.md', 'DATA_PROVENANCE.md',
     'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json', 'media.json',
@@ -44,7 +46,7 @@ TOP_KEYS = {'schema_version', 'publication_state', 'fullwindow_source_sha256', '
     'counts', 'metrics', 'results', 'comparisons', 'datasets', 'phase', 'primary_comparison_ids',
     'secondary_comparison_ids', 'methods', 'completion_contract', 'report_downloads', 'fairness', 'stats'}
 ROW_KEYS = {'id', 'label', 'phase', 'dataset', 'condition', 'mode', 'robot', 'motion_id', 'seed', 'scope',
-    'matched_seed_set', 'metrics', 'completion', 'coverage', 'pairing'}
+    'matched_seed_set', 'metrics', 'completion', 'coverage', 'pairing', 'provenance'}
 FULLWINDOW_KEYS = {'run_id', 'case_id', 'metric_window', 'full_recorded_frames',
                   'reference_common_frames', 'reference_start_s', 'reference_end_s'}
 COMPARISON_KEYS = {'id', 'label', 'phase', 'dataset', 'condition', 'mode', 'role', 'metric_window',
@@ -117,6 +119,7 @@ class Audit:
         self.data = read_json(self.root / 'data.json')
         self.checked, self.errors = [], []
         self.value_checks = {'episode_values': 0, 'aggregate_scalars': 0, 'paired_delta_scalars': 0}
+        self.provenance_checks = {'hash_values': 0, 'null_values': 0, 'source_fields': 0}
         self.episodes, self.cases, self.aliases, self.by_id = {}, {}, {}, {}
 
     def check(self, name, fn):
@@ -165,6 +168,11 @@ class Audit:
             require(row['phase'] == 'A' and row['robot'] in {'rp1', 'g1'} and group_key(row) in COHORTS,
                     'Unreviewed result identity')
             pending(row['completion'])
+            exact_keys(row['provenance'], PROVENANCE_FIELDS, 'scientific provenance')
+            for value in row['provenance'].values():
+                require(value is None or (type(value) is str and HASH.fullmatch(value)),
+                        'Scientific provenance must be SHA256 or null')
+                self.provenance_checks['null_values' if value is None else 'hash_values'] += 1
             exact_keys(row['coverage'], {'numerator', 'denominator', 'unit'}, 'coverage')
             exact_keys(row['pairing'], {'comparison_id', 'sample_set_sha256', 'case_id'}, 'pairing')
             require(HASH.fullmatch(row['pairing']['sample_set_sha256']), 'Malformed paired sample identity')
@@ -218,6 +226,9 @@ class Audit:
             require(all(members['rp1']['fullwindow'][field] == members['g1']['fullwindow'][field] for field in
                     ('full_recorded_frames', 'reference_common_frames', 'reference_start_s', 'reference_end_s')),
                     'Paired full replay windows differ')
+        require(provenance_digest(rows) == PROVENANCE_SHA, 'Frozen scientific provenance differs')
+        require(self.provenance_checks['hash_values'] == 556 and
+                self.provenance_checks['null_values'] == 204, 'Scientific hash/null coverage differs')
         self.episodes, self.cases, self.aliases = episodes, cases, aliases
         self.by_id = {row['id']: row for row in rows}
 
@@ -318,7 +329,16 @@ class Audit:
                 'Both reviewed private inputs are required for the independent source comparison')
         raw, identity_raw = Path(self.source).read_bytes(), Path(self.identities).read_bytes()
         require(sha(raw) == FULL_SOURCE_SHA and sha(identity_raw) == IDENTITY_SHA, 'Unreviewed source identity')
-        expected = project(read_json(self.source), read_json(self.identities), publication=not self.preview)
+        identities = read_json(self.identities)
+        original_by_id = {row['id']: row for row in identities['results']}
+        for row in self.data['results']:
+            original = original_by_id[row['id']].get('provenance', {})
+            for field in PROVENANCE_FIELDS:
+                require(row['provenance'][field] == original.get(field),
+                        'Scientific provenance differs from frozen identity: ' + field)
+                self.provenance_checks['source_fields'] += 1
+        require(self.provenance_checks['source_fields'] == 760, 'Incomplete scientific provenance source comparison')
+        expected = project(read_json(self.source), identities, publication=not self.preview)
         for name in ('schema_version', 'publication_state', 'fullwindow_source_sha256', 'identity_map_sha256',
                      'counts', 'metrics', 'results', 'comparisons', 'phase', 'primary_comparison_ids',
                      'secondary_comparison_ids', 'completion_contract'):
@@ -435,7 +455,8 @@ class Audit:
             'completion_ready': False, 'preview_only': self.preview,
             'schema_version': self.data.get('schema_version'), 'counts': self.data.get('counts'),
             'completion_status': self.data.get('completion_contract', {}).get('status'),
-            'value_checks': self.value_checks, 'source_compared': 'frozen_source_720_values_and_original_ID_mapping' in self.checked,
+            'value_checks': self.value_checks, 'provenance_checks': self.provenance_checks,
+            'source_compared': 'frozen_source_720_values_and_original_ID_mapping' in self.checked,
             'public_data_sha256': sha((self.root / 'data.json').read_bytes()),
             'checked': self.checked, 'errors': self.errors, 'browser_qa_checked': False,
             'external_availability_checked': False}
