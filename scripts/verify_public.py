@@ -1246,6 +1246,9 @@ class Audit:
                             loc + ': Feishu permission boundary missing')
         html = HTMLLinks()
         html.feed((self.root / 'index.html').read_text())
+        for asset in ('app.js', 'style.css'):
+            versioned = './' + asset + '?v=' + sha((self.root / asset).read_bytes())[:12]
+            require(versioned in html.links, 'unversioned or stale browser asset: ' + asset)
         require(not html.ids.intersection({'official', 'official-body', 'official-references',
                                           'appendix', 'single-robot-results', 'unpaired-results'}),
                 'official/single-robot appendix table entry remains public')
