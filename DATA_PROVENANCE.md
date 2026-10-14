@@ -1,6 +1,6 @@
 # RP1 与 G1 共同动作评测说明
 
-本评测比较两套固定发布学生策略的离线仿真表现。公开指标为全程身体与手腕的位置、姿态四项误差；motion 跟踪任务完成率正在离线核验。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试。科学来源、原始轨迹与历史实验保留在来源项目，当前公开投影按回合身份关联冻结结果。 每条结果还保留已记录的科学协议、执行协议、配置和来源摘要；科学评分协议与执行文件版本分别记录，原未记录的字段为 null。
+本评测比较两套固定发布学生策略的离线仿真表现。公开指标为全程身体与手腕的位置、姿态四项误差；motion 跟踪任务完成率依据几何、参考轨迹与有效末端证据单独报告。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试。科学来源、原始轨迹与历史实验保留在来源项目，当前公开投影按回合身份关联冻结结果。 每条结果还保留已记录的科学协议、执行协议、配置和来源摘要；科学评分协议与执行文件版本分别记录，原未记录的字段为 null。
 
 ## 评测条件
 
@@ -41,9 +41,13 @@ Common40 nominal 与 Extreme5 主组使用参考姿态和零初速；本次主�
 
 ### Motion 跟踪任务完成率定义
 
-因摔倒而无法继续后续动作跟踪，记为未完成；未发生这类不可继续中断，记为完成。中途摔倒后恢复并跟踪到动作末尾，仍记为完成。判定需对照参考动作，识别参考翻滚、倒地起身与允许的低姿态动作，并核验摔倒后是否恢复跟踪。仿真记录运行至末端只表示记录长度，低高度也不能单独作为摔倒判据。
+因失控摔倒而无法继续后续动作跟踪，记为未完成；未发生这类不可继续中断，记为完成。中途倒地后重新跟上参考并维持到有效动作末端，仍记为完成。判定对照参考轨迹，区分参考翻滚、倒地起身与允许的低姿态动作，并核验后续是否恢复跟踪。低高度不能单独判摔倒，仿真记录运行至末端也不能直接判完成。
 
-恢复后跟踪至末尾计为完成的规则已确定；正式回合标签、判定证据及多 seed 动作统计仍待离线核验与冻结，完成率保持 `null/pending`，**当前不展示百分比**。各组的统计单位、有效分母与多 seed 汇总随冻结结果一并记录。已冻结的四项全程误差可先独立正式发布，完成率在正式统计冻结后更新。
+公开证据等级为 `verified_geometry_reference_and_valid_endpoint`，使用几何状态、参考轨迹与有效动作末端；接触力未直接记录。`completion_failure_reference_time_s` 和 `completion_failure_physics_time_s` 分别使用参考、物理时间轴，表示最终持续未恢复区间的几何观察起点；它们属于几何观察时间，不解释为接触力测得的首次触地时刻。
+
+每个 seed 的标签为 completed / not_completed / unknown。多 seed 先在动作内平均二元完成标签，再对动作等权，报告“动作等权平均完成比例／完成动作当量”。跨 seed 混合结局保留分数比例，不将动作强行归为二分类；重复与扰动组的 15 / 25 对回合不扩大独立动作 N=5。
+
+unknown 保留完整动作及 seed 分母；存在 unknown 时点比例为 null，保留将未知结局分别视为未完成、完成的逻辑下界与上界。这些界是未知标签的逻辑范围，不是统计 CI。本次公共汇总的 unknown 均为 0；完成率未新增置信区间，描述当前所选动作的完成比例，不用于推断总体成功概率。
 
 ### 硬件模型与关节参数
 
@@ -83,6 +87,18 @@ Common40 nominal 与 Extreme5 主组使用参考姿态和零初速；本次主�
 
 身体与手腕位置误差均值为 G1 较低，姿态误差均值为 RP1 较低；仅手腕姿态差值区间位于零以下，其余三项跨零。两个动作组独立报告，不合并为 N=45 的主估计。完整精度、每机器人均值区间及逐回合记录见 [data.json](data.json)、[episodes.csv](episodes.csv) 和 [comparisons.csv](comparisons.csv)。
 
+## Motion 跟踪任务完成率结果
+
+| 数据组 | 动作 N | RP1 | G1 |
+| --- | ---: | --- | --- |
+| Common40 主组 | 40 | 72.5%（29/40） | 65%（26/40） |
+| Extreme5 主组 | 5 | 0%（0/5） | 0%（0/5） |
+| 部署敏感性 | 5 | 60%（3.0/5 动作当量） | 60%（3.0/5 动作当量） |
+| 名义重复 | 5 | 60%（3.0/5 动作当量） | 60%（3.0/5 动作当量） |
+| 根初态扰动 | 5 | 60%（3.0/5 动作当量） | 60%（3.0/5 动作当量） |
+
+单 seed 主组用完成动作数／动作数报告；三个敏感性组使用动作等权平均完成比例与完成动作当量，各自独立动作数为 N=5。上述汇总直接读取公共科学来源，任务结局不用于截短或筛掉四项全程误差记录。
+
 ## 结果分析
 
 聚合先对完整相同 seed 集求每动作均值，再按动作等权计算组均值。四项全程误差的 95% 区间采用 10,000 次 paired motion percentile bootstrap，PCG64 随机种子 20261013、线性分位数，每组和指标重置；两侧共享重采样索引。每机器人均值区间与 RP1−G1 配对差值区间分别保存。组内名次依据配对身份、协议与有效指标分母齐全一致计算；任务结局不用于排除全程误差记录。
@@ -103,7 +119,7 @@ Common40 主组以 **40 对动作**、Extreme5 以 **5 对动作**为重采样�
 
 当前公开投影：[配对结果 JSON](data.json)、[180 回合 CSV](episodes.csv)、[10 条机器人聚合记录 CSV](comparisons.csv)。模型参数：[JSON](hardware.json) / [CSV](hardware.csv)。科学来源与历史原始实验在来源项目和 Git 历史中保留。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。原链接正在按“全程误差与跟踪任务完成率”的新口径更新；完成率的正式回合标签、判定证据和多 seed 动作统计待冻结。相关飞书资料需要组织访问权限。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。原链接正在按本次“全程误差与跟踪任务完成率”结果更新；**V6 待云端同步**。相关飞书资料需要组织访问权限。
 
 既有同步视频的两侧来源回合均对应 Common40 共有数据。新公开视频为 **0/40**，索引见 [media.json](media.json)；Extreme5 的 5 个视频尚未制作。
 
@@ -111,8 +127,9 @@ Common40 主组以 **40 对动作**、Extreme5 以 **5 对动作**为重采样�
 
 | 冻结来源 | SHA256 |
 | --- | --- |
-| 全程科学输入 public_fullwindow.json | `119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd` |
+| 当前科学输入 public_completion_fullwindow.json | `8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f` |
+| 当前科学回合表 public_completion_episodes.csv | `7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b` |
 | hardware.json | `5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af` |
 | hardware.csv | `78972776c7640ec62e03bffda14caf0fb530a170ca3751109e66a79ac57614de` |
 
-全程科学输入包含 180 条既有回合的 720 个四项误差值与五组冻结配对统计；当前网站只投影公开字段。公开 `data.json`、`episodes.csv`、`comparisons.csv` 的自身摘要、文件大小与生成时间见 [RELEASE_MANIFEST.json](RELEASE_MANIFEST.json)。
+上述两文件为当前唯一科学来源，包含 180 条既有回合的 720 个四项误差值、原有 CI、五组配对统计及语义完成标签。JSON 为 372,397 bytes，CSV 为 63,535 bytes、180 条回合；历史输入留作内部交叉验证与窗口元信息。当前网站按 schema 4 投影公开字段，`data.json`、`episodes.csv`、`comparisons.csv` 的自身摘要、文件大小与生成时间见 [RELEASE_MANIFEST.json](RELEASE_MANIFEST.json)。

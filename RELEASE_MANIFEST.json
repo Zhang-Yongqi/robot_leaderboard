@@ -1,6 +1,6 @@
 {
-  "schema_version": 3,
-  "public_data_sha256": "6a1e38c4d779748c52244b5df401e8eb28b5a2dcde211ef59ecdf0e54a4be598",
+  "schema_version": 4,
+  "public_data_sha256": "4106379ef4abd9a46eba0f80f01f3adb765e972db5b6e0d356cff608488b8eec",
   "counts": {
     "episode_records": 180,
     "paired_cases": 90,
@@ -9,26 +9,25 @@
     "aggregate_rows": 10,
     "result_rows": 190
   },
-  "fullwindow_source_sha256": "119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd",
+  "fullwindow_source_sha256": "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f",
   "identity_map_sha256": "d7c902304aba5ca0588275b4b366f7bb799ee6e5a243c1bc8866ad059fb12aa4",
   "completion_contract": {
-    "status": "pending",
-    "rule_version": null,
-    "source_sha256": null
+    "status": "verified",
+    "rule_version": "fall_recovery_terminal_tracking_v2",
+    "source_sha256": "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f"
   },
-  "publication_state": "fullwindow_published_completion_pending",
-  "generated_utc": "2026-10-14T12:15:05.523795+00:00",
+  "publication_state": "fullwindow_semantic_completion_published",
+  "generated_utc": "2026-10-14T12:36:52.627498+00:00",
   "media_state": {
     "public_new_common40": 0,
     "public_new_extreme5": 0,
     "source_media_sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
   },
   "report_state": {
-    "existing_urls_retained_in_source": true,
-    "latest_public_V5_sync_received": true,
-    "latest_user_scope": "full errors plus fall-unable-to-continue task completion metric",
-    "new_completion_scope_report": "pending owner frozen labels and statistics; original report owner updating",
-    "human_recovery_rule": "恢复并跟踪到末尾算完成"
+    "existing_urls_retained": true,
+    "V6_local_report": "final checks",
+    "V6_cloud_sync": "pending actual replacement and readback by original report owner",
+    "latest_verified_cloud_version": 5
   },
   "hardware": {
     "json": "hardware.json",
@@ -47,28 +46,28 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "index.html": {
-      "bytes": 13138,
-      "sha256": "12f9e80daaae5c509a7f5fa7b31b427a63450cdb5dc0ceae166784ef9c7cf871"
+      "bytes": 13524,
+      "sha256": "ed6353481e28d0960f02e8cacc65b313b6baad95180a33ca6a5aaab631d70409"
     },
     "app.js": {
-      "bytes": 52781,
-      "sha256": "f1b42a890f264554af1f2339865991b1ab5cb3a8f73f8a4ed3fade314bbaedff"
+      "bytes": 63910,
+      "sha256": "faa0a0570324ae48540e59ecf748feb31e8fe30fe9694aac60c0158396586b2c"
     },
     "style.css": {
-      "bytes": 22040,
-      "sha256": "6ab17dc471e156f70f3fb170752c6b44a8dc594b0bd647b03573ca834c0b36cd"
+      "bytes": 22713,
+      "sha256": "ab5c202d17351712cb9c4e268aa155277c006879453b55f988a394baf91e9392"
     },
     "data.json": {
-      "bytes": 534872,
-      "sha256": "6a1e38c4d779748c52244b5df401e8eb28b5a2dcde211ef59ecdf0e54a4be598"
+      "bytes": 746611,
+      "sha256": "4106379ef4abd9a46eba0f80f01f3adb765e972db5b6e0d356cff608488b8eec"
     },
     "episodes.csv": {
-      "bytes": 117342,
-      "sha256": "97fb5129744b37bf2236ea51ce10fae4eeffe0e871555c8079811052e655d11c"
+      "bytes": 140256,
+      "sha256": "1c51ea1651ddbcb75de3f6bafca3baf63c59015dcb79b985ead2938022613bca"
     },
     "comparisons.csv": {
-      "bytes": 7636,
-      "sha256": "8f78a4662eed1cb0742e0c1966066f32d2a2b8412cb08b98b314b4a803815191"
+      "bytes": 46725,
+      "sha256": "767f6dd840a6ac08c3348f91db82ad174d3a67016c3abc72babbc84ac175adc9"
     },
     "media.json": {
       "bytes": 173,
@@ -83,24 +82,25 @@
       "sha256": "78972776c7640ec62e03bffda14caf0fb530a170ca3751109e66a79ac57614de"
     },
     "README.md": {
-      "bytes": 6723,
-      "sha256": "27ade3f967be3de5fcc7b38883c4c7bd96df25a417fbca3c27d18e274c9a6042"
+      "bytes": 8006,
+      "sha256": "40121d8a81d1e34250e8e2ce3a90e1b98283201baa121165f0842c3bdbaac394"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 11605,
-      "sha256": "95e98dff094f7d3728b1e366b9b99946414325fb721374f1196ba3667e14a0d2"
+      "bytes": 13399,
+      "sha256": "0d6c060a7af5906ef4d92932cb52fb2ec50ae8fac0f1bb6b78b61d2ddb321962"
     },
     "favicon.svg": {
       "bytes": 279,
       "sha256": "ac39fd5a6da25a4df96d90c5b315814eae89792d9e900755572b7df089541758"
     },
     "scripts/update_snapshot.py": {
-      "bytes": 15545,
-      "sha256": "019437f9e053c3640c78167e9108a2f74f7c3fb9b242032f907eab8290b6aff4"
+      "bytes": 28757,
+      "sha256": "5ec833c4dbde9524a49ade1aecfe68d0fdeae8d66c70e02c2a18a9a1954d148f"
     },
     "scripts/verify_public.py": {
-      "bytes": 30941,
-      "sha256": "998c012c1145d5e98220d270dcca21cf89c213c3f010d4e0fe8c29e705796737"
+      "bytes": 44697,
+      "sha256": "49892c68563f8887bca2ac77572a3068b129ceffb708642173bedd06fe7430ac"
     }
-  }
+  },
+  "completion_source_csv_sha256": "7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b"
 }

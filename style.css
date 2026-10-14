@@ -19,3 +19,9 @@
 
 #results-table{min-width:1320px}.completion-section{margin-top:48px;padding-top:32px;border-top:1px solid var(--line)}.completion-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px}.completion-card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:25px}.completion-card h3{font-size:18px}.completion-robots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:20px;margin-top:24px}.completion-robots h4{display:flex;align-items:center;gap:8px;margin:0 0 12px;font-size:12px}.completion-robots p{font-size:11px;color:var(--muted);margin-top:12px;margin-bottom:0}.completion-pending{display:block;color:#716336;font-size:14px;font-weight:600}.completion-result{font-size:14px;font-weight:600}.completion-result.finished{color:#15745b}.completion-result.unfinished{color:#a04634}.completion-cell{min-width:170px}.completion-table{min-width:620px;font-size:12px}.completion-table td:first-child{min-width:200px}.completion-table td{width:33%}.completion-card .metric-detail{max-width:none}
 @media(max-width:760px){.completion-grid{grid-template-columns:1fr}.completion-card{padding:24px}.completion-section{margin-top:35px}.completion-section .section-heading.compact{margin-bottom:20px}}
+
+.completion-evidence{margin-top:8px}.completion-evidence summary{font-size:10px;padding:4px 0;font-weight:500}.completion-evidence p{font-size:10px;color:var(--muted);margin:8px 0;max-width:220px}.completion-result.undetermined{color:#716336}.completion-secondary-table{min-width:760px}.completion-secondary-table td{min-width:150px}.completion-card .metric-value{font-size:27px}.filters .search-field{grid-column:span 3}
+@media(max-width:1050px){.filters .search-field{grid-column:span 2}}
+@media(max-width:760px){.filters .search-field{grid-column:span 2}.completion-evidence p{max-width:190px}}
+
+@media(max-width:760px){.filters .completion-filter{grid-column:span 2}}

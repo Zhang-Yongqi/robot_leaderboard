@@ -1,6 +1,6 @@
 # RP1 / G1 Robot Motion Benchmark
 
-RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全程身体与手腕的位置、姿态四项误差。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试；motion 跟踪任务完成率正在离线核验。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
+RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全程身体与手腕的位置、姿态四项误差。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试；motion 跟踪任务完成率依据几何、参考轨迹与有效末端证据单独报告。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
 
 ## 评测条件
 
@@ -39,7 +39,19 @@ Common40 的四项全程误差均值均为 RP1 较低，配对差值区间均位
 
 ## Motion 跟踪任务完成率
 
-摔倒导致无法继续后续动作跟踪，记为未完成；未发生这类不可继续中断，记为完成。中途摔倒后恢复并跟踪到动作末尾，仍记为完成。核验需对照参考动作，区分参考翻滚、倒地起身与摔倒后无法继续。正式回合标签、判定证据及多 seed 动作统计正在离线核验，完成率保持 `null/pending`，**当前不展示百分比**。
+因失控摔倒而无法继续后续跟踪，记为未完成；中途倒地后重新跟上参考并维持到有效动作末端，仍记为完成。核验对照参考动作，区分翻滚、倒地起身与未恢复的失控姿态；完整仿真记录本身不决定完成状态。
+
+| 数据组 | 动作 N | RP1 | G1 |
+| --- | ---: | --- | --- |
+| Common40 主组 | 40 | 72.5%（29/40） | 65%（26/40） |
+| Extreme5 主组 | 5 | 0%（0/5） | 0%（0/5） |
+| 部署敏感性 | 5 | 60%（3.0/5 动作当量） | 60%（3.0/5 动作当量） |
+| 名义重复 | 5 | 60%（3.0/5 动作当量） | 60%（3.0/5 动作当量） |
+| 根初态扰动 | 5 | 60%（3.0/5 动作当量） | 60%（3.0/5 动作当量） |
+
+多 seed 先在动作内平均完成／未完成二元标签，再对动作等权；敏感性组使用“动作等权平均完成比例／完成动作当量”。同动作跨 seed 结局不一致时保留分数比例，不强行归为二分类；15 或 25 个配对回合不扩大独立动作 N=5。
+
+存在 unknown 标签时保留完整分母，点比例为 null，并保留逻辑上下界。完成率描述本组所选动作，不用于推断总体成功概率，未创建完成率 CI。判定依靠几何、参考轨迹与有效末端，接触力未直接记录；两个失败时钟表示最终持续未恢复区间的几何观察起点。完整定义见[评测说明](DATA_PROVENANCE.md)。
 
 ## 硬件模型与控制参数
 
@@ -49,7 +61,7 @@ Common40 的四项全程误差均值均为 RP1 较低，配对差值区间均位
 
 ## 数据与报告
 
-- [公开配对结果 JSON](data.json)：190 条记录，四项全程误差及任务完成率状态。
+- [公开配对结果 JSON](data.json)：190 条记录，四项全程误差及语义任务完成率。
 - [逐回合 CSV](episodes.csv)：180 条机器人回合。
 - [聚合比较 CSV](comparisons.csv)：10 条机器人聚合记录。
 - 硬件模型与控制参数：[JSON](hardware.json) / [CSV](hardware.csv)。
@@ -57,7 +69,7 @@ Common40 的四项全程误差均值均为 RP1 较低，配对差值区间均位
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)。
 - [新公开视频索引](media.json)：当前 0/40。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。原链接正在按“全程误差与跟踪任务完成率”的新口径更新；完成率的正式回合标签、判定证据和多 seed 动作统计待冻结。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。原链接正在按本次“全程误差与跟踪任务完成率”结果更新；**V6 待云端同步**。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
 ## 本地预览
 
@@ -69,15 +81,16 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 ## 可重复更新
 
-从已冻结的全程科学来源与私有身份映射生成公开字段投影，参数以脚本 `--help` 为准：
+从当前已独立核验的公共科学输入与私有身份映射生成公开字段投影，参数以脚本 `--help` 为准。历史全程输入仅用于内部交叉验证与窗口元信息：
 
 ```sh
 python3 scripts/update_snapshot.py \
-  --source-fullwindow /path/to/reviewed/public_fullwindow.json \
+  --fullwindow-source /path/to/archived/public_fullwindow.json \
+  --source-completion /path/to/reviewed/public_completion_fullwindow.json \
   --identity-map /path/to/private/identity-map.json \
   --output-dir /path/to/preview
 ```
 
-全程科学输入 SHA256 为 `119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd`。公开投影保留四项误差、均值、区间、分母与配对身份；输出 `data.json`、`episodes.csv`、`comparisons.csv`，文件摘要见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)及发布清单。JSON 与 CSV 保留原科学协议、执行协议、配置和来源摘要；原未记录字段为 null。私有身份映射不进入公开目录。
+当前唯一科学来源为 `public_completion_fullwindow.json` 与 `public_completion_episodes.csv`，SHA256 分别为 `8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f`、`7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b`。schema 4 公开投影保留四项误差及其均值与区间、语义完成标签、完成比例、分母与配对身份；输出 `data.json`、`episodes.csv`、`comparisons.csv`，文件摘要见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)及发布清单。JSON 与 CSV 保留原科学协议、执行协议、配置和来源摘要；原未记录字段为 null。私有身份映射不进入公开目录。
 
-四项全程误差可先独立正式发布，发布前完成静态检查及桌面、手机浏览器 QA。完成率保持 `null/pending`，待正式回合标签、判定证据与多 seed 动作统计冻结后更新。GitHub Pages 发布源为 `main / (root)`。
+公开投影经独立核验及静态、桌面和手机浏览器 QA 后发布。科学来源与公开投影的摘要分别记录，报告云端更新单独核验。GitHub Pages 发布源为 `main / (root)`。

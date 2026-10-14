@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Build the reviewed four-error v3 staging payload without estimating completion.
+"""Build reviewed full-window staging with pending or frozen semantic completion.
 
 Inputs are read only. Only explicit identity and full-window fields are selected.
 Each result retains only four frozen provenance hashes; absent hashes are null.
 Four frozen errors may be published with honest pending/null completion. New
-completion values remain unsupported until their separate contract is reviewed.
+Frozen completion is selected only from the separately SHA-bound public package.
 """
 import argparse
 from collections import Counter
@@ -20,6 +20,9 @@ import tempfile
 
 FULL_SOURCE_SHA = '119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd'
 IDENTITY_SHA = 'd7c902304aba5ca0588275b4b366f7bb799ee6e5a243c1bc8866ad059fb12aa4'
+COMPLETION_SOURCE_SHA = '8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f'
+COMPLETION_CSV_SHA = '7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b'
+CRITERION_ID = 'fall_recovery_terminal_tracking_v2'
 WINDOW = 'full_replay_50hz_first_substep'
 FULL4 = ('full_body_pos_mm', 'full_body_ori_rad', 'full_wrist_pos_mm', 'full_wrist_ori_rad')
 JOIN = ('dataset', 'condition', 'mode', 'robot', 'motion_id', 'seed')
@@ -30,6 +33,8 @@ COUNTS = {'episode_records': 180, 'paired_cases': 90, 'unique_motions': 45,
           'comparison_groups': 5, 'aggregate_rows': 10, 'result_rows': 190}
 PREVIEW_STATE = 'internal_preview_completion_pending'
 PUBLIC_STATE = 'fullwindow_published_completion_pending'
+COMPLETION_PUBLIC_STATE = 'fullwindow_semantic_completion_published'
+COMPLETION_PREVIEW_STATE = 'internal_preview_semantic_completion'
 PENDING = {'status': 'pending', 'completed': None, 'rate_pct': None, 'ci95': None,
            'reason': '等待正式完成判据和标签冻结'}
 COMPLETION_CONTRACT = {'status': 'pending', 'rule_version': None, 'source_sha256': None}
@@ -44,6 +49,30 @@ COMPARISON_COLUMNS = ['id', 'label', 'comparison_id', 'phase', 'dataset', 'condi
     (metric, metric + '_ci95_low', metric + '_ci95_high')],
     'completion_status', 'motion_completed', 'motion_completion_pct',
     'completion_ci95_low', 'completion_ci95_high', 'completion_reason']
+COMPLETION_ROW_FIELDS = ('status', 'completed', 'rate_pct', 'ci95', 'reason', 'evidence_level',
+    'reason_code', 'failure_reference_time_s', 'failure_physics_time_s', 'summary')
+COMPLETION_DEFINITION_FIELDS = ('label', 'criterion_id', 'definition', 'statuses', 'evidence_levels',
+    'reason_codes', 'recovered_midmotion_falls_can_complete', 'precision_errors_do_not_define_completion',
+    'point_rate_when_unknown')
+COMPLETION_GROUP_FIELDS = ('aggregation_rule', 'ratio_unit', 'display_unit', 'range_type',
+    'completion_CI_created', 'interpretation', 'robots')
+COMPLETION_SUMMARY_FIELDS = ('seed_counts', 'motion_completion_equivalents', 'expected_motion_denominator',
+    'expected_seeds_per_motion', 'effective_adjudicated_motions', 'n_unknown_motions',
+    'integer_completed_motions', 'completion_rate', 'possible_rate_bounds', 'completion_percent',
+    'possible_percent_bounds', 'completion_summary_label', 'completion_CI_created', 'per_motion_rates')
+COMPLETION_MOTION_FIELDS = ('motion_id', 'seed_counts', 'expected_seed_denominator', 'completion_fraction',
+    'possible_fraction_bounds', 'completion_percent', 'possible_percent_bounds')
+COMPLETION_EPISODE_FIELDS = ('phase', 'dataset', 'condition', 'mode', 'robot', 'motion_id', 'seed',
+    'effective_condition', 'scope', 'run_id', 'scientific_selected_case_id', 'metric_window', *FULL4,
+    'completion_status', 'completion_evidence_level', 'completion_reason_code',
+    'completion_failure_reference_time_s', 'completion_failure_physics_time_s')
+COMPLETION_COLUMNS_V4 = ['completion_status', 'motion_completed', 'motion_completion_pct',
+    'completion_reason', 'completion_evidence_level', 'completion_reason_code',
+    'completion_failure_reference_time_s', 'completion_failure_physics_time_s']
+EPISODE_COLUMNS_V4 = EPISODE_COLUMNS[:-6] + COMPLETION_COLUMNS_V4
+COMPARISON_COLUMNS_V4 = COMPARISON_COLUMNS[:-6] + COMPLETION_COLUMNS_V4 + [
+    'completion_possible_fraction_low', 'completion_possible_fraction_high',
+    'completion_possible_pct_low', 'completion_possible_pct_high', 'completion_summary_json']
 
 
 def require(ok, message):
@@ -112,7 +141,7 @@ def metric_cell(value, unit, ci, n):
     return {'value': value, 'unit': unit, 'ci95': deepcopy(ci), 'n_motions': n}
 
 
-def project(full, identities, publication=False):
+def project(full, identities, publication=False, completion=None):
     require(full['schema'] == 'rp1-g1-public-fullwindow-handoff-v1' and
             full['metric_window'] == WINDOW, 'Unreviewed full-window schema')
     require(len(full['episodes']) == 180 and len(full['comparisons']) == 5,
@@ -187,7 +216,7 @@ def project(full, identities, publication=False):
         require(set(comparison['paired_deltas']) == set(comparison['paired_motion_values']) == set(FULL4),
                 'Unreviewed comparison metric')
         comparisons.append(comparison)
-    return {'schema_version': 3, 'publication_state': PUBLIC_STATE if publication else PREVIEW_STATE,
+    data = {'schema_version': 3, 'publication_state': PUBLIC_STATE if publication else PREVIEW_STATE,
         'fullwindow_source_sha256': FULL_SOURCE_SHA, 'identity_map_sha256': IDENTITY_SHA,
         'counts': deepcopy(COUNTS),
         'metrics': {name: {'unit': units[name], 'label': full['metric_definitions'][name]['label'],
@@ -203,6 +232,134 @@ def project(full, identities, publication=False):
                     'weighting': full['methods']['weighting'], 'bootstrap': deepcopy(full['methods']['bootstrap'])},
         'completion_contract': deepcopy(COMPLETION_CONTRACT),
         'report_downloads': [], 'fairness': [], 'stats': {}}
+    if completion is not None:
+        apply_completion(data, full, completion, publication)
+    return data
+
+
+def exact_keys(obj, fields, location):
+    require(type(obj) is dict and set(obj) == set(fields), location + ': fields differ')
+
+
+def read_completion(path):
+    path = Path(path)
+    csv_path = path.with_name('public_completion_episodes.csv')
+    raw, csv_raw = path.read_bytes(), csv_path.read_bytes()
+    require(sha(raw) == COMPLETION_SOURCE_SHA and sha(csv_raw) == COMPLETION_CSV_SHA,
+            'Unreviewed public completion JSON/CSV identity')
+    obj = read_json(path)
+    handle = io.StringIO(newline='')
+    writer = csv.DictWriter(handle, fieldnames=COMPLETION_EPISODE_FIELDS, lineterminator='\r\n')
+    writer.writeheader()
+    writer.writerows(obj['episodes'])
+    require(csv_raw == handle.getvalue().encode(), 'Completion source CSV is not its exact JSON episode export')
+    require(path.read_bytes() == raw and csv_path.read_bytes() == csv_raw, 'Completion input changed during read')
+    return obj
+
+
+def apply_completion(data, full, completion, publication):
+    exact_keys(completion, ('schema', 'status', 'metric_window', 'counts', 'episode_semantic_join_key',
+        'episodes', 'comparisons', 'primary_comparison_ids', 'secondary_comparison_ids', 'metric_definitions',
+        'completion_definition', 'methods'), 'Completion source')
+    require(completion['schema'] == 'rp1-g1-public-fullwindow-semantic-completion-v2' and
+            completion['status'] == 'independently_verified' and completion['metric_window'] == WINDOW and
+            completion['episode_semantic_join_key'] == list(JOIN), 'Completion schema/window/join differs')
+    require(completion['counts'] == {'physical_episode_records': 180, 'paired_cases': 90,
+        'unique_motion_ids': 45, 'comparison_groups': 5, 'aggregate_views': 10,
+        'maximum_display_rows_with_aggregate_views': 190, 'lafan40_episode_records': 170,
+        'lafan40_paired_cases': 85, 'extreme5_episode_records': 10, 'extreme5_paired_cases': 5},
+        'Completion source counts differ')
+    definition = completion['completion_definition']
+    exact_keys(definition, COMPLETION_DEFINITION_FIELDS, 'Completion definition')
+    require(definition['criterion_id'] == CRITERION_ID and
+            definition['recovered_midmotion_falls_can_complete'] is True and
+            definition['precision_errors_do_not_define_completion'] is True, 'Completion criterion differs')
+    require(set(completion['metric_definitions']) == set(FULL4) and
+            all(completion['metric_definitions'][name] == full['metric_definitions'][name] for name in FULL4),
+            'Completion source changed full-window metric definitions')
+    episodes = {}
+    full_episodes = {episode_key(row): row for row in full['episodes']}
+    for row in completion['episodes']:
+        exact_keys(row, COMPLETION_EPISODE_FIELDS, 'Completion episode')
+        require(type(row['seed']) is int and row['seed'] >= 0 and row['scope'] == 'per_motion' and
+                row['effective_condition'] == row['condition'] and row['metric_window'] == WINDOW,
+                'Completion episode seed/condition/window differs')
+        key = episode_key(row)
+        require(key not in episodes and key in full_episodes, 'Duplicate/unmatched completion episode')
+        original = full_episodes[key]
+        require(all(row[name] == original[name] for name in (*FULL4, 'run_id', 'scientific_selected_case_id')),
+                'Completion source changed full-window values or aliases')
+        episodes[key] = row
+    require(set(episodes) == set(full_episodes) and len(episodes) == 180, 'Completion episode population differs')
+    groups = {}
+    original_groups = {group_key(row): row for row in full['comparisons']}
+    for group in completion['comparisons']:
+        key = group_key(group)
+        require(key not in groups and key in original_groups, 'Duplicate/unmatched completion group')
+        original = original_groups[key]
+        exact_keys(group, ('id', 'phase', 'dataset', 'condition', 'effective_condition', 'mode', 'role',
+            'metric_window', 'n_unique_motions', 'paired_cases', 'episode_records', 'matched_seed_set',
+            'expected_participants', 'expected_paired_motions', 'sample_set', 'sample_set_sha256',
+            'robot_means', 'paired_deltas', 'paired_motion_values', 'completion'), 'Completion group')
+        require(group['effective_condition'] == group['condition'] and all(group[name] == original[name] for name in
+            ('id', 'phase', 'dataset', 'condition', 'mode', 'role', 'metric_window', 'n_unique_motions',
+             'paired_cases', 'episode_records', 'matched_seed_set', 'expected_participants', 'expected_paired_motions',
+             'sample_set', 'sample_set_sha256', 'robot_means', 'paired_deltas', 'paired_motion_values')),
+             'Completion source changed frozen group values, CI, seeds or sample identity')
+        exact_keys(group['completion'], COMPLETION_GROUP_FIELDS, 'Group completion')
+        exact_keys(group['completion']['robots'], ('rp1', 'g1'), 'Completion robots')
+        for summary in group['completion']['robots'].values():
+            exact_keys(summary, COMPLETION_SUMMARY_FIELDS, 'Completion summary')
+            for motion in summary['per_motion_rates']:
+                exact_keys(motion, COMPLETION_MOTION_FIELDS, 'Completion motion')
+        groups[key] = group
+    require(set(groups) == set(original_groups) and len(groups) == 5, 'Completion group population differs')
+    for field in ('primary_comparison_ids', 'secondary_comparison_ids'):
+        require(completion[field] == full[field], 'Completion comparison role index differs')
+    for row in data['results']:
+        obj = dict.fromkeys(COMPLETION_ROW_FIELDS)
+        if row['scope'] == 'per_motion':
+            source = episodes[episode_key(row)]
+            row['metrics'] = {name: metric_cell(source[name], data['metrics'][name]['unit'], None, 1)
+                              for name in FULL4}
+            status = source['completion_status']
+            require(status in ('completed', 'not_completed', 'unknown'), 'Unreviewed completion status')
+            obj.update(status=status, completed={'completed': True, 'not_completed': False, 'unknown': None}[status],
+                reason=definition['reason_codes'][source['completion_reason_code']],
+                evidence_level=source['completion_evidence_level'], reason_code=source['completion_reason_code'],
+                failure_reference_time_s=source['completion_failure_reference_time_s'],
+                failure_physics_time_s=source['completion_failure_physics_time_s'])
+        else:
+            group = groups[group_key(row)]
+            summary = group['completion']['robots'][row['robot']]
+            row['metrics'] = {name: metric_cell(group['robot_means'][name][row['robot']]['value'],
+                data['metrics'][name]['unit'], group['robot_means'][name][row['robot']]['ci95'],
+                group['n_unique_motions']) for name in FULL4}
+            obj.update(status='summarized', rate_pct=summary['completion_percent'],
+                       reason=summary['completion_summary_label'], summary=deepcopy(summary))
+        row['completion'] = obj
+    for comparison in data['comparisons']:
+        group = groups[group_key(comparison)]
+        for field in ('phase', 'dataset', 'condition', 'mode', 'role', 'metric_window', 'n_unique_motions',
+                      'paired_cases', 'episode_records', 'matched_seed_set', 'expected_paired_motions',
+                      'sample_set', 'sample_set_sha256', 'paired_deltas', 'paired_motion_values', 'completion'):
+            comparison[field] = deepcopy(group[field])
+    data.update(schema_version=4, publication_state=COMPLETION_PUBLIC_STATE if publication else COMPLETION_PREVIEW_STATE,
+                fullwindow_source_sha256=COMPLETION_SOURCE_SHA,
+                completion_contract={'status': 'verified', 'rule_version': definition['criterion_id'],
+                                     'source_sha256': COMPLETION_SOURCE_SHA})
+    for field in ('fullwindow', 'weighting', 'bootstrap'):
+        data['methods'][field] = deepcopy(completion['methods'][field])
+    data['methods']['completion'] = deepcopy(definition)
+
+
+def completion_digest(data):
+    obj = {'definition': data['methods']['completion'], 'contract': data['completion_contract'],
+           'results': [{'id': row['id'], 'completion': row['completion']}
+                       for row in sorted(data['results'], key=lambda row: row['id'])],
+           'comparisons': [{'id': row['id'], 'completion': row['completion']}
+                           for row in sorted(data['comparisons'], key=lambda row: row['id'])]}
+    return sha(json.dumps(obj, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False).encode())
 
 
 def completion_columns(completion):
@@ -211,6 +368,12 @@ def completion_columns(completion):
             'motion_completion_pct': completion['rate_pct'],
             'completion_ci95_low': bounds[0] if bounds else None,
             'completion_ci95_high': bounds[1] if bounds else None, 'completion_reason': completion['reason']}
+
+
+def csv_columns(data, scope):
+    if data['schema_version'] == 4:
+        return EPISODE_COLUMNS_V4 if scope == 'per_motion' else COMPARISON_COLUMNS_V4
+    return EPISODE_COLUMNS if scope == 'per_motion' else COMPARISON_COLUMNS
 
 
 def csv_records(data, scope):
@@ -236,14 +399,31 @@ def csv_records(data, scope):
                 cell = row['metrics'][name]
                 record.update({name: cell['value'], name + '_ci95_low': cell['ci95'][0],
                                name + '_ci95_high': cell['ci95'][1]})
-        record.update(completion_columns(row['completion']))
+        if data['schema_version'] == 4:
+            obj = row['completion']
+            record.update(completion_status=obj['status'], motion_completed=(json.dumps(obj['completed'])
+                if obj['completed'] is not None else None),
+                motion_completion_pct=obj['rate_pct'], completion_reason=obj['reason'],
+                completion_evidence_level=obj['evidence_level'], completion_reason_code=obj['reason_code'],
+                completion_failure_reference_time_s=obj['failure_reference_time_s'],
+                completion_failure_physics_time_s=obj['failure_physics_time_s'])
+            if scope == 'aggregate':
+                summary = obj['summary']
+                record.update(completion_possible_fraction_low=summary['possible_rate_bounds'][0],
+                    completion_possible_fraction_high=summary['possible_rate_bounds'][1],
+                    completion_possible_pct_low=summary['possible_percent_bounds'][0],
+                    completion_possible_pct_high=summary['possible_percent_bounds'][1],
+                    completion_summary_json=json.dumps(summary, ensure_ascii=False, sort_keys=True,
+                                                       separators=(',', ':'), allow_nan=False))
+        else:
+            record.update(completion_columns(row['completion']))
         records.append(record)
     return records
 
 
 def csv_bytes(data, scope):
     handle = io.StringIO(newline='')
-    columns = EPISODE_COLUMNS if scope == 'per_motion' else COMPARISON_COLUMNS
+    columns = csv_columns(data, scope)
     writer = csv.DictWriter(handle, fieldnames=columns, lineterminator='\r\n')
     writer.writeheader()
     writer.writerows(csv_records(data, scope))
@@ -256,7 +436,9 @@ def main():
     parser.add_argument('--identity-map', type=Path, required=True)
     parser.add_argument('--output-dir', type=Path, required=True)
     parser.add_argument('--publication', action='store_true',
-                        help='stage the publishable four-error contract with completion still pending/null')
+                        help='stage the publication state for the selected reviewed contract')
+    parser.add_argument('--source-completion', type=Path,
+                        help='optional frozen public completion JSON with its sibling public episode CSV')
     args = parser.parse_args()
     raw = args.fullwindow_source.read_bytes()
     identity_raw = args.identity_map.read_bytes()
@@ -264,16 +446,19 @@ def main():
     dest = args.output_dir.resolve()
     require('.private' in dest.parts or dest.is_relative_to(Path(tempfile.gettempdir()).resolve()),
             'Generate only in a private staging or temporary directory')
-    data = project(read_json(args.fullwindow_source), read_json(args.identity_map), args.publication)
+    completion = read_completion(args.source_completion) if args.source_completion else None
+    data = project(read_json(args.fullwindow_source), read_json(args.identity_map), args.publication, completion)
     outputs = {'data.json': (json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode(),
                'episodes.csv': csv_bytes(data, 'per_motion'), 'comparisons.csv': csv_bytes(data, 'aggregate')}
     require(args.fullwindow_source.read_bytes() == raw and args.identity_map.read_bytes() == identity_raw,
             'Input changed during projection')
+    if args.source_completion:
+        require(read_completion(args.source_completion) == completion, 'Completion input changed during projection')
     dest.mkdir(parents=True, exist_ok=True)
     for name, content in outputs.items():
         (dest / name).write_bytes(content)
-    print(json.dumps({'schema_version': 3, 'publication_contract_eligible': args.publication,
-        'completion_ready': False, 'publication_state': data['publication_state'], 'counts': COUNTS,
+    print(json.dumps({'schema_version': data['schema_version'], 'publication_contract_eligible': args.publication,
+        'completion_ready': data['schema_version'] == 4, 'publication_state': data['publication_state'], 'counts': COUNTS,
         'files': {name: {'bytes': len(content), 'sha256': sha(content)} for name, content in outputs.items()}},
         ensure_ascii=False))
 

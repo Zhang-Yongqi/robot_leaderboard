@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit the reviewed v3 four-error contract with honest pending/null completion.
+"""Audit reviewed full-window v3 pending or v4 semantic completion contracts.
 
 --preview permits internal pending/null completion inspection. It never enables
 publication. The full four-error contract may be published independently; new
@@ -21,7 +21,11 @@ from urllib.parse import unquote, urlsplit
 from update_snapshot import (COMPLETION_CONTRACT, COMPARISON_COLUMNS, COUNTS,
     EPISODE_COLUMNS, FULL4, FULL_SOURCE_SHA, IDENTITY_SHA, PENDING, PREVIEW_STATE, PUBLIC_STATE,
     PROVENANCE_FIELDS, PROVENANCE_SHA, WINDOW, csv_bytes, episode_key, group_key,
-    project, provenance_digest, read_json, seed, sha)
+    project, provenance_digest, read_json, seed, sha, csv_columns, completion_digest, read_completion,
+    COMPLETION_SOURCE_SHA, COMPLETION_CSV_SHA, CRITERION_ID, COMPLETION_PUBLIC_STATE,
+    COMPLETION_PREVIEW_STATE, COMPLETION_ROW_FIELDS, COMPLETION_DEFINITION_FIELDS,
+    COMPLETION_GROUP_FIELDS, COMPLETION_SUMMARY_FIELDS, COMPLETION_MOTION_FIELDS)
+COMPLETION_PROJECTION_SHA = '1f60098e6bf38fece043474847d55936ff4aad0a6d576a7b728cfe6a42d9639b'
 
 PUBLISH_FILES = {'.gitignore', '.nojekyll', 'README.md', 'DATA_PROVENANCE.md',
     'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json', 'media.json',
@@ -111,15 +115,17 @@ class Links(HTMLParser):
 
 
 class Audit:
-    def __init__(self, root, preview=False, source=None, identities=None):
+    def __init__(self, root, preview=False, source=None, identities=None, completion=None):
         self.root = Path(root).resolve()
         self.preview = preview
         self.source = source
         self.identities = identities
+        self.completion_source = completion
         self.data = read_json(self.root / 'data.json')
         self.checked, self.errors = [], []
         self.value_checks = {'episode_values': 0, 'aggregate_scalars': 0, 'paired_delta_scalars': 0}
         self.provenance_checks = {'hash_values': 0, 'null_values': 0, 'source_fields': 0}
+        self.completion_checks = {'episode_labels': 0, 'aggregate_summaries': 0, 'motion_summaries': 0}
         self.episodes, self.cases, self.aliases, self.by_id = {}, {}, {}, {}
 
     def check(self, name, fn):
@@ -132,19 +138,25 @@ class Audit:
     def schema(self):
         d = self.data
         exact_keys(d, TOP_KEYS, 'data')
-        require(d['schema_version'] == 3 and d['phase'] == 'A' and d['counts'] == COUNTS,
-                'v3 schema/physical scope differs')
-        require(d['publication_state'] == (PREVIEW_STATE if self.preview else PUBLIC_STATE)
-                and d['completion_contract'] == COMPLETION_CONTRACT,
-                'Publication state or pending/null completion contract differs')
-        require(d['fullwindow_source_sha256'] == FULL_SOURCE_SHA and d['identity_map_sha256'] == IDENTITY_SHA,
+        require(type(d['schema_version']) is int and d['schema_version'] in (3, 4) and
+                d['phase'] == 'A' and d['counts'] == COUNTS, 'Reviewed schema/physical scope differs')
+        semantic = d['schema_version'] == 4
+        expected_state = ((COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE) if semantic else
+                          (PREVIEW_STATE if self.preview else PUBLIC_STATE))
+        expected_contract = ({'status': 'verified', 'rule_version': CRITERION_ID,
+                              'source_sha256': COMPLETION_SOURCE_SHA} if semantic else COMPLETION_CONTRACT)
+        require(d['publication_state'] == expected_state and d['completion_contract'] == expected_contract,
+                'Publication state or frozen completion contract differs')
+        require(d['fullwindow_source_sha256'] == (COMPLETION_SOURCE_SHA if semantic else FULL_SOURCE_SHA) and
+                d['identity_map_sha256'] == IDENTITY_SHA,
                 'Reviewed projection source identities differ')
         require(set(d['metrics']) == set(FULL4), 'Exactly four full-window metrics are reviewed')
         for name, definition in d['metrics'].items():
             exact_keys(definition, {'unit', 'label', 'higher_is_better'}, 'metric definition')
             require(definition['unit'] == ('mm' if name.endswith('_mm') else 'rad')
                     and definition['higher_is_better'] is False, 'Full-window units/direction differ')
-        exact_keys(d['methods'], {'fullwindow', 'units', 'weighting', 'bootstrap'}, 'methods')
+        exact_keys(d['methods'], {'fullwindow', 'units', 'weighting', 'bootstrap'} |
+                   ({'completion'} if semantic else set()), 'methods')
         require(d['methods']['bootstrap'] == BOOTSTRAP, 'Paired motion bootstrap protocol differs')
         require(len(d['datasets']) == 2 and {(x['id'], x['expected_motions']) for x in d['datasets']} ==
                 {('lafan40', 40), ('extreme5', 5)}, 'Two datasets must remain separate')
@@ -167,7 +179,8 @@ class Audit:
             exact_keys(row, ROW_KEYS | ({'fullwindow'} if is_episode else set()), 'result')
             require(row['phase'] == 'A' and row['robot'] in {'rp1', 'g1'} and group_key(row) in COHORTS,
                     'Unreviewed result identity')
-            pending(row['completion'])
+            if self.data['schema_version'] == 3:
+                pending(row['completion'])
             exact_keys(row['provenance'], PROVENANCE_FIELDS, 'scientific provenance')
             for value in row['provenance'].values():
                 require(value is None or (type(value) is str and HASH.fullmatch(value)),
@@ -247,7 +260,8 @@ class Audit:
                     and c['paired_cases'] == pairs and c['episode_records'] == pairs * 2
                     and c['n_unique_motions'] == c['expected_paired_motions'] == motions
                     and c['matched_seed_set'] == seeds, 'Comparison coverage/weighting differs')
-            pending(c['completion'])
+            if self.data['schema_version'] == 3:
+                pending(c['completion'])
             members = [self.by_id[x] for x in c['expected_participants']]
             require(len(members) == 2 and {r['robot'] for r in members} == {'rp1', 'g1'} and
                     all(r['scope'] == 'aggregate' and group_key(r) == g for r in members),
@@ -312,17 +326,157 @@ class Audit:
                 'Primary/secondary indices differ')
 
     def exports(self):
-        for name, scope, n, columns in [('episodes.csv', 'per_motion', 180, EPISODE_COLUMNS),
-                                        ('comparisons.csv', 'aggregate', 10, COMPARISON_COLUMNS)]:
+        for name, scope, n in [('episodes.csv', 'per_motion', 180), ('comparisons.csv', 'aggregate', 10)]:
+            columns = csv_columns(self.data, scope)
             raw = (self.root / name).read_bytes()
             require(raw == csv_bytes(self.data, scope), 'CSV is not the exact canonical v3 export: ' + name)
             with (self.root / name).open(encoding='utf-8', newline='') as handle:
                 reader = csv.DictReader(handle, strict=True)
                 rows = list(reader)
             require(reader.fieldnames == columns and len(rows) == n, 'CSV rows/columns differ')
-            require(all(row['completion_status'] == 'pending' and all(row[field] == '' for field in
-                    ('motion_completed', 'motion_completion_pct', 'completion_ci95_low', 'completion_ci95_high'))
-                    for row in rows), 'Unknown completion must retain blank numeric/boolean CSV cells')
+            if self.data['schema_version'] == 3:
+                require(all(row['completion_status'] == 'pending' and all(row[field] == '' for field in
+                        ('motion_completed', 'motion_completion_pct', 'completion_ci95_low', 'completion_ci95_high'))
+                        for row in rows), 'Pending completion must retain blank numeric/boolean CSV cells')
+            else:
+                require(not any('completion_ci' in name.lower() for name in columns), 'Completion CSV cannot invent CI')
+                if scope == 'per_motion':
+                    require(all(row['motion_completion_pct'] == '' and row['motion_completed'] ==
+                        {'completed': 'true', 'not_completed': 'false', 'unknown': ''}[row['completion_status']]
+                        for row in rows), 'Episode CSV boolean/unknown mapping differs')
+
+    def completions(self):
+        if self.data['schema_version'] == 3:
+            for obj in self.data['results'] + self.data['comparisons']:
+                pending(obj['completion'])
+            return
+        definition = self.data['methods']['completion']
+        exact_keys(definition, COMPLETION_DEFINITION_FIELDS, 'Completion definition')
+        require(definition['criterion_id'] == CRITERION_ID and
+                definition['recovered_midmotion_falls_can_complete'] is True and
+                definition['precision_errors_do_not_define_completion'] is True, 'Completion criterion differs')
+        exact_keys(definition['statuses'], ('completed', 'not_completed', 'unknown'), 'Completion states')
+        exact_keys(definition['reason_codes'], ('terminal_tracking_complete', 'persistent_fall_unable_to_resume',
+                   'unknown_evidence'), 'Completion reasons')
+        require(definition['evidence_levels'] == ['verified_geometry_reference_and_valid_endpoint',
+                'unknown_insufficient_evidence'], 'Completion evidence levels differ')
+        mapping = {'completed': (True, 'terminal_tracking_complete', 'verified_geometry_reference_and_valid_endpoint'),
+                   'not_completed': (False, 'persistent_fall_unable_to_resume', 'verified_geometry_reference_and_valid_endpoint'),
+                   'unknown': (None, 'unknown_evidence', 'unknown_insufficient_evidence')}
+        for row in self.data['results']:
+            obj = row['completion']
+            exact_keys(obj, COMPLETION_ROW_FIELDS, 'Result semantic completion')
+            require(obj['ci95'] is None, 'Completion cannot invent a statistical CI')
+            if row['scope'] == 'per_motion':
+                require(obj['status'] in mapping, 'Episode completion state differs')
+                completed, code, level = mapping[obj['status']]
+                require(obj['completed'] is completed and obj['rate_pct'] is None and obj['summary'] is None and
+                        obj['reason_code'] == code and obj['evidence_level'] == level and
+                        obj['reason'] == definition['reason_codes'][code], 'Episode completion/evidence mapping differs')
+                for field in ('failure_reference_time_s', 'failure_physics_time_s'):
+                    value = obj[field]
+                    if obj['status'] == 'not_completed':
+                        number(value, 'Semantic failure time')
+                        require(0 <= value <= row['fullwindow']['reference_end_s'], 'Semantic failure time outside reference')
+                    else:
+                        require(value is None, 'Completed/unknown episode cannot have a failure time')
+                self.completion_checks['episode_labels'] += 1
+            else:
+                require(obj['status'] == 'summarized' and all(obj[field] is None for field in
+                    ('completed', 'evidence_level', 'reason_code', 'failure_reference_time_s', 'failure_physics_time_s')),
+                    'Aggregate completion cannot be an episode label')
+        for comparison in self.data['comparisons']:
+            group = comparison['completion']
+            exact_keys(group, COMPLETION_GROUP_FIELDS, 'Comparison semantic completion')
+            require(group['aggregation_rule'] == 'seed_binary_mean_within_motion_then_equal_motion_mean' and
+                    group['ratio_unit'] == 'fraction' and group['display_unit'] == '%' and
+                    group['range_type'] == 'unknown_label_logical_bounds_not_statistical_CI' and
+                    group['completion_CI_created'] is False, 'Completion weighting/range/CI contract differs')
+            exact_keys(group['robots'], ('rp1', 'g1'), 'Completion participants')
+            for robot, summary in group['robots'].items():
+                self.completion_summary(summary, comparison, robot)
+                rows = [self.by_id[name] for name in comparison['expected_participants']
+                        if self.by_id[name]['robot'] == robot]
+                require(len(rows) == 1, 'Completion aggregate participant differs')
+                row = rows[0]
+                require(row['completion']['summary'] == summary and
+                        row['completion']['rate_pct'] == summary['completion_percent'] and
+                        row['completion']['reason'] == summary['completion_summary_label'],
+                        'Aggregate/source completion summary differs')
+                self.completion_checks['aggregate_summaries'] += 1
+        require(completion_digest(self.data) == COMPLETION_PROJECTION_SHA,
+                'Completion labels/times/definition/summary differ from frozen public source')
+
+    def completion_summary(self, summary, comparison, robot):
+        exact_keys(summary, COMPLETION_SUMMARY_FIELDS, 'Robot completion summary')
+        motions = {sample['motion_id'] for sample in comparison['sample_set']}
+        n, s = len(motions), len(comparison['matched_seed_set'])
+        require(type(summary['expected_motion_denominator']) is int and summary['expected_motion_denominator'] == n and
+                type(summary['expected_seeds_per_motion']) is int and summary['expected_seeds_per_motion'] == s and
+                summary['completion_CI_created'] is False, 'Completion denominator or CI differs')
+        provided = summary['per_motion_rates']
+        require(len(provided) == n and len({row['motion_id'] for row in provided}) == n and
+                {row['motion_id'] for row in provided} == motions, 'Completion motion population differs')
+        seed_totals = Counter({name: 0 for name in ('completed', 'not_completed', 'unknown')})
+        equivalents = {name: [] for name in seed_totals}
+        unknown_motions = 0
+        for motion in provided:
+            exact_keys(motion, COMPLETION_MOTION_FIELDS, 'Motion completion')
+            counts = motion['seed_counts']
+            exact_keys(counts, ('completed', 'not_completed', 'unknown'), 'Completion seed counts')
+            require(all(type(value) is int and value >= 0 for value in counts.values()) and
+                    sum(counts.values()) == s and type(motion['expected_seed_denominator']) is int and
+                    motion['expected_seed_denominator'] == s, 'Completion fixed seed denominator differs')
+            selected = [row for row in self.episodes.values() if group_key(row) == group_key(comparison) and
+                        row['robot'] == robot and row['motion_id'] == motion['motion_id']]
+            require(len(selected) == s and sorted(row['seed'] for row in selected) == comparison['matched_seed_set'] and
+                    dict(Counter(row['completion']['status'] for row in selected) + Counter()) ==
+                    {name: value for name, value in counts.items() if value}, 'Completion counts differ from episode labels')
+            low, high = counts['completed'] / s, (counts['completed'] + counts['unknown']) / s
+            self.completion_ratio(motion['completion_fraction'], motion['completion_percent'],
+                motion['possible_fraction_bounds'], motion['possible_percent_bounds'], low, high, counts['unknown'] > 0)
+            unknown_motions += int(counts['unknown'] > 0)
+            seed_totals.update(counts)
+            for name in equivalents:
+                equivalents[name].append(counts[name] / s)
+            self.completion_checks['motion_summaries'] += 1
+        exact_keys(summary['seed_counts'], seed_totals, 'Group completion seed counts')
+        require(all(type(value) is int and value >= 0 for value in summary['seed_counts'].values()) and
+                summary['seed_counts'] == dict(seed_totals), 'Group seed counts differ')
+        exact_keys(summary['motion_completion_equivalents'], equivalents, 'Completion motion equivalents')
+        for name, values in equivalents.items():
+            value = summary['motion_completion_equivalents'][name]
+            number(value, 'Completion motion equivalent')
+            require(math.isclose(value, math.fsum(values), rel_tol=0, abs_tol=1e-12), 'Motion equivalent differs')
+        require(type(summary['n_unknown_motions']) is int and summary['n_unknown_motions'] == unknown_motions and
+                type(summary['effective_adjudicated_motions']) is int and
+                summary['effective_adjudicated_motions'] == n - unknown_motions, 'Unknown/effective motion count differs')
+        e = summary['motion_completion_equivalents']
+        self.completion_ratio(summary['completion_rate'], summary['completion_percent'],
+            summary['possible_rate_bounds'], summary['possible_percent_bounds'], e['completed'] / n,
+            (e['completed'] + e['unknown']) / n, unknown_motions > 0)
+        if comparison['role'] == 'primary' and s == 1:
+            require(type(summary['integer_completed_motions']) is int and
+                    summary['integer_completed_motions'] == seed_totals['completed'] and
+                    summary['completion_summary_label'] == '完成动作数 / 动作数', 'Primary integer completion count differs')
+        else:
+            require(summary['integer_completed_motions'] is None and
+                    summary['completion_summary_label'] == '动作等权平均完成比例 / 完成动作当量',
+                    'Sensitivity completion must remain an average/equivalent')
+
+    def completion_ratio(self, fraction, percent, fraction_bounds, percent_bounds, low, high, unknown):
+        bounds(fraction_bounds, 'Completion logical fraction bounds')
+        bounds(percent_bounds, 'Completion logical percent bounds')
+        require(0 <= low <= high <= 1 and all(math.isclose(actual, expected, rel_tol=0, abs_tol=1e-12)
+                for actual, expected in zip(fraction_bounds + percent_bounds, [low, high, low * 100, high * 100])),
+                'Completion logical bounds differ')
+        if unknown:
+            require(fraction is None and percent is None, 'Unknown must keep a null point and full denominator')
+        else:
+            number(fraction, 'Completion fraction')
+            number(percent, 'Completion percent')
+            require(math.isclose(fraction, low, rel_tol=0, abs_tol=1e-12) and
+                    math.isclose(percent, low * 100, rel_tol=0, abs_tol=1e-12), 'Completion fraction/percent differs')
 
     def sources(self):
         require(self.source is not None and self.identities is not None,
@@ -338,11 +492,17 @@ class Audit:
                         'Scientific provenance differs from frozen identity: ' + field)
                 self.provenance_checks['source_fields'] += 1
         require(self.provenance_checks['source_fields'] == 760, 'Incomplete scientific provenance source comparison')
-        expected = project(read_json(self.source), identities, publication=not self.preview)
+        completion = read_completion(self.completion_source) if self.completion_source else None
+        require((self.data['schema_version'] == 4) == (completion is not None), 'Completion source/schema differs')
+        expected = project(read_json(self.source), identities, publication=not self.preview, completion=completion)
         for name in ('schema_version', 'publication_state', 'fullwindow_source_sha256', 'identity_map_sha256',
                      'counts', 'metrics', 'results', 'comparisons', 'phase', 'primary_comparison_ids',
                      'secondary_comparison_ids', 'completion_contract'):
             require(self.data[name] == expected[name], 'Projection differs from frozen source: ' + name)
+        if completion is not None:
+            require(self.data['methods']['completion'] == expected['methods']['completion'],
+                    'Completion definition differs from frozen public source')
+            require(read_completion(self.completion_source) == completion, 'Completion input changed during audit')
         require(Path(self.source).read_bytes() == raw and Path(self.identities).read_bytes() == identity_raw,
                 'Private input changed during audit')
 
@@ -394,14 +554,17 @@ class Audit:
         if self.preview:
             return
         manifest = read_json(self.root / 'RELEASE_MANIFEST.json')
-        require(manifest['schema_version'] == 3 and manifest['public_data_sha256'] ==
+        require(manifest['schema_version'] == self.data['schema_version'] and manifest['public_data_sha256'] ==
                 sha((self.root / 'data.json').read_bytes()) and manifest['counts'] == COUNTS,
                 'Manifest v3 data identity/counts differ')
         require(manifest['publication_state'] == self.data['publication_state'],
                 'Manifest publication state differs')
-        require(manifest['fullwindow_source_sha256'] == FULL_SOURCE_SHA and
+        require(manifest['fullwindow_source_sha256'] == self.data['fullwindow_source_sha256'] and
                 manifest['identity_map_sha256'] == IDENTITY_SHA and
                 manifest['completion_contract'] == self.data['completion_contract'], 'Manifest source closure differs')
+        if self.data['schema_version'] == 4:
+            require(manifest['completion_source_csv_sha256'] == COMPLETION_CSV_SHA,
+                    'Manifest public completion CSV source identity differs')
         files = manifest['files']
         require(set(files) == PUBLISH_FILES - {'RELEASE_MANIFEST.json'}, 'Manifest file allowlist differs')
         for name, record in files.items():
@@ -436,27 +599,37 @@ class Audit:
                 self.link(value)
 
     def publication_gate(self):
-        require(self.data['publication_state'] == (PREVIEW_STATE if self.preview else PUBLIC_STATE)
-                and self.data['completion_contract'] == COMPLETION_CONTRACT,
-                'Only the reviewed four-error contract with pending/null completion is eligible')
-        for obj in self.data['results'] + self.data['comparisons']:
-            pending(obj['completion'])
+        if self.data['schema_version'] == 3:
+            require(self.data['publication_state'] == (PREVIEW_STATE if self.preview else PUBLIC_STATE)
+                    and self.data['completion_contract'] == COMPLETION_CONTRACT,
+                    'Only the reviewed pending four-error contract is eligible')
+            for obj in self.data['results'] + self.data['comparisons']:
+                pending(obj['completion'])
+        else:
+            require(self.data['schema_version'] == 4 and self.data['publication_state'] ==
+                    (COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE) and
+                    self.data['completion_contract'] == {'status': 'verified', 'rule_version': CRITERION_ID,
+                    'source_sha256': COMPLETION_SOURCE_SHA}, 'Only the frozen semantic completion contract is eligible')
 
     def run(self):
-        for name, fn in [('v3_positive_schema', self.schema), ('physical_rows_and_exact_pairs', self.rows_and_pairs),
+        for name, fn in [('reviewed_positive_schema', self.schema), ('physical_rows_and_exact_pairs', self.rows_and_pairs),
                          ('five_independent_fullwindow_comparisons', self.comparisons),
-                         ('canonical_csv_exports', self.exports), ('v3_publication_file_allowlist', self.bundle),
+                         ('frozen_semantic_completion_contract', self.completions),
+                         ('canonical_csv_exports', self.exports), ('publication_file_allowlist', self.bundle),
                          ('privacy', self.privacy)]:
             self.check(name, fn)
-        if self.source is not None or self.identities is not None:
+        if self.source is not None or self.identities is not None or self.completion_source is not None:
             self.check('frozen_source_720_values_and_original_ID_mapping', self.sources)
-        self.check('pending_completion_publication_gate', self.publication_gate)
+        self.check('reviewed_completion_publication_gate', self.publication_gate)
         return {'ok': not self.errors, 'publication_allowed': not self.errors and not self.preview,
-            'completion_ready': False, 'preview_only': self.preview,
+            'completion_ready': not self.errors and self.data.get('schema_version') == 4, 'preview_only': self.preview,
             'schema_version': self.data.get('schema_version'), 'counts': self.data.get('counts'),
             'completion_status': self.data.get('completion_contract', {}).get('status'),
             'value_checks': self.value_checks, 'provenance_checks': self.provenance_checks,
+            'completion_checks': self.completion_checks,
             'source_compared': 'frozen_source_720_values_and_original_ID_mapping' in self.checked,
+            'completion_source_compared': self.completion_source is not None and
+                'frozen_source_720_values_and_original_ID_mapping' in self.checked,
             'public_data_sha256': sha((self.root / 'data.json').read_bytes()),
             'checked': self.checked, 'errors': self.errors, 'browser_qa_checked': False,
             'external_availability_checked': False}
@@ -468,10 +641,11 @@ def main():
     parser.add_argument('--preview', action='store_true', help='audit an internal pending/null preview; never publish')
     parser.add_argument('--source-fullwindow', type=Path)
     parser.add_argument('--identity-map', type=Path)
+    parser.add_argument('--source-completion', type=Path)
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
     try:
-        report = Audit(args.repo_root, args.preview, args.source_fullwindow, args.identity_map).run()
+        report = Audit(args.repo_root, args.preview, args.source_fullwindow, args.identity_map, args.source_completion).run()
     except (ValueError, TypeError, KeyError, IndexError, OSError) as error:
         report = {'ok': False, 'publication_allowed': False, 'errors': [str(error)]}
     text = json.dumps(report, ensure_ascii=False, indent=2, allow_nan=False) + '\n'
