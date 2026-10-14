@@ -3,9 +3,10 @@
 
 Standard library only. Never follows a path or copies an evidence attachment
 from the comparison input. Updating requires an explicitly reviewed source SHA.
-The four frozen public extensions are retained only after identity/schema checks;
---extensions-manifest can initialize them from the reviewed private handoff's
-explicit public allowlist. It never imports new experiments or private artifacts.
+The six frozen public extensions are retained only after identity/schema checks;
+--extensions-manifest initializes only the reviewed private handoff's four-file
+public allowlist; --fullwindow-receipt initializes the two supplemental
+files from their terminal-reviewed allowlist. No new experiments are imported.
 """
 import argparse
 from collections import defaultdict
@@ -280,14 +281,14 @@ def validate_projection(source, out):
     assert 'source_status' not in encoded
     assert len({x['id'] for x in out['results']}) == len(out['results'])
 
-def reviewed_extensions(dest, handoff_path=None):
-    """Preflight all four exact public attachments before writing any output.
+def reviewed_extensions(dest, handoff_path=None, fullwindow_receipt=None):
+    """Preflight all six exact public attachments before writing any output.
 
     Reuse the publication contract, not private source/model assets. An explicit
     handoff is the only initialization path for a directory without the reviewed
-    extension metadata. Its pinned bytes authorize exactly four public files.
+    extension metadata. Each pinned handoff authorizes only its four or two public files.
     """
-    from verify_public import DISPLAY_SCOPE, EXTENSIONS
+    from verify_public import DISPLAY_SCOPE, EXTENSIONS, FULLWINDOW_RECEIPT_SHA
 
     expected = {
         'public_extreme5.json': ('extreme5.json', EXTENSIONS['extreme5']['json_sha256'],
@@ -304,9 +305,11 @@ def reviewed_extensions(dest, handoff_path=None):
         previous = json.loads(previous_path.read_bytes())
     payloads = {}
     if handoff_path is None:
-        assert previous.get('extensions') == EXTENSIONS and previous.get('display_scope') == DISPLAY_SCOPE, (
+        legacy_extensions = {key: value for key, value in EXTENSIONS.items() if key != 'fullwindow'}
+        accepted_extensions = [EXTENSIONS] + ([legacy_extensions] if fullwindow_receipt is not None else [])
+        assert previous.get('extensions') in accepted_extensions and previous.get('display_scope') == DISPLAY_SCOPE, (
             'Reviewed extension metadata is required; initialize with --extensions-manifest '
-            'using the formal frozen handoff')
+            'and --fullwindow-receipt using the formal frozen handoffs')
         inputs = {name: dest / spec[0] for name, spec in expected.items()}
     else:
         raw = handoff_path.read_bytes()
@@ -331,6 +334,39 @@ def reviewed_extensions(dest, handoff_path=None):
             assert json.loads(raw)['schema'] == schema, 'Public extension schema differs: ' + name
         if handoff_path is not None:
             assert len(raw) == entries[source_name]['bytes'], 'Public extension byte count differs'
+        payloads[name] = raw
+    supplemental = {
+        'public_fullwindow.json': ('fullwindow.json', EXTENSIONS['fullwindow']['json_sha256'],
+                                  'rp1-g1-public-fullwindow-handoff-v1', 407473),
+        'public_episodes_fullwindow.csv': ('fullwindow.csv', EXTENSIONS['fullwindow']['csv_sha256'], None, 88651),
+    }
+    if fullwindow_receipt is None:
+        assert previous.get('extensions') == EXTENSIONS, (
+            'Terminal fullwindow receipt required for initial integration; use --fullwindow-receipt')
+        full_inputs = {name: dest / spec[0] for name, spec in supplemental.items()}
+    else:
+        raw = fullwindow_receipt.read_bytes()
+        assert sha(raw) == FULLWINDOW_RECEIPT_SHA, 'Unreviewed or historical pending fullwindow receipt'
+        receipt = json.loads(raw)
+        assert receipt['schema'] == 'rp1-g1-fullwindow-public-final-receipt-v1'
+        assert receipt['status'] == 'PASS_TWO_PUBLIC_FILES_FROZEN_READY_FOR_OWNER_SUPPLEMENTAL_INTEGRATION'
+        assert receipt['independent_final_audit']['sha256'] == EXTENSIONS['fullwindow']['independent_audit_sha256']
+        assert receipt['internal_manifest']['sha256'] == EXTENSIONS['fullwindow']['historical_handoff_sha256']
+        full_entries = {entry['filename']: entry for entry in receipt['public_allowlist']}
+        assert len(receipt['public_allowlist']) == len(full_entries) == 2 and set(full_entries) == set(supplemental), (
+            'Fullwindow terminal receipt is not the two-file public allowlist')
+        full_inputs = {}
+        for name, entry in full_entries.items():
+            assert (entry['sha256'], entry['bytes']) == (supplemental[name][1], supplemental[name][3]), (
+                'Fullwindow terminal file identity differs')
+            full_inputs[name] = Path(entry['local_path'])
+    for source_name, (name, digest, schema, size) in supplemental.items():
+        path = full_inputs[source_name]
+        assert path.is_file() and not path.is_symlink(), 'Missing reviewed fullwindow supplement: ' + name
+        raw = path.read_bytes()
+        assert sha(raw) == digest and len(raw) == size, 'Unreviewed fullwindow supplement: ' + name
+        if schema is not None:
+            assert json.loads(raw)['schema'] == schema, 'Fullwindow public schema differs'
         payloads[name] = raw
     metadata = dict(extensions=deepcopy(EXTENSIONS), display_scope=deepcopy(DISPLAY_SCOPE))
     # These are already public version labels, not the private handoff body.
@@ -366,6 +402,8 @@ def main():
     parser.add_argument('--output-dir', type=Path, default=Path('.'))
     parser.add_argument('--extensions-manifest', type=Path,
                         help='formal frozen Extreme5/hardware private handoff; copy only its four public files')
+    parser.add_argument('--fullwindow-receipt', type=Path,
+                        help='terminal frozen fullwindow private receipt; copy only its two public files')
     args = parser.parse_args()
     handoff_raw = args.handoff.read_bytes()
     assert sha(handoff_raw) == args.expected_handoff_sha, 'Unreviewed handoff manifest'
@@ -397,16 +435,18 @@ def main():
     validate_projection(source, out)
     assert args.source_data.read_bytes() == raw, 'Source changed during build'
     dest = args.output_dir
-    extension_metadata, extension_payloads = reviewed_extensions(dest, args.extensions_manifest)
+    extension_metadata, extension_payloads = reviewed_extensions(
+        dest, args.extensions_manifest, args.fullwindow_receipt)
     dest.mkdir(parents=True, exist_ok=True)
     data = (json.dumps(out, ensure_ascii=False, separators=(',', ':'), allow_nan=False)+'\n').encode()
     (dest/'data.json').write_bytes(data)
     for name, payload in extension_payloads.items():
         path = dest / name
         # Default reuse preserves the exact existing bytes and file identities.
-        # An explicitly pinned handoff may initialize only these four files.
+        # Explicitly pinned handoffs initialize only their reviewed public files.
         if not path.exists() or path.read_bytes() != payload:
-            assert args.extensions_manifest is not None, 'Public extension changed during build'
+            assert args.extensions_manifest is not None or args.fullwindow_receipt is not None, (
+                'Public extension changed during build')
             path.write_bytes(payload)
     manifest = dict(schema='rp1-g1-public-snapshot-v1',
                     consumed_handoff_version=handoff['version'],

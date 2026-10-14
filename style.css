@@ -12,3 +12,7 @@
 @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
 
 .extension-results{margin-top:48px;padding-top:34px;border-top:1px solid var(--line)}.extension-results .method-grid{margin-top:20px}.extension-results .paired-table{min-width:760px}.table-scroll .hardware-table{min-width:1050px;width:100%;font-size:12px}.hardware-table td{vertical-align:top}.hardware-table th{white-space:normal}.hardware-table td:first-child{width:240px}.hardware-table summary{font-size:12px;padding:6px 0;overflow-wrap:anywhere}.joint-details{min-width:220px;max-width:270px;padding:12px;background:#f0f3f8}.joint-spec h4{margin-bottom:8px}.joint-spec p{font-size:11px;margin-bottom:10px;overflow-wrap:anywhere}.joint-spec+.joint-spec{border-top:1px solid var(--line);margin-top:14px;padding-top:14px}
+
+/* Four complete-window metrics share the original episode set. */
+.full-finding-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.sort-controls{flex-wrap:wrap}.sort-controls select{max-width:100%}
+@media(max-width:720px){.full-finding-grid{grid-template-columns:1fr}}

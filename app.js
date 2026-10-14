@@ -10,8 +10,17 @@
     { key: "wrist_pos_mm", label: "Wrist position", unit: "mm", direction: "asc", digits: 2 },
     { key: "wrist_ori_rad", label: "Wrist orientation", unit: "rad", direction: "asc", digits: 4 },
     { key: "episode_return", label: "Normalized tracking return", unit: "无量纲", direction: "desc", digits: 2 },
-    { key: "progress_pct", label: "Progress", unit: "%", direction: "desc", digits: 2 }
+    { key: "progress_pct", label: "首次阈值位置（原版 Progress）", unit: "%", direction: "desc", digits: 2 }
   ];
+  const FULL_METRICS = [
+    { key: "full_body_pos_mm", label: "全程身体位置误差", unit: "mm", direction: "asc", digits: 2 },
+    { key: "full_body_ori_rad", label: "全程身体姿态误差", unit: "rad", direction: "asc", digits: 4 },
+    { key: "full_wrist_pos_mm", label: "全程手腕位置误差", unit: "mm", direction: "asc", digits: 2 },
+    { key: "full_wrist_ori_rad", label: "全程手腕姿态误差", unit: "rad", direction: "asc", digits: 4 }
+  ];
+  const ALL_METRICS = [...FULL_METRICS, ...METRICS];
+  const FULL_WINDOW = "full_replay_50hz_first_substep";
+  const activeMetrics = () => state.window === "full" ? FULL_METRICS : METRICS;
   const DATASETS = [["lafan40", "LAFAN40"]];
   const STATUS = { complete: "已记录", partial: "部分记录", pending: "待完成", blocked: "受阻", invalid: "无效", matched: "已核验一致", disclosed_difference: "已披露差异", unknown: "未知" };
   const EMPTY = {
@@ -32,13 +41,13 @@
       limitations: []
     }
   };
-  const state = { data: EMPTY, scope: "aggregate", metric: METRICS[0].key, direction: "asc", page: 1, pageSize: 25, origin: "pending", issues: [] };
+  const state = { data: EMPTY, scope: "aggregate", window: "full", metric: FULL_METRICS[0].key, direction: "asc", page: 1, pageSize: 25, origin: "pending", issues: [] };
   const $ = (id) => document.getElementById(id);
   const escape = (value) => String(value == null ? "" : value).replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   const isNumber = (value) => typeof value === "number" && Number.isFinite(value);
   const asArray = (value) => Array.isArray(value) ? value : [];
   const showText = (value, fallback = "pending") => value == null || value === "" ? fallback : String(value);
-  const metricDefinition = (key) => METRICS.find((metric) => metric.key === key) || METRICS[0];
+  const metricDefinition = (key) => ALL_METRICS.find((metric) => metric.key === key) || FULL_METRICS[0];
   const valueOf = (row, key) => row.metrics && row.metrics[key] && isNumber(row.metrics[key].value) ? row.metrics[key].value : null;
   const sha256 = (value) => typeof value === "string" && /^[a-f0-9]{64}$/i.test(value);
   const fmt = (value, digits = 2) => isNumber(value) ? value.toLocaleString("en-US", { maximumFractionDigits: digits, minimumFractionDigits: digits }) : "n/a";
@@ -141,6 +150,7 @@
   }
   /* Compute rank only within an explicitly declared complete paired group. Never infer pairing from names. */
   function ranksForMetric(data, key) {
+    if (FULL_METRICS.some(metric => metric.key === key)) return fullWindowRanks(data, key);
     const output = new Map();
     const definition = metricDefinition(key);
     data.results.forEach((row) => output.set(row.id, { rank: null, reason: row.scope === "per_motion" ? "逐回合不排名；配对统计见聚合" : "未核验共同配对" }));
@@ -187,7 +197,9 @@
   function rowEvidence(row) {
     const provenance = row.provenance || {}, checkpoint = row.checkpoint || {};
     const notes = asArray(row.notes).map(readerNote).filter(Boolean);
-    return `<details><summary>策略、条件与同步视频</summary><div class="record-evidence"><p>${escape(checkpoint.name || (row.dataset === "extreme5" ? String(row.robot).toUpperCase() + " 发布学生策略" : "策略身份待提供"))}</p><p>评测环境：${escape(provenance.runtime || "待提供")}</p>${notes.map((note) => `<p>${escape(note)}</p>`).join("")}${asArray(row.videos).filter(pairedHistoricalVideo).map((video) => `${linkHTML(video, "同步视频")}<p>共同时间轴对比 · ${escape(String(video.description || "视频仅为个例证据").replace(/SHA 为本地原视频；云端原文件未下载做字节哈希。\s*/g, ""))}</p>`).join("")}</div></details>`;
+    const full = row.scope === "per_motion" && row.fullwindow;
+    const windowText = full ? `<p>全程评分：${full.full_recorded_frames} 个 50 Hz 首物理子步记录，参考时间 ${fmt(full.full_reference_start_s, 3)}–${fmt(full.full_reference_end_s, 3)} s。</p><p>${full.threshold_failure ? `首次失败阈值：${escape(full.failure_category)}；参考时间 ${fmt(full.first_failure_reference_time_s, 3)} s，物理时间 ${fmt(full.first_failure_physics_time_s, 3)} s。` : "本回合未触发失败阈值。"}</p><p>原版 root 端点：参考时间 ${fmt(full.root_endpoint_reference_time_s, 3)} s，物理时间 ${fmt(full.root_endpoint_physics_time_s, 3)} s。</p>` : "";
+    return `<details><summary>策略、评分窗口与同步视频</summary><div class="record-evidence"><p>${escape(checkpoint.name || (row.dataset === "extreme5" ? String(row.robot).toUpperCase() + " 发布学生策略" : "策略身份待提供"))}</p><p>评测环境：${escape(provenance.runtime || "待提供")}</p>${windowText}${notes.map((note) => `<p>${escape(note)}</p>`).join("")}${asArray(row.videos).filter(pairedHistoricalVideo).map((video) => `${linkHTML(video, "同步视频")}<p>共同时间轴对比 · ${escape(String(video.description || "视频仅为个例证据").replace(/SHA 为本地原视频；云端原文件未下载做字节哈希。\s*/g, ""))}</p>`).join("")}</div></details>`;
   }
   function readerNote(note) {
     const text = String(note);
@@ -205,7 +217,7 @@
     return text.replace(/aligned_nominal/g, "对齐名义条件").replace(/逐字节确定性一致/g, "结果完全一致");
   }
   function renderHeaders() {
-    $("results-head").innerHTML = `<tr><th scope="col">组内名次<span class="unit">按所选指标</span></th><th scope="col">策略 / 动作<span class="unit">阶段 · 机器人 · 条件</span></th><th scope="col">覆盖<span class="unit">已评 / 计划；共同 / 母集</span></th>${METRICS.map((metric) => `<th scope="col" aria-sort="${state.metric === metric.key ? (state.direction === "asc" ? "ascending" : "descending") : "none"}"><button type="button" data-sort="${metric.key}" title="按 ${escape(metric.label)} 排序">${metric.label} ${state.metric === metric.key ? state.direction === "asc" ? "↑" : "↓" : "↕"}<span class="unit">${metric.unit} · ${metric.direction === "asc" ? "越低越好 ↓" : "越高越好 ↑"}</span></button></th>`).join("")}</tr>`;
+    $("results-head").innerHTML = `<tr><th scope="col">组内名次<span class="unit">按所选指标</span></th><th scope="col">策略 / 动作<span class="unit">阶段 · 机器人 · 条件</span></th><th scope="col">覆盖<span class="unit">已评 / 计划；共同 / 母集</span></th>${activeMetrics().map((metric) => `<th scope="col" aria-sort="${state.metric === metric.key ? (state.direction === "asc" ? "ascending" : "descending") : "none"}"><button type="button" data-sort="${metric.key}" title="按 ${escape(metric.label)} 排序">${metric.label} ${state.metric === metric.key ? state.direction === "asc" ? "↑" : "↓" : "↕"}<span class="unit">${metric.unit} · ${metric.direction === "asc" ? "越低越好 ↓" : "越高越好 ↑"}</span></button></th>`).join("")}</tr>`;
   }
   function renderRows(rows, ranks) {
     const pages = Math.max(1, Math.ceil(rows.length / state.pageSize));
@@ -214,13 +226,13 @@
     $("results-body").innerHTML = current.length ? current.map((row) => {
       const ranking = ranks.get(row.id) || { rank: null, reason: "未核验共同配对" };
       const rankDescription = String(ranking.reason).replace(/SHA256/g, "身份");
-      return `<tr><td class="rank-cell"><span class="rank-number">${ranking.rank === null ? "—" : ranking.rank}</span><span class="rank-note" title="${escape(rankDescription)}">${escape(ranking.rank === null ? rankDescription : "同条件配对")}</span></td><td class="row-heading"><div class="record-label">${escape(row.label)}</div>${row.scope === "per_motion" ? `<span class="record-meta">${escape(row.motion_id || "动作 ID 待提供")}</span>` : ""}<span class="record-meta">${escape(datasetLabel(row.dataset))}</span><span class="record-meta">${escape(row.condition)} · ${escape(row.mode)} · seed ${escape(row.seed)}</span><div class="record-badges"><span class="badge">${escape(String(row.robot).toUpperCase())}</span><span class="badge">${escape(phaseLabel(row.phase))}</span>${statusBadge(row.status)}</div>${row.status_reason ? `<span class="record-meta">${escape(row.status_reason)}</span>` : ""}${rowEvidence(row)}</td><td><span class="coverage-primary">${escape(coverageText(row.coverage))}</span><span class="coverage-secondary">共同 ${escape(coverageText(row.paired_coverage))}</span><span class="coverage-secondary">${escape((row.coverage || {}).reason || "")}</span><span class="coverage-secondary">${escape((row.paired_coverage || {}).reason || "")}</span></td>${METRICS.map((metric) => metricHTML(row, metric)).join("")}</tr>`;
+      return `<tr><td class="rank-cell"><span class="rank-number">${ranking.rank === null ? "—" : ranking.rank}</span><span class="rank-note" title="${escape(rankDescription)}">${escape(ranking.rank === null ? rankDescription : "同条件配对")}</span></td><td class="row-heading"><div class="record-label">${escape(row.label)}</div>${row.scope === "per_motion" ? `<span class="record-meta">${escape(row.motion_id || "动作 ID 待提供")}</span>` : ""}<span class="record-meta">${escape(datasetLabel(row.dataset))}</span><span class="record-meta">${escape(row.condition)} · ${escape(row.mode)} · seed ${escape(row.seed)}</span><div class="record-badges"><span class="badge">${escape(String(row.robot).toUpperCase())}</span><span class="badge">${escape(phaseLabel(row.phase))}</span>${statusBadge(row.status)}</div>${row.status_reason ? `<span class="record-meta">${escape(row.status_reason)}</span>` : ""}${rowEvidence(row)}</td><td><span class="coverage-primary">${escape(coverageText(row.coverage))}</span><span class="coverage-secondary">共同 ${escape(coverageText(row.paired_coverage))}</span><span class="coverage-secondary">${escape((row.coverage || {}).reason || "")}</span><span class="coverage-secondary">${escape((row.paired_coverage || {}).reason || "")}</span></td>${activeMetrics().map((metric) => metricHTML(row, metric)).join("")}</tr>`;
     }).join("") : `<tr><td class="empty-cell" colspan="11"><strong>${state.data.results.length ? "当前筛选没有匹配记录" : "PENDING · 等待实测结果"}</strong><p>${state.data.results.length ? "可切换结果粒度或重置筛选。" : "导入带有 checkpoint、有效配置、原始记录和分母的 data.json 后显示。当前未生成任何示例成绩。"}</p></td></tr>`;
     $("pagination").innerHTML = pages > 1 ? `<span>第 ${state.page} / ${pages} 页 · 每页 ${state.pageSize} 条</span><button type="button" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""}>上一页</button><button type="button" data-page="${state.page + 1}" ${state.page === pages ? "disabled" : ""}>下一页</button>` : "";
     const ranked = rows.filter((row) => (ranks.get(row.id) || {}).rank != null).length;
     $("result-count").textContent = `${rows.length} 条${state.scope === "aggregate" ? "聚合" : "逐动作"}记录 · ${ranked} 条有组内名次 · 缺失值列于末尾`;
     $("download-csv").disabled = !rows.length;
-    $("download-json").disabled = !extension;
+    $("download-json").disabled = !extension || !fullWindow;
   }
   function renderOverview() {
     const summary = pairedSummaryFor(state.data);
@@ -252,8 +264,88 @@
     }
     return null;
   }
-  const CN_METRICS = { body_pos_mm: "身体位置误差", body_ori_rad: "身体姿态误差", wrist_ori_rad: "手腕姿态误差", wrist_pos_mm: "手腕位置误差", root_pos_m: "根节点端点误差", episode_return: "归一化跟踪回报", progress_pct: "动作完成度" };
+  const CN_METRICS = { body_pos_mm: "原版身体位置误差", body_ori_rad: "原版身体姿态误差", wrist_ori_rad: "原版手腕姿态误差", wrist_pos_mm: "原版手腕位置误差", root_pos_m: "原版根节点端点误差", episode_return: "原版归一化跟踪回报", progress_pct: "首次阈值位置（原版 Progress）" };
   let extension = null;
+  let fullWindow = null;
+  function strictSeed(seed) {
+    if (typeof seed === "string" && /^(0|[1-9]\d*)$/.test(seed)) seed = Number(seed);
+    if (!Number.isSafeInteger(seed) || seed < 0) throw new Error("全程指标 seed 身份无效");
+    return seed;
+  }
+  const semanticKey = row => JSON.stringify([row.phase, row.dataset, row.condition, row.mode, row.robot, row.motion_id, strictSeed(row.seed)]);
+  const groupKey = row => JSON.stringify([row.phase, row.dataset, row.condition, row.mode]);
+  function mergeFullWindow(base, input) {
+    if (!input || input.schema !== "rp1-g1-public-fullwindow-handoff-v1" || input.metric_window !== FULL_WINDOW ||
+        input.episodes?.length !== 180 || input.comparisons?.length !== 5 || base.results.length !== 190) throw new Error("全程指标版本或数量不兼容");
+    const expectedCounts = { physical_episode_records: 180, paired_cases: 90, unique_motion_ids: 45, comparison_groups: 5, aggregate_views: 10, maximum_display_rows_with_aggregate_views: 190 };
+    if (Object.entries(expectedCounts).some(([key, count]) => input.counts?.[key] !== count)) throw new Error("全程指标分母不一致");
+    const episodes = new Map(), runs = new Map(), groups = new Map();
+    input.episodes.forEach(episode => {
+      const key = semanticKey(episode);
+      if (episode.phase !== "A" || episode.scope !== "per_motion" || episode.condition !== episode.effective_condition || episode.metric_window !== FULL_WINDOW || episodes.has(key) || runs.has(episode.run_id) ||
+          FULL_METRICS.some(metric => !isNumber(episode[metric.key])) || !Number.isInteger(episode.full_recorded_frames) || episode.full_recorded_frames !== episode.reference_common_frames - 1) throw new Error("全程回合身份或窗口无效");
+      episodes.set(key, episode); runs.set(episode.run_id, episode);
+    });
+    input.comparisons.forEach(comparison => {
+      const key = groupKey(comparison);
+      const members = input.episodes.filter(row => groupKey(row) === key);
+      if (groups.has(key) || comparison.metric_window !== FULL_WINDOW || !sha256(comparison.sample_set_sha256) ||
+          comparison.expected_participants?.join(",") !== "rp1,g1" || members.length !== comparison.episode_records || comparison.sample_set.length !== comparison.paired_cases || members.length !== comparison.paired_cases * 2 ||
+          new Set(members.map(row => row.motion_id)).size !== comparison.n_unique_motions) throw new Error("全程比较组身份或覆盖无效");
+      const selected = new Set();
+      comparison.sample_set.forEach(sample => ["rp1", "g1"].forEach(robot => {
+        const episode = runs.get(sample.participants?.[robot]);
+        if (!episode || groupKey(episode) !== key || episode.robot !== robot || episode.motion_id !== sample.motion_id || strictSeed(episode.seed) !== strictSeed(sample.seed) ||
+            episode.scientific_selected_case_id !== sample.scientific_selected_case_id || selected.has(episode.run_id)) throw new Error("全程配对样本不能一一对应");
+        selected.add(episode.run_id);
+      }));
+      if (selected.size !== members.length) throw new Error("全程比较组缺少配对回合");
+      FULL_METRICS.forEach(metric => {
+        const delta = comparison.paired_deltas?.[metric.key], means = comparison.robot_means?.[metric.key];
+        if (!delta || delta.n_motions !== comparison.n_unique_motions || delta.unit !== metric.unit || !isNumber(delta.value) || !Array.isArray(delta.ci95) || delta.ci95.length !== 2 || !delta.ci95.every(isNumber) || delta.ci95[0] > delta.ci95[1] ||
+            ["rp1", "g1"].some(robot => !isNumber(means?.[robot]?.value) || !Array.isArray(means[robot].ci95) || means[robot].ci95.length !== 2 || !means[robot].ci95.every(isNumber) || means[robot].ci95[0] > means[robot].ci95[1])) throw new Error("全程均值与区间无效");
+      });
+      groups.set(key, comparison);
+    });
+    const originalEpisodes = base.results.filter(row => row.scope === "per_motion");
+    if (originalEpisodes.length !== episodes.size || new Set(originalEpisodes.map(semanticKey)).size !== episodes.size) throw new Error("既有回合与全程记录身份集合不同");
+    const legacy = { body_pos_mm: ["local_body_tracking_error", 1000], body_ori_rad: ["local_body_orientation_error", 1], wrist_pos_mm: ["wrist_tracking_error", 1000], wrist_ori_rad: ["wrist_orientation_error", 1], episode_return: ["normalized_tracking_return", 1], progress_pct: ["progress", 100], root_pos_m: ["root_final_error_norm", 1] };
+    const comparisons = base.comparisons.map(comparison => {
+      const rows = comparison.expected_participants.map(id => base.results.find(row => row.id === id));
+      const source = rows[0] && groups.get(groupKey(rows[0]));
+      if (!source || rows.length !== 2 || rows.some(row => !row || row.scope !== "aggregate" || groupKey(row) !== groupKey(source)) || new Set(rows.map(row => row.robot)).size !== 2) throw new Error("全程统计无法映射既有聚合身份");
+      return { ...comparison, fullwindow: { ...source, source_expected_participants: source.expected_participants, expected_participants: comparison.expected_participants, source_comparison_id: source.id, id: comparison.id } };
+    });
+    if (new Set(comparisons.map(comparison => comparison.fullwindow.source_comparison_id)).size !== 5) throw new Error("全程比较组重复映射");
+    const results = base.results.map(row => {
+      const comparison = groups.get(groupKey(row));
+      let metadata, cells;
+      if (row.scope === "per_motion") {
+        metadata = episodes.get(semanticKey(row));
+        if (!metadata || Object.entries(legacy).some(([key, [source, scale]]) => valueOf(row, key) !== metadata[source] * scale)) throw new Error("全程扩展与原版诊断不一致");
+        cells = Object.fromEntries(FULL_METRICS.map(metric => [metric.key, { value: metadata[metric.key], coverage: { numerator: 1, denominator: 1, unit: "episodes" }, ci: { reason: "单个回合不计算动作重采样区间" }, metric_window: FULL_WINDOW, sample_set_sha256: comparison.sample_set_sha256 }]));
+      } else {
+        metadata = { metric_window: FULL_WINDOW, source_comparison_id: comparison.id };
+        cells = Object.fromEntries(FULL_METRICS.map(metric => {
+          const mean = comparison.robot_means[metric.key][row.robot];
+          return [metric.key, { value: mean.value, coverage: { numerator: comparison.n_unique_motions, denominator: comparison.n_unique_motions, unit: "motions" }, ci: { low: mean.ci95[0], high: mean.ci95[1], level: 0.95, method: "paired motion percentile bootstrap, 10000 resamples", resampling_unit: "paired_motion", n_clusters: comparison.n_unique_motions, n_seeds: comparison.matched_seed_set.length }, metric_window: FULL_WINDOW, sample_set_sha256: comparison.sample_set_sha256 }];
+        }));
+      }
+      return { ...row, metrics: { ...row.metrics, ...cells }, fullwindow: metadata };
+    });
+    return { ...base, results, comparisons, extensions: { ...base.extensions, fullwindow: { schema: input.schema, source: "./fullwindow.json", metric_window: input.metric_window, counts: input.counts, metric_definitions: input.metric_definitions, diagnostic_definitions: input.diagnostic_definitions, methods: input.methods, primary_comparison_ids: comparisons.filter(c => input.primary_comparison_ids.includes(c.fullwindow.source_comparison_id)).map(c => c.id), secondary_comparison_ids: comparisons.filter(c => input.secondary_comparison_ids.includes(c.fullwindow.source_comparison_id)).map(c => c.id) } } };
+  }
+  function fullWindowRanks(data, key) {
+    const output = new Map(data.results.map(row => [row.id, { rank: null, reason: row.scope === "per_motion" ? "逐回合不排名；配对统计见聚合" : "全程配对指标待核验" }]));
+    data.comparisons.forEach(comparison => {
+      const full = comparison.fullwindow;
+      if (!full || full.metric_window !== FULL_WINDOW || !sha256(full.sample_set_sha256)) return;
+      const members = comparison.expected_participants.map(id => data.results.find(row => row.id === id));
+      if (members.length !== 2 || members.some(row => !row || row.scope !== "aggregate" || groupKey(row) !== groupKey(full) || valueOf(row, key) === null || row.metrics[key].sample_set_sha256 !== full.sample_set_sha256 || row.metrics[key].coverage.numerator !== full.n_unique_motions || row.metrics[key].coverage.denominator !== full.n_unique_motions)) return;
+      members.forEach(row => output.set(row.id, { rank: 1 + members.filter(other => valueOf(other, key) < valueOf(row, key)).length, reason: "同条件全程配对", comparison: comparison.id }));
+    });
+    return output;
+  }
   function mergeExtension(base, extra) {
     if (!extra || extra.schema !== "rp1-g1-public-extreme5-handoff-v1" || extra.dataset !== "extreme5" || extra.lafan40_statistics_changed !== false || extra.results.length !== 12 || extra.comparisons.length !== 1) throw new Error("Extreme5 配对数据格式不兼容");
     const result = { ...base, datasets: [...base.datasets, { id: "extreme5", label: "Extreme5 · 空翻与转体", expected_motions: 5 }], results: [...base.results, ...extra.results.map(row => {
@@ -267,11 +359,28 @@
     result.public_scope = { ...base.public_scope, unique_motions: motions.size, paired_cases: pairs.length, episodes: pairs.length * 2, aggregate_rows: 10, result_rows: 190, comparison_groups: 5 };
     return result;
   }
+  function pairedMetricTable(comparison, rows, metrics) {
+    return `<table class="paired-table"><thead><tr><th>指标</th><th>单位</th><th>RP1 均值</th><th>G1 均值</th><th>RP1 − G1</th><th>95% CI</th><th>配对动作数</th></tr></thead><tbody>${metrics.filter(m => comparison.paired_deltas[m.key]).map(m => {
+      const d = comparison.paired_deltas[m.key], unit = d.unit === "pp" ? "pp" : m.unit;
+      return `<tr><td>${CN_METRICS[m.key] || m.label}</td><td>${m.unit}</td><td>${fmt(valueOf(rows.find(r => r.robot === "rp1"), m.key), m.digits)}</td><td>${fmt(valueOf(rows.find(r => r.robot === "g1"), m.key), m.digits)}</td><td>${signed(d.value, m.digits)} ${unit}</td><td>[${fmt(d.ci95[0], m.digits)}, ${fmt(d.ci95[1], m.digits)}] ${unit}</td><td>${d.n_motions}</td></tr>`;
+    }).join("")}</tbody></table>`;
+  }
+  function fullGroup(dataset) {
+    const comparison = state.data.comparisons.find(c => c.fullwindow?.dataset === dataset && c.fullwindow.condition === "nominal" && c.fullwindow.mode === "native_position");
+    if (!comparison) return null;
+    return { comparison: comparison.fullwindow, rows: comparison.expected_participants.map(id => state.data.results.find(row => row.id === id)) };
+  }
+  function fullFindingCards(group) {
+    return FULL_METRICS.map(m => {
+      const d = group.comparison.paired_deltas[m.key];
+      const interpretation = d.ci95[1] < 0 ? "RP1 全程误差较低，配对区间低于零。" : d.ci95[0] > 0 ? "G1 全程误差较低，配对区间高于零。" : "配对区间跨零，当前样本未支持明确方向。";
+      return `<article class="finding-card"><h3>${m.label}</h3><p class="metric-caption">越低越好 · ${d.n_motions} 个配对动作（N=${d.n_motions}）</p><div class="finding-values">${["rp1", "g1"].map(robot => `<div><span><i class="dot ${robot}"></i>${robot.toUpperCase()}</span><strong>${fmt(valueOf(group.rows.find(row => row.robot === robot), m.key), m.digits)}<small>${m.unit}</small></strong></div>`).join("")}</div><p class="delta-label">全程配对差值 RP1 − G1</p>${pairedIntervalSVG(d, m.digits, m.unit)}<p class="delta-ci">${signed(d.value, m.digits)} ${m.unit} · 95% CI [${fmt(d.ci95[0], m.digits)}, ${fmt(d.ci95[1], m.digits)}]</p><p class="finding-interpretation">${interpretation}</p></article>`;
+    }).join("");
+  }
   function renderExtension() {
-    if (!extension) { $("extreme-results").innerHTML=emptyHTML("Extreme5 暂时无法载入", "当前显示 Common40 冻结数据；可直接读取 Extreme5 JSON 附件。"); return; }
-    const comparison = extension.comparisons[0], rows = comparison.expected_participants.map(id => state.data.results.find(r => r.id === id));
-    const delta = comparison.paired_deltas.progress_pct;
-    $("extreme-results").innerHTML = `<div class="section-heading compact"><div><p class="eyebrow">EXTREME5 / INDEPENDENT GROUP</p><h3>空翻与转体：5 个配对动作（N=5）</h3><p>踢月转体、侧空翻、后空翻、前空翻与毽子后空翻，共 10 个机器人回合。</p></div><span class="scope-label">5 / 5 共同动作</span></div><div class="method-grid"><article><h3>完成度 ${fmt(valueOf(rows[0],"progress_pct"),2)}% / ${fmt(valueOf(rows[1],"progress_pct"),2)}%</h3><p>RP1 / G1；差值 ${signed(delta.value,2)} pp，95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp。G1 在本组的首次失败前完成度较高。</p></article><article><h3>未触发失败阈值 0 / 5</h3><p>两侧各 5 个动作均触发失败阈值。完整回放与失败时刻保留，完成度表示首次失败发生的位置。</p></article><article><h3>分别报告精度与完成度</h3><p>身体与手腕误差使用各侧首次失败前窗口；根节点使用完整回放的最后有效同步策略采样帧。均值与配对区间如下。</p></article></div><details class="disclosure"><summary>Extreme5 七项指标与评分窗口<span>5 个配对动作 · 95% CI</span></summary><div class="detail-content"><div class="table-scroll"><table class="paired-table"><thead><tr><th>指标</th><th>单位</th><th>RP1 均值</th><th>G1 均值</th><th>RP1 − G1</th><th>95% CI</th><th>配对动作数</th></tr></thead><tbody>${METRICS.filter(m=>comparison.paired_deltas[m.key]).map(m=>{const d=comparison.paired_deltas[m.key];return `<tr><td>${CN_METRICS[m.key]}</td><td>${m.unit}</td><td>${fmt(valueOf(rows[0],m.key),m.digits)}</td><td>${fmt(valueOf(rows[1],m.key),m.digits)}</td><td>${signed(d.value,m.digits)} ${d.unit==="pp"?"pp":m.unit}</td><td>[${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}] ${d.unit==="pp"?"pp":m.unit}</td><td>${d.n_motions}</td></tr>`}).join("")}</tbody></table></div><p>身体位置诊断（mm，50 Hz 评分采样，每周期首个物理子步）：各自失败前 / 共同失败前 / 全程评分窗口。RP1 ${["own_prefailure_body_mm","common_prefailure_body_mm","full_replay_body_mm"].map(k=>fmt(extension.diagnostics.rp1[k],2)).join(" / ")}；G1 ${["own_prefailure_body_mm","common_prefailure_body_mm","full_replay_body_mm"].map(k=>fmt(extension.diagnostics.g1[k],2)).join(" / ")}。主指标使用各自失败前窗口；这些诊断窗口另列。</p></div></details><p class="report-links"><a href="./extreme5.json" target="_blank" rel="noopener noreferrer">Extreme5 JSON ↗</a> <a href="./extreme5.csv" download>10 回合 CSV ↓</a> <span>本组视频待制作。</span></p>`;
+    if (!extension) { $("extreme-results").innerHTML = emptyHTML("Extreme5 暂时无法载入", "可直接读取冻结 JSON 附件。"); return; }
+    const comparison = extension.comparisons[0], rows = comparison.expected_participants.map(id => state.data.results.find(r => r.id === id)), group = fullGroup("extreme5");
+    $("extreme-results").innerHTML = `<div class="section-heading compact"><div><p class="eyebrow">EXTREME5 / INDEPENDENT GROUP</p><h3>空翻与转体：5 个配对动作（N=5）</h3><p>踢月转体、侧空翻、后空翻、前空翻与毽子后空翻，共 10 个机器人回合，独立报告。</p></div><span class="scope-label">5 / 5 共同动作</span></div><div class="finding-grid full-finding-grid">${group ? fullFindingCards(group) : emptyHTML("全程指标暂未载入", "原版评分保留于下方辅助入口。")}</div><p class="result-note">两侧各 5 个动作均触发首次失败阈值，完整轨迹继续到自然终点。全程误差包含失败后的评分记录。</p><details class="disclosure"><summary>辅助：Extreme5 原版七项与首次失败诊断<span>原版窗口 · 5 个配对动作 · 95% CI</span></summary><div class="detail-content"><div class="table-scroll">${pairedMetricTable(comparison, rows, METRICS)}</div><p>身体、手腕误差和 Return 保留各侧首次失败前评分；首次阈值位置为原版 Progress；root 保留最后有效同步策略帧的端点误差。各自失败前 / 共同失败前 / 历史全程身体诊断（mm）：RP1 ${["own_prefailure_body_mm", "common_prefailure_body_mm", "full_replay_body_mm"].map(k => fmt(extension.diagnostics.rp1[k], 2)).join(" / ")}；G1 ${["own_prefailure_body_mm", "common_prefailure_body_mm", "full_replay_body_mm"].map(k => fmt(extension.diagnostics.g1[k], 2)).join(" / ")}。新的全程主指标采用完整评分 CSV 的 float64 均值。</p></div></details><p class="report-links"><a href="./extreme5.json" target="_blank" rel="noopener noreferrer">原版 Extreme5 JSON ↗</a> <a href="./extreme5.csv" download>原版 10 回合 CSV ↓</a> <span>本组视频待制作。</span></p>`;
   }
   const signed = (value, digits) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
   function pairedIntervalSVG(delta, digits, unit, dark = false) {
@@ -281,19 +390,18 @@
     return `<svg class="${dark ? "hero-ci" : "ci-svg"}" viewBox="0 0 310 74" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="RP1 减 G1 差值 ${escape(signed(delta.value, digits))} ${escape(unit)}，95% 置信区间 ${escape(fmt(delta.ci95[0], digits))} 至 ${escape(fmt(delta.ci95[1], digits))}"><line x1="26" y1="28" x2="284" y2="28" stroke="${dark ? "#46536b" : "#e0e6ef"}"/><line x1="155" y1="7" x2="155" y2="43" stroke="${dark ? "#889bb8" : "#7c8ca3"}" stroke-dasharray="3 3"/><line x1="${x(delta.ci95[0])}" y1="28" x2="${x(delta.ci95[1])}" y2="28" stroke="${color}" stroke-width="4" stroke-linecap="round"/><line x1="${x(delta.ci95[0])}" y1="21" x2="${x(delta.ci95[0])}" y2="35" stroke="${color}"/><line x1="${x(delta.ci95[1])}" y1="21" x2="${x(delta.ci95[1])}" y2="35" stroke="${color}"/><circle cx="${x(delta.value)}" cy="28" r="5" fill="${color}" stroke="${dark ? "#101c30" : "white"}" stroke-width="2"/><text x="26" y="60">−${escape(fmt(bound, digits))}</text><text x="155" y="60" text-anchor="middle">0</text><text x="284" y="60" text-anchor="end">+${escape(fmt(bound, digits))} ${escape(unit)}</text></svg>`;
   }
   function renderPairedSummary() {
-    const summary = pairedSummaryFor(state.data);
-    if (!summary) {
-      $("hero-chart").innerHTML = emptyHTML("配对摘要待核验", "尚未读取完整共同动作组。");
-      $("paired-summary").innerHTML = ""; $("paired-all-metrics").innerHTML = ""; return;
+    const legacy = pairedSummaryFor(state.data), group = fullGroup("lafan40");
+    $("paired-all-metrics").innerHTML = legacy ? pairedMetricTable(legacy.comparison, [legacy.rp1, legacy.g1], METRICS) : "";
+    if (!group) {
+      $("hero-chart").innerHTML = emptyHTML("全程配对摘要暂未载入", "已冻结的原版评分可在辅助入口查看。");
+      $("paired-summary").innerHTML = emptyHTML("全程指标暂未载入", "可检查全程 JSON 附件及载入状态。"); return;
     }
-    const { rp1, g1, comparison, delta, crossesZero } = summary;
-    $("hero-chart").innerHTML = `<p class="eyebrow">COMPLETION / 40 PAIRED MOTIONS</p><h2>动作完成度</h2><p class="chart-context">首次失败前动作推进比例 · 数值越高越好</p>${[rp1,g1].map((row) => `<div class="progress-row"><div class="progress-label"><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,"progress_pct"),2)}<small>%</small></strong></div><div class="progress-track" aria-hidden="true"><div class="progress-fill ${row.robot}" style="width:${valueOf(row,"progress_pct")}%"></div></div></div>`).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value,2)}<small> pp</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp · 40 个配对动作（N=40）</p>${pairedIntervalSVG(delta,2,"pp",true)}<p class="hero-conclusion">${crossesZero ? "完成度差值的 95% 置信区间跨零。" : "完成度差值的 95% 置信区间与零分离。"}</p></div>`;
-    const conclusions = {body_pos_mm:"RP1 均值较低 · 区间上界接近零",body_ori_rad:"RP1 身体姿态误差较低",wrist_ori_rad:"G1 手腕姿态误差较低"};
-    $("paired-summary").innerHTML = ["body_pos_mm","body_ori_rad","wrist_ori_rad"].map((key) => {
-      const m=metricDefinition(key), d=comparison.paired_deltas[key];
-      return `<article class="finding-card"><h3>${CN_METRICS[key]}</h3><p class="metric-caption">${m.label} · 越低越好 · ${d.n_motions} 个配对动作</p><div class="finding-values">${[rp1,g1].map(row=>`<div><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,key),m.digits)}<small>${m.unit}</small></strong></div>`).join("")}</div><p class="delta-label">配对差值 RP1 − G1</p>${pairedIntervalSVG(d,m.digits,m.unit)}<p class="delta-ci">${signed(d.value,m.digits)} ${m.unit} · 95% CI [${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}]</p><p class="finding-interpretation">${conclusions[key]}</p></article>`;
-    }).join("");
-    $("paired-all-metrics").innerHTML = `<table class="paired-table"><caption class="sr-only">共同 40 动作，RP1 减 G1 配对差值及 95% 置信区间</caption><thead><tr><th>指标</th><th>单位</th><th>RP1 均值</th><th>G1 均值</th><th>RP1 − G1</th><th>95% CI</th><th>配对动作数</th></tr></thead><tbody>${METRICS.filter(m=>comparison.paired_deltas[m.key]).map(m=>{const d=comparison.paired_deltas[m.key];return `<tr><td>${CN_METRICS[m.key]}</td><td>${m.unit}</td><td class="number">${fmt(valueOf(rp1,m.key),m.digits)}</td><td class="number">${fmt(valueOf(g1,m.key),m.digits)}</td><td class="number">${signed(d.value,m.digits)} ${d.unit==="pp"?"pp":""}</td><td class="number">[${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}] ${d.unit==="pp"?"pp":m.unit}</td><td>${d.n_motions}</td></tr>`}).join("")}</tbody></table>`;
+    const key = "full_body_pos_mm", delta = group.comparison.paired_deltas[key], values = group.rows.map(row => valueOf(row, key)), maximum = Math.max(...values);
+    $("hero-chart").innerHTML = `<p class="eyebrow">FULL WINDOW / 40 PAIRED MOTIONS</p><h2>全程身体位置误差</h2><p class="chart-context">完整评分序列 · 包含失败后过程 · 越低越好</p>${["rp1", "g1"].map(robot => {
+      const row = group.rows.find(r => r.robot === robot), value = valueOf(row, key);
+      return `<div class="progress-row"><div class="progress-label"><span><i class="dot ${robot}"></i>${robot.toUpperCase()}</span><strong>${fmt(value, 2)}<small>mm</small></strong></div><div class="progress-track" aria-hidden="true"><div class="progress-fill ${robot}" style="width:${value / maximum * 100}%"></div></div></div>`;
+    }).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value, 2)}<small> mm</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0], 2)}, ${fmt(delta.ci95[1], 2)}] mm · 40 个配对动作（N=40）</p>${pairedIntervalSVG(delta, 2, "mm", true)}<p class="hero-conclusion">${delta.ci95[1] < 0 ? "RP1 全程身体位置误差较低。" : "结论以全程配对区间为准。"}</p></div>`;
+    $("paired-summary").innerHTML = fullFindingCards(group);
   }
   function renderMotionChart() {
     const metric = metricDefinition(state.metric);
@@ -339,24 +447,24 @@
       $("fairness-body").innerHTML=rows.map(([item,rp1,g1,status,evidence])=>`<tr><td>${item}</td><td>${rp1}</td><td>${g1}</td><td>${statusBadge(status)}</td><td>${evidence}</td></tr>`).join(""); return;
     }
     const rows = state.data.fairness.filter((row) => ["phase", "condition", "mode"].every((key) => !row[key] || row[key] === "all" || selected[key] === "all" || row[key] === selected[key]));
-    $("fairness-body").innerHTML = rows.length ? rows.map((row) => `<tr><td>${escape(row.item)}${row.phase && row.phase !== "all" ? `<span class="record-meta">${escape(phaseLabel(row.phase))}</span>` : ""}</td><td>${escape(row.rp1)}</td><td>${escape(row.g1)}</td><td>${statusBadge(row.status)}</td><td>${escape(String(row.evidence || "待提供").replace(/每回合 manifest；/g, ""))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-cell"><strong>公平条件核验待导入</strong><p>应逐项提供 runtime、执行器、控制 / 物理步长、初态、终止、seed、训练预算、归一化器及 retarget 身份。</p></td></tr>`;
+    $("fairness-body").innerHTML = rows.length ? rows.map((row) => `<tr><td>${escape(row.item)}${row.phase && row.phase !== "all" ? `<span class="record-meta">${escape(phaseLabel(row.phase))}</span>` : ""}</td><td>${escape(row.rp1)}</td><td>${escape(row.g1)}</td><td>${statusBadge(row.status)}</td><td>${escape(String(row.evidence || "待提供").replace(/每回合 manifest；/g, "").replace(/根\/关节速度标准差各 ?0\.05/g, "根部 vx/vy 与局部 yaw 角速度标准差分别 0.05 m/s、0.05 m/s、0.05 rad/s"))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-cell"><strong>公平条件核验待导入</strong><p>应逐项提供 runtime、执行器、控制 / 物理步长、初态、终止、seed、训练预算、归一化器及 retarget 身份。</p></td></tr>`;
   }
   function renderEvidence() {
     const statistics = state.data.statistics;
     const methodText = {
-      aggregation: "相同 seed 集先求每动作均值，再按动作等权；各条件分别报告。",
-      ci_method: "10,000 次配对动作百分位 bootstrap；分别保存机器人均值区间与 RP1−G1 差值区间。",
+      aggregation: "全程四项取全部 50 Hz 首物理子步样本（motion_t=1..Ncommon−1），包含首次失败及其后记录；不包含初始化帧或额外 200 Hz 末端 hold。完整相同 seed 先在动作内平均，再按动作等权；各数据集与条件分别报告。",
+      ci_method: "10,000 次配对动作百分位 bootstrap，PCG64 seed 20261013、95% 线性分位数；每组和每指标重置，两侧共享索引。机器人均值区间与 RP1−G1 差值区间直接读取冻结统计。",
       missing_policy: "保留有效、无效、删失与待完成记录；均值要求完整的每动作 seed 集，缺失成绩保留 null 及原因。",
       rank_policy: "参与者、完成状态、协议、配对身份及指标分母齐全一致时，计算组内名次。"
     };
     $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] ? methodText[key] : "待提供")}</dd>`).join("") + `<dt>条件覆盖</dt><dd>Common40：40 动作 / 40 对 / 80 回合；敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。${extension ? "Extreme5：5 / 5 / 10，独立报告。" : ""}${extension ? "合计 90 个条件与 seed 配对，45 个不同动作。" : "Common40 当前载入 85 对、40 个动作；Extreme5 数据待载入。"}</dd>`;
     const all=asArray(state.data.downloads), reports=all.filter(d=>/feishu\.cn\/(docx|file)\//.test(d.url)&&/技术报告/.test(d.label));
-    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>18 页统一报告的 PDF / DOCX 已更新为版本 4，飞书正文正在同步核对。资料需飞书组织权限。</p>`;
+    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>18 页统一报告的 PDF / DOCX 已更新为版本 4，飞书正文已完成版本 4 内容核对；包含全程指标的版本 5 正在定稿。资料需飞书组织权限。</p>`;
     const historical=all.filter(d=>!reports.includes(d)&&/feishu\.cn/.test(d.url)&&pairedHistoricalVideo(d));
     $("historical-links").innerHTML = `<p>共有动作的既有双机器人同步回放。</p>${historical.length ? historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("") : "<p>尚无可核验的既有同步回放。</p>"}`;
     const notes = [
       "区间描述固定发布策略与当前仿真动作。训练数据、重定向和控制参数不同；完整历史训练日志、GPU 训练小时及真机验证待补充。",
-      "Common14 使用 ankle-roll 语义映射，跟踪回报使用独立 torso anchor 与 reward 点集。失败前误差存在存活时长选择效应；七项描述性区间未作多重比较校正。",
+      "Common14 使用 ankle-roll 语义映射，跟踪回报使用独立 torso anchor 与 reward 点集。原版失败前误差存在存活时长选择效应，保留作辅助诊断；全程与原版描述性区间未作多重比较校正。",
       "公开重定向的动作名与时长已对齐，原始 BVH 输入哈希血缘仍有缺口。",
       "30 个重复回合的结果逐值一致，独立动作数仍为 5；同步视频用于观察已有回合。"
     ];
@@ -420,6 +528,7 @@
     $("view-aggregate").setAttribute("aria-pressed", String(state.scope === "aggregate"));
     $("view-per-motion").setAttribute("aria-pressed", String(state.scope === "per_motion"));
     $("sort-direction").textContent = state.direction === "asc" ? "升序 ↑" : "降序 ↓";
+    $("filter-window").value = state.window;
     $("sort-metric").value = state.metric;
   }
   function populateFilters() {
@@ -431,7 +540,10 @@
       const values = [...new Set(state.data.results.map((row) => row[key]).filter((value) => value != null).map(String))].sort((a, b) => a.localeCompare(b, "en", { numeric: true }));
       selectOptions(key, values.map((value) => [value, key === "robot" ? value.toUpperCase() : value]), { robot: "全部机器人", condition: "全部条件", mode: "全部模式", seed: "全部 seed" }[key]);
     });
-    $("sort-metric").innerHTML = METRICS.map((metric) => `<option value="${metric.key}">${metric.label} (${metric.unit})</option>`).join("");
+    populateMetricOptions();
+  }
+  function populateMetricOptions() {
+    $("sort-metric").innerHTML = activeMetrics().map((metric) => `<option value="${metric.key}">${metric.label} (${metric.unit})</option>`).join("");
   }
   function csvCell(value) {
     let cell = value == null ? "" : String(value);
@@ -440,12 +552,12 @@
   }
   function csvExport(rows) {
     const base = ["id", "label", "phase", "robot", "dataset", "condition", "mode", "seed", "scope", "motion_id", "status", "status_reason"];
-    const fields = ["coverage_numerator", "coverage_denominator", "coverage_unit", "coverage_reason", "paired_numerator", "paired_denominator", "paired_unit", "paired_reason", "comparison_id", "paired_sample_set_sha256", "checkpoint_sha256", "source_sha256", "config_sha256", "protocol_sha256", "execution_protocol_sha256", "raw_links_json", "videos_json", "failures_json"];
+    const fields = ["coverage_numerator", "coverage_denominator", "coverage_unit", "coverage_reason", "paired_numerator", "paired_denominator", "paired_unit", "paired_reason", "comparison_id", "paired_sample_set_sha256", "checkpoint_sha256", "source_sha256", "config_sha256", "protocol_sha256", "execution_protocol_sha256", "raw_links_json", "videos_json", "failures_json", "fullwindow_metadata_json"];
     const metricFields = ["value", "reason", "coverage_numerator", "coverage_denominator", "coverage_unit", "ci_low", "ci_high", "ci_level", "ci_method", "ci_resampling_unit", "ci_n_clusters", "ci_n_seeds", "ci_reason", "sample_set_sha256"];
-    const header = [...base, ...fields, ...METRICS.flatMap((metric) => metricFields.map((field) => metric.key + "_" + field))];
+    const header = [...base, ...fields, ...ALL_METRICS.flatMap((metric) => metricFields.map((field) => metric.key + "_" + field))];
     return "\uFEFF" + [header, ...rows.map((row) => {
       const c = row.coverage || {}, p = row.paired_coverage || {}, pairing = row.pairing || {}, provenance = row.provenance || {};
-      return [...base.map((key) => row[key]), c.numerator, c.denominator, c.unit, c.reason, p.numerator, p.denominator, p.unit, p.reason, pairing.comparison_id, pairing.sample_set_sha256, (row.checkpoint || {}).sha256, provenance.source_sha256, provenance.config_sha256, provenance.protocol_sha256, provenance.execution_protocol_sha256, JSON.stringify(asArray(provenance.raw_links)), JSON.stringify(asArray(row.videos)), JSON.stringify(asArray(row.failures)), ...METRICS.flatMap(({ key }) => {
+      return [...base.map((key) => row[key]), c.numerator, c.denominator, c.unit, c.reason, p.numerator, p.denominator, p.unit, p.reason, pairing.comparison_id, pairing.sample_set_sha256, (row.checkpoint || {}).sha256, provenance.source_sha256, provenance.config_sha256, provenance.protocol_sha256, provenance.execution_protocol_sha256, JSON.stringify(asArray(provenance.raw_links)), JSON.stringify(asArray(row.videos)), JSON.stringify(asArray(row.failures)), JSON.stringify(row.fullwindow || null), ...ALL_METRICS.flatMap(({ key }) => {
         const m = (row.metrics || {})[key] || {}, mc = m.coverage || {}, ci = m.ci || {};
         return [valueOf(row, key), m.reason, mc.numerator, mc.denominator, mc.unit, ci.low, ci.high, ci.level, ci.method, ci.resampling_unit, ci.n_clusters, ci.n_seeds, ci.reason, m.sample_set_sha256];
       })];
@@ -462,6 +574,7 @@
     $("filters").addEventListener("change", () => { state.page = 1; render(); });
     $("filters").addEventListener("reset", () => { setTimeout(() => { state.page = 1; render(); }, 0); });
     ["view-aggregate", "view-per-motion"].forEach((id) => $(id).addEventListener("click", () => { state.scope = $(id).dataset.scope; state.page = 1; render(); }));
+    $("filter-window").addEventListener("change", () => { state.window = $("filter-window").value; state.metric = activeMetrics()[0].key; state.direction = "asc"; state.page = 1; populateMetricOptions(); render(); });
     $("sort-metric").addEventListener("change", () => { state.metric = $("sort-metric").value; state.direction = metricDefinition(state.metric).direction; state.page = 1; render(); });
     $("sort-direction").addEventListener("click", () => { state.direction = state.direction === "asc" ? "desc" : "asc"; state.page = 1; render(); });
     $("results-head").addEventListener("click", (event) => {
@@ -504,11 +617,25 @@
     $("report-status").textContent = String(state.data.status || "pending").toUpperCase();
     $("updated-at").textContent = state.data.updated_utc ? new Date(state.data.updated_utc).toLocaleDateString("zh-CN", {timeZone:"UTC", year:"numeric",month:"long",day:"numeric"}) : "待导入";
     if (state.data.updated_utc) $("updated-at").setAttribute("datetime", state.data.updated_utc);
+    if (extension) {
+      try {
+        const response = await fetch("./fullwindow.json", { cache: "no-store", credentials: "same-origin" });
+        if (!response.ok) throw new Error(`全程数据读取失败（HTTP ${response.status}）`);
+        const text = await response.text(), bytes = new TextEncoder().encode(text);
+        const hash = [...new Uint8Array(await crypto.subtle.digest("SHA-256", bytes))].map(byte => byte.toString(16).padStart(2, "0")).join("");
+        if (hash !== "119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd") throw new Error("全程公开数据版本身份不匹配");
+        const candidate = JSON.parse(text), combined = normalizeData(mergeFullWindow(state.data, candidate));
+        state.data = combined; fullWindow = candidate; state.origin += " + fullwindow.json";
+      } catch (error) {
+        notice = `${notice} 全程指标暂未载入：${error.message}。已冻结原版评分仍可查看。`;
+        $("load-notice").classList.add("error");
+      }
+    }
     const issues = state.issues.length ? ` 有 ${state.issues.length} 处字段缺失或非有限值，已显式标为 n/a；请检查数据生成端。` : "";
-    $("load-notice").textContent = notice || `${state.data.status_message || "快照已载入；结论范围以各记录的协议、覆盖与来源为准。"} 数据来源：${state.origin}。${issues}`;
+    $("load-notice").textContent = notice || `${fullWindow ? "全程四项已载入：45 个共有动作、90 个条件与 seed 配对、180 个既有回合、5 个比较组；原版评分与首次失败诊断保留。" : state.data.status_message || "快照已载入；结论范围以各记录的协议、覆盖与来源为准。"} 数据来源：${state.origin}。${issues}`;
     populateFilters(); bindEvents(); render(); await Promise.all([renderPublicMedia(), renderHardware()]);
   }
   /* Pure helpers exposed for offline contract checks; no scores or fixtures are bundled. */
-  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, mergeExtension, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, pairedMotionCases, pairedHistoricalVideo, validPublicMedia, pairedIntervalSVG, metrics: METRICS };
+  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, mergeExtension, mergeFullWindow, semanticKey, fullWindowRanks, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, pairedMotionCases, pairedHistoricalVideo, validPublicMedia, pairedIntervalSVG, metrics: ALL_METRICS, legacyMetrics: METRICS, fullMetrics: FULL_METRICS };
   init();
 })();

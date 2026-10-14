@@ -3,7 +3,7 @@
 
 Run without arguments to verify the distributable bundle. Add --source-data to
 independently compare every result's metrics, CI, coverage and pairing with the
-hash-approved Common40 private input. Separate Extreme5 and hardware files must
+hash-approved Common40 private input. Separate Extreme5, hardware and fullwindow files must
 match their reviewed public projection hashes. Private inputs are never copied. A changed
 scientific version requires review and an explicit change to this contract.
 Exit 1 means publication must stop; exit 0 records only the checks performed.
@@ -41,6 +41,30 @@ EXTREME_NUMERIC_SHA = '776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b1
 EXTREME_EXECUTION_V1_SHA = '7fe3c1fca5570abb08de9af23bdc618e604d565fbf85a9bf80c44883d5f8af02'
 EXTREME_EXECUTION_V2_SHA = '5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035'
 EXTREME_ID = 'paired_extreme5_nominal_native_position_20261014'
+FULLWINDOW_JSON_SHA = '119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd'
+FULLWINDOW_CSV_SHA = '894a5b836fb1473202c3c3da08b11f9280fe3b572f589279dd00e444ea7e2ff4'
+FULLWINDOW_RECEIPT_SHA = 'c3698c7e99ebba4167ef8cb2254f10b82aa7e4884efd97cd3745796540ced47b'
+FULLWINDOW_WINDOW = 'full_replay_50hz_first_substep'
+FULLWINDOW_METRICS = ('full_body_pos_mm', 'full_body_ori_rad',
+                      'full_wrist_pos_mm', 'full_wrist_ori_rad')
+FULLWINDOW_JOIN = ('dataset', 'condition', 'mode', 'robot', 'motion_id', 'seed')
+FULLWINDOW_COHORTS = {
+    ('lafan40', 'nominal', 'native_position'):
+        ('fullwindow_2ed140d66171d9de', 40, 40, [0], 'primary',
+         'eafa7179ed73a84956126a6f57b35740b39bf9e948b3ef37434834943336561f'),
+    ('extreme5', 'nominal', 'native_position'):
+        ('fullwindow_13726acb7f07e362', 5, 5, [0], 'primary',
+         '64860ac299ad482c82e73819bf274de3b70585e80d0472e92243d8a215422135'),
+    ('lafan40', 'repeat_nominal', 'native_position'):
+        ('fullwindow_e5a4e7c58d22b83b', 15, 5, [0, 1, 42], 'secondary',
+         '82fcd51b3617263a6ff9d8d060572f736391585ca62b43a0dc568ca956573f08'),
+    ('lafan40', 'robust_initial_velocity', 'native_position'):
+        ('fullwindow_8e62320ef9665457', 25, 5, [0, 1, 2, 3, 4], 'secondary',
+         '7f10ff0df57f0d805e2fcba85aef3c00a06775eba6a56e4a14cf001fc437ff26'),
+    ('lafan40', 'explicit_sensitivity', 'explicit_deploy'):
+        ('fullwindow_2f2e445e5e2e664e', 5, 5, [0], 'secondary',
+         '1b75372620d64a237e0b7f350c7592932254cfc2ccc195afc9c7a498a1a8cdc5'),
+}
 EXTREME_FRAMES = {'Take_143_Skeleton0': 431, 'Take_144_Skeleton0': 448,
                   'Take_146_Skeleton0': 375, 'Take_148_Skeleton0': 391,
                   'Take_149_Skeleton0': 462}
@@ -59,6 +83,14 @@ EXTENSIONS = {
         'json': 'hardware.json', 'csv': 'hardware.csv',
         'source_sha256': '7c3ab345adbaf55d12fe6a5bc8a3923dab7257bd7df82b248c46e651214cce8c',
         'json_sha256': HARDWARE_JSON_SHA, 'csv_sha256': HARDWARE_CSV_SHA,
+    },
+    'fullwindow': {
+        'json': 'fullwindow.json', 'csv': 'fullwindow.csv',
+        'json_sha256': FULLWINDOW_JSON_SHA, 'csv_sha256': FULLWINDOW_CSV_SHA,
+        'metric_window': FULLWINDOW_WINDOW,
+        'final_receipt_sha256': FULLWINDOW_RECEIPT_SHA,
+        'independent_audit_sha256': '01a10684520c13dd9e00d7b0329389e3000a37e3dc7f69d985501bc486a44b57',
+        'historical_handoff_sha256': '6c7707db561524f260f5a33527b6b6d61ee1c807f25fff7412e900578b44b7fd',
     },
     'handoff_sha256': '6afe9c674cc85df00d67016cedb0dfb0da23d27705b09adf00c79c0ac9e30cd2',
 }
@@ -97,6 +129,7 @@ PUBLISH_FILES = {
     'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json', 'media.json', 'favicon.svg',
     'hardware.json', 'hardware.csv',
     'extreme5.json', 'extreme5.csv',
+    'fullwindow.json', 'fullwindow.csv',
     'scripts/update_snapshot.py', 'scripts/verify_public.py',
 }
 EXCLUDED_DIRS = {'.git', '.agents', '.aws', '.codex', '.private', 'qa', '__pycache__'}
@@ -173,6 +206,20 @@ def scientific_digest(data):
     }
     return sha(json.dumps(protected, sort_keys=True, ensure_ascii=False,
                           separators=(',', ':'), allow_nan=False).encode())
+
+def strict_seed(value):
+    # Accept the historical Extreme text "0", never coerce bool/float/whitespace.
+    if type(value) is int and value >= 0:
+        return value
+    require(type(value) is str and re.fullmatch(r'0|[1-9][0-9]*', value) is not None,
+            'episode seed must be a strict nonnegative decimal integer')
+    return int(value)
+
+def fullwindow_join_key(row):
+    require(row['phase'] == 'A', 'fullwindow join crosses phase')
+    for name in FULLWINDOW_JOIN[:-1]:
+        require(type(row[name]) is str and row[name], 'fullwindow semantic key is missing')
+    return tuple(row[name] for name in FULLWINDOW_JOIN[:-1]) + (strict_seed(row['seed']),)
 
 
 def read_json(path):
@@ -391,7 +438,7 @@ class Audit:
             # Generic localhost preview docs and privacy-detector source code are safe.
             if name in {'index.html', 'app.js', 'style.css', 'DATA_PROVENANCE.md',
                         'RELEASE_MANIFEST.json', 'hardware.json', 'hardware.csv',
-                        'extreme5.json', 'extreme5.csv'}:
+                        'extreme5.json', 'extreme5.csv', 'fullwindow.json', 'fullwindow.csv'}:
                 require(not LOCAL_PATH.search(content), name + ': absolute local path')
                 # URL.hostname is a browser API used to label permissioned links.
                 scanned = content.replace('.hostname', '') if name == 'app.js' else content
@@ -818,6 +865,212 @@ class Audit:
                 len(self.data['comparisons']) + len(extension['comparisons']) == 5,
                 'combined display scope differs; cohorts must remain separate')
 
+    def fullwindow_contract(self):
+        json_path, csv_path = self.root / 'fullwindow.json', self.root / 'fullwindow.csv'
+        require(sha(json_path.read_bytes()) == FULLWINDOW_JSON_SHA and json_path.stat().st_size == 407473,
+                'fullwindow JSON differs from the terminal-reviewed public supplement')
+        require(sha(csv_path.read_bytes()) == FULLWINDOW_CSV_SHA and csv_path.stat().st_size == 88651,
+                'fullwindow CSV differs from the terminal-reviewed public supplement')
+        full = read_json(json_path)
+        require(set(full) == {'schema', 'status', 'metric_window', 'counts', 'episode_semantic_join_key',
+                              'paired_case_definition', 'episodes', 'comparisons', 'primary_comparison_ids',
+                              'secondary_comparison_ids', 'metric_definitions', 'diagnostic_definitions', 'methods'},
+                'fullwindow supplemental schema fields differ')
+        require(full['schema'] == 'rp1-g1-public-fullwindow-handoff-v1' and
+                full['status'] == 'independently_verified' and full['metric_window'] == FULLWINDOW_WINDOW and
+                full['episode_semantic_join_key'] == list(FULLWINDOW_JOIN), 'fullwindow version/join differs')
+        require(full['counts'] == {
+            'physical_episode_records': 180, 'paired_cases': 90, 'unique_motion_ids': 45,
+            'comparison_groups': 5, 'aggregate_views': 10, 'maximum_display_rows_with_aggregate_views': 190,
+            'lafan40_episode_records': 170, 'lafan40_paired_cases': 85,
+            'extreme5_episode_records': 10, 'extreme5_paired_cases': 5}, 'fullwindow immutable episode scope differs')
+        units = {name: 'mm' if name.endswith('_mm') else 'rad' for name in FULLWINDOW_METRICS}
+        require(set(full['metric_definitions']) == set(units), 'only four full body/wrist errors are reviewed')
+        for name, unit in units.items():
+            definition = full['metric_definitions'][name]
+            require(definition['unit'] == unit and definition['higher_is_better'] is False and
+                    definition['role'] == 'primary_fullwindow_error', 'fullwindow metric role/units differ')
+        diagnostic_mapping = {
+            'progress': ('progress_pct', 100, 'fraction'),
+            'local_body_tracking_error': ('body_pos_mm', 1000, 'm'),
+            'local_body_orientation_error': ('body_ori_rad', 1, 'rad'),
+            'wrist_tracking_error': ('wrist_pos_mm', 1000, 'm'),
+            'wrist_orientation_error': ('wrist_ori_rad', 1, 'rad'),
+            'normalized_tracking_return': ('episode_return', 1, 'dimensionless'),
+            'root_final_error_norm': ('root_pos_m', 1, 'm'),
+        }
+        require(set(full['diagnostic_definitions']) == set(diagnostic_mapping) | {'gpu_train_hours'},
+                'fullwindow original diagnostic definitions differ')
+        for name, (_, _, unit) in diagnostic_mapping.items():
+            require(full['diagnostic_definitions'][name]['unit'] == unit, 'original diagnostic units differ')
+        require(full['methods']['bootstrap'] == {
+            'resampling_unit': 'paired_motion', 'generator': 'PCG64', 'seed': 20261013,
+            'resamples': 10000, 'confidence': 0.95, 'quantile_method': 'linear',
+            'reset_per_group_and_metric': True, 'shared_indices_for_robots': True,
+            'delta_direction': 'RP1 minus G1'}, 'fullwindow paired motion CI protocol differs')
+        extreme = read_json(self.root / 'extreme5.json')
+        old_episodes = list(self.episodes_by_id.values()) + [
+            row for row in extreme['results'] if row['scope'] == 'per_motion']
+        originals = {fullwindow_join_key(row): row for row in old_episodes}
+        require(len(old_episodes) == len(originals) == 180, 'old supplemental join is not one-to-one')
+        rows = full['episodes']
+        joined = {fullwindow_join_key(row): row for row in rows}
+        require(len(rows) == len(joined) == 180 and set(joined) == set(originals),
+                'fullwindow must join the same 180 original episodes without appending a new cohort')
+        episode_fields = set(FULLWINDOW_JOIN) | {'phase', 'effective_condition', 'scope', 'run_id',
+            'scientific_selected_case_id', 'metric_window', 'full_recorded_frames', 'reference_common_frames',
+            'full_reference_start_s', 'full_reference_end_s', *FULLWINDOW_METRICS, *diagnostic_mapping,
+            'threshold_failure', 'first_failure_policy_index', 'first_failure_reference_time_s',
+            'first_failure_physics_time_s', 'failure_category', 'root_endpoint_motion_t',
+            'root_endpoint_reference_time_s', 'root_endpoint_physics_time_s', 'root_endpoint_scope', 'gpu_train_hours'}
+        runs, cases = {}, {}
+        new_value_checks = old_value_checks = 0
+        for key, row in joined.items():
+            require(set(row) == episode_fields and row['scope'] == 'per_motion' and
+                    type(row['seed']) is int and row['effective_condition'] == row['condition'] and
+                    row['metric_window'] == FULLWINDOW_WINDOW, 'fullwindow episode shape/identity differs')
+            require(re.fullmatch(r'[0-9a-f]{24}', row['run_id']) and row['run_id'] not in runs,
+                    'fullwindow opaque run aliases are missing/duplicated')
+            require(re.fullmatch(r'case_[0-9a-f]{24}', row['scientific_selected_case_id']),
+                    'fullwindow case alias malformed')
+            runs[row['run_id']] = row
+            case_key = key[:3] + key[4:]
+            members = cases.setdefault(case_key, {})
+            require(row['robot'] in {'rp1', 'g1'} and row['robot'] not in members,
+                    'fullwindow duplicate robot for the same semantic case')
+            members[row['robot']] = row
+            frames = row['reference_common_frames']
+            require(type(frames) is int and frames > 2 and row['full_recorded_frames'] == frames - 1 and
+                    row['full_reference_start_s'] == .02 and
+                    math.isclose(row['full_reference_end_s'], (frames - 1) / 50, abs_tol=1e-10),
+                    'fullwindow must include every 50Hz first-substep frame after initialization')
+            for name in units:
+                numeric(row[name], 'fullwindow.' + name, nullable=False)
+                require(row[name] >= 0, 'fullwindow error is negative')
+                new_value_checks += 1
+            for name, (alias, scale, _) in diagnostic_mapping.items():
+                numeric(row[name], 'fullwindow.original.' + name, nullable=False)
+                require(row[name] * scale == originals[key]['metrics'][alias]['value'],
+                        'fullwindow original diagnostic/display mapping changed: ' + name)
+                old_value_checks += 1
+            require(0 <= row['progress'] <= 1 and row['gpu_train_hours'] is None,
+                    'original Progress/training-cost boundary differs')
+            require(type(row['threshold_failure']) is bool, 'threshold failure must be a boolean')
+            failure_fields = ('first_failure_policy_index', 'first_failure_reference_time_s',
+                              'first_failure_physics_time_s', 'failure_category')
+            if not row['threshold_failure']:
+                require(all(row[name] is None for name in failure_fields),
+                        'absent first failure must preserve explicit nulls')
+            else:
+                index = row['first_failure_policy_index']
+                require(type(index) is int and 0 <= index < frames - 1 and
+                        row['failure_category'] in {'height', 'gravity', 'both'} and
+                        math.isclose(row['first_failure_reference_time_s'], (index + 1) / 50, abs_tol=1e-10),
+                        'original first failure/clock differs')
+                numeric(row['first_failure_physics_time_s'], 'fullwindow.failure.physics_time', nullable=False)
+            require(row['root_endpoint_scope'] == 'last_valid_same_time_frame' and
+                    row['root_endpoint_motion_t'] == frames - 2 and
+                    math.isclose(row['root_endpoint_reference_time_s'], row['root_endpoint_motion_t'] / 50,
+                                 abs_tol=1e-10), 'original root endpoint differs from its retained raw clock')
+            numeric(row['root_endpoint_physics_time_s'], 'fullwindow.root.physics_time', nullable=False)
+            # Preserve the recorded physics clock. It is not the reference clock
+            # or the last full-window body/wrist sample, and must not be replaced.
+            require(0 < row['root_endpoint_reference_time_s'] - row['root_endpoint_physics_time_s'] < .02,
+                    'original root physics/reference clock relationship differs')
+        require(new_value_checks == 720 and old_value_checks == 1260, 'fullwindow value coverage differs')
+        require(len(cases) == 90 and len({row['motion_id'] for row in rows}) == 45,
+                'fullwindow pair/motion count differs')
+        require(Counter(row['dataset'] for row in rows) == {'lafan40': 170, 'extreme5': 10},
+                'fullwindow datasets must retain original physical episode counts')
+        for members in cases.values():
+            require(set(members) == {'rp1', 'g1'} and
+                    members['rp1']['scientific_selected_case_id'] == members['g1']['scientific_selected_case_id'],
+                    'fullwindow case must identify both original robots')
+            require(all(members['rp1'][name] == members['g1'][name] for name in
+                        ('full_recorded_frames', 'reference_common_frames', 'full_reference_start_s',
+                         'full_reference_end_s')), 'fullwindow paired complete source windows differ')
+        require(len(full['comparisons']) == 5 and
+                set(full['primary_comparison_ids']) == {s[0] for s in FULLWINDOW_COHORTS.values() if s[4] == 'primary'}
+                and set(full['secondary_comparison_ids']) == {s[0] for s in FULLWINDOW_COHORTS.values() if s[4] == 'secondary'},
+                'fullwindow must retain two primary and three secondary groups')
+        seen_cases = set()
+        for comparison in full['comparisons']:
+            group = tuple(comparison[name] for name in ('dataset', 'condition', 'mode'))
+            spec = FULLWINDOW_COHORTS.get(group)
+            require(spec is not None, 'fullwindow unreviewed dataset/condition/mode group')
+            cid, n_cases, n_motions, seeds, role, sample_sha = spec
+            require(comparison['id'] == cid and comparison['phase'] == 'A' and
+                    comparison['effective_condition'] == comparison['condition'] and
+                    comparison['metric_window'] == FULLWINDOW_WINDOW and comparison['role'] == role and
+                    comparison['paired_cases'] == n_cases and comparison['episode_records'] == 2 * n_cases and
+                    comparison['n_unique_motions'] == comparison['expected_paired_motions'] == n_motions and
+                    comparison['matched_seed_set'] == seeds and comparison['expected_participants'] == ['rp1', 'g1'],
+                    'fullwindow group coverage/seed/motion denominator differs')
+            samples = comparison['sample_set']
+            require(len(samples) == n_cases and comparison['sample_set_sha256'] == sample_sha and
+                    sha(json.dumps(samples, ensure_ascii=False, sort_keys=True, separators=(',', ':')).encode()) == sample_sha,
+                    'fullwindow reviewed paired sample identity differs')
+            for sample in samples:
+                case_key = group + (sample['motion_id'], strict_seed(sample['seed']))
+                require(case_key in cases and case_key not in seen_cases and
+                        set(sample['participants']) == {'rp1', 'g1'}, 'fullwindow sample case duplicated/unmatched')
+                seen_cases.add(case_key)
+                for robot, run_id in sample['participants'].items():
+                    require(cases[case_key][robot]['run_id'] == run_id and
+                            cases[case_key][robot]['scientific_selected_case_id'] == sample['scientific_selected_case_id'],
+                            'fullwindow paired sample/run alias binding differs')
+            require(set(comparison['robot_means']) == set(comparison['paired_deltas']) ==
+                    set(comparison['paired_motion_values']) == set(units), 'fullwindow group metric columns differ')
+            for name, unit in units.items():
+                motions = comparison['paired_motion_values'][name]
+                require(len(motions) == len({x['motion_id'] for x in motions}) == n_motions,
+                        'fullwindow repeated seeds must not expand independent motion count')
+                mean = comparison['robot_means'][name]
+                delta = comparison['paired_deltas'][name]
+                require(mean['unit'] == delta['unit'] == unit and mean['higher_is_better'] is False
+                        and delta['n_motions'] == n_motions, 'fullwindow CI unit/denominator differs')
+                for item in motions:
+                    require(item['seeds'] == seeds and item['repeats_per_robot'] == len(seeds),
+                            'fullwindow within-motion seed weighting differs')
+                    for robot in ('rp1', 'g1'):
+                        values = [cases[group + (item['motion_id'], seed)][robot][name] for seed in seeds]
+                        require(math.isclose(item[robot], math.fsum(values) / len(values), abs_tol=1e-10),
+                                'fullwindow motion value differs from its complete original seed group')
+                    require(math.isclose(item['delta_rp1_minus_g1'], item['rp1'] - item['g1'], abs_tol=1e-10),
+                            'fullwindow motion delta must be RP1 minus G1')
+                for cell in [mean['rp1'], mean['g1'], delta]:
+                    numeric(cell['value'], 'fullwindow.summary.value', nullable=False)
+                    require(len(cell['ci95']) == 2, 'fullwindow CI bounds must have two values')
+                    for value in cell['ci95']:
+                        numeric(value, 'fullwindow.summary.ci95', nullable=False)
+                    require(cell['ci95'][0] <= cell['ci95'][1], 'fullwindow CI reversed')
+                for robot in ('rp1', 'g1'):
+                    require(math.isclose(mean[robot]['value'], math.fsum(x[robot] for x in motions) / n_motions,
+                                         abs_tol=1e-10), 'fullwindow group mean must weight motions equally')
+                require(math.isclose(delta['value'], mean['rp1']['value'] - mean['g1']['value'], abs_tol=1e-10),
+                        'fullwindow paired group delta must be RP1 minus G1')
+        require(seen_cases == set(cases), 'fullwindow samples must partition all 90 cases across five groups')
+        try:
+            with csv_path.open(encoding='utf-8', newline='') as handle:
+                reader = csv.DictReader(handle, strict=True)
+                csv_rows = list(reader)
+        except csv.Error as error:
+            raise AuditError('fullwindow CSV cannot be parsed') from error
+        require(reader.fieldnames == list(rows[0]) and len(csv_rows) == 180 and len(reader.fieldnames) == 37,
+                'fullwindow CSV must preserve the exact 180 by 37 supplemental table')
+        for record, row in zip(csv_rows, rows):
+            for name, value in row.items():
+                text = record[name]
+                valid = (text == '' if value is None else text.lower() == str(value).lower() if type(value) is bool
+                         else strict_seed(text) == value if name == 'seed'
+                         else float(text) == value if type(value) in (int, float) else text == value)
+                require(valid, 'fullwindow CSV/JSON value differs: ' + name)
+        content = json_path.read_text() + csv_path.read_text()
+        require(not SECRET.search(content) and not LOCAL_PATH.search(content) and not INFRA.search(content),
+                'fullwindow supplement contains private information')
+        self.fullwindow_value_checks = {'new_values': new_value_checks, 'old_diagnostics': old_value_checks,
+                                       'csv_fields': 180 * 37}
+
     def counts_and_missing(self):
         rows = self.data['results']
         # 511 source display rows = 18 aggregate + 493 per-motion. The public
@@ -1046,6 +1299,7 @@ class Audit:
                           ('public_media_pending_boundary', self.public_media),
                           ('frozen_hardware_metadata_and_csv_contract', self.hardware_contract),
                           ('independent_extreme5_science_and_csv_contract', self.extreme_contract),
+                          ('supplemental_fullwindow_values_join_ci_and_csv_contract', self.fullwindow_contract),
                           ('reviewed_extensions_and_separate_display_scope', self.extension_manifest),
                           ('internal_targets_and_reviewed_https_links', self.links)]:
             self.run_check(label, fn)
@@ -1063,7 +1317,10 @@ class Audit:
                 'extensions_sha256': {'hardware_json': HARDWARE_JSON_SHA,
                                       'hardware_csv': HARDWARE_CSV_SHA,
                                       'extreme5_json': EXTREME_JSON_SHA,
-                                      'extreme5_csv': EXTREME_CSV_SHA},
+                                      'extreme5_csv': EXTREME_CSV_SHA,
+                                      'fullwindow_json': FULLWINDOW_JSON_SHA,
+                                      'fullwindow_csv': FULLWINDOW_CSV_SHA},
+                'fullwindow_value_checks': getattr(self, 'fullwindow_value_checks', None),
                 'checked': self.checked, 'errors': self.errors,
                 'unique_external_links': len(self.external_links),
                 'unique_internal_links': len(self.internal_links),
