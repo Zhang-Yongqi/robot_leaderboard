@@ -98,7 +98,7 @@ Extreme5 的七项 95% 区间以本组 **5 对动作** 为重采样单位，使�
 
 ## 报告与资料
 
-现有云端共同动作报告为 `common_v07_20261014`：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。PDF 与 DOCX 附件为版本 3，对应 Common40；Extreme5 与硬件模型的新增资料以四个公开 JSON / CSV 附件为准，新增版云端报告待更新。相关飞书报告及既有同步视频需要组织访问权限。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。18 页 PDF 与 DOCX 已上传为版本 4，涵盖 Common40、Extreme5 与机器人参数；飞书正文正在同步核对。网页数值以四个冻结 JSON / CSV 附件为准。相关飞书资料需要组织访问权限。
 
 既有同步视频的两侧来源回合均对应 Common40 共有数据。新公开视频为 **0/40**，索引见 [media.json](media.json)；Extreme5 的 5 个视频尚未制作。
 

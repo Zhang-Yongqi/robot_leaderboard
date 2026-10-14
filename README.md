@@ -40,7 +40,7 @@ Extreme5 的 Progress 为 RP1 **55.167%**、G1 **56.543%**；差值 **−1.376 �
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)
 - [新公开视频索引](media.json)：当前 0/40。
 
-现有云端共同动作报告为 `common_v07_20261014`：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。附件为版本 3，对应 Common40；Extreme5 与硬件模型资料见上述四个公开附件，新增版云端报告待更新。飞书报告及既有同步视频需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。18 页 PDF 与 DOCX 已上传为版本 4，涵盖 Common40、Extreme5 与机器人参数；飞书正文正在同步核对。报告及既有同步视频需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
 ## 本地预览
 

@@ -126,16 +126,16 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 11609,
-      "sha256": "384a31370e8869e43d697814b787873ab36083df757416524e34e155d9cb48dd"
+      "bytes": 11558,
+      "sha256": "d4bad28c7be225e414ba30871d4e4951f39c1d91a83db64b7934b545bc717b53"
     },
     "README.md": {
-      "bytes": 5612,
-      "sha256": "dc1c81ec9c04ee8a468a8473e2574d46b78e134a7d8a276bf97a0ef374e51e38"
+      "bytes": 5556,
+      "sha256": "f65558d6dd0a75b74756fb1b12907ab2c9e41c8c328fee7bd5c1a44744caf7d4"
     },
     "app.js": {
-      "bytes": 61702,
-      "sha256": "fc63a9556af625e89ddc16b8deb0fc65d90c5bd614211af42c434f05e902da02"
+      "bytes": 61678,
+      "sha256": "4ab3069a6348aa3e230dae4de1fbe2a0ad58f08fbf7651c05386b737433f9100"
     },
     "data.json": {
       "bytes": 894089,
@@ -213,5 +213,5 @@
     },
     "handoff_sha256": "6afe9c674cc85df00d67016cedb0dfb0da23d27705b09adf00c79c0ac9e30cd2"
   },
-  "expanded_report_update_status": "Existing common_v07 cloud report / PDF / DOCX version 3; expanded unified report in preparation"
+  "expanded_report_update_status": "18-page PDF / DOCX uploaded as version 4; native Feishu body synchronization and readback in progress"
 }

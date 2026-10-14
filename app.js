@@ -351,7 +351,7 @@
     };
     $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] ? methodText[key] : "待提供")}</dd>`).join("") + `<dt>条件覆盖</dt><dd>Common40：40 动作 / 40 对 / 80 回合；敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。${extension ? "Extreme5：5 / 5 / 10，独立报告。" : ""}${extension ? "合计 90 个条件与 seed 配对，45 个不同动作。" : "Common40 当前载入 85 对、40 个动作；Extreme5 数据待载入。"}</dd>`;
     const all=asArray(state.data.downloads), reports=all.filter(d=>/feishu\.cn\/(docx|file)\//.test(d.url)&&/技术报告/.test(d.label));
-    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>现有云端报告为 common_v07 · PDF / DOCX v3。加入 Extreme5 与模型参数的统一报告正在更新；资料需飞书组织权限。</p>`;
+    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>18 页统一报告的 PDF / DOCX 已更新为版本 4，飞书正文正在同步核对。资料需飞书组织权限。</p>`;
     const historical=all.filter(d=>!reports.includes(d)&&/feishu\.cn/.test(d.url)&&pairedHistoricalVideo(d));
     $("historical-links").innerHTML = `<p>共有动作的既有双机器人同步回放。</p>${historical.length ? historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("") : "<p>尚无可核验的既有同步回放。</p>"}`;
     const notes = [
