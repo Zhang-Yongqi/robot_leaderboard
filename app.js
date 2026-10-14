@@ -187,7 +187,7 @@
   function rowEvidence(row) {
     const provenance = row.provenance || {}, checkpoint = row.checkpoint || {};
     const notes = asArray(row.notes).map(readerNote).filter(Boolean);
-    return `<details><summary>策略、条件与同步视频</summary><div class="record-evidence"><p>${escape(checkpoint.name || "策略身份待提供")}</p><p>评测环境：${escape(provenance.runtime || "待提供")}</p>${notes.map((note) => `<p>${escape(note)}</p>`).join("")}${asArray(row.videos).filter(pairedHistoricalVideo).map((video) => `${linkHTML(video, "同步视频")}<p>共同时间轴对比 · ${escape(String(video.description || "视频仅为个例证据").replace(/SHA 为本地原视频；云端原文件未下载做字节哈希。\s*/g, ""))}</p>`).join("")}</div></details>`;
+    return `<details><summary>策略、条件与同步视频</summary><div class="record-evidence"><p>${escape(checkpoint.name || (row.dataset === "extreme5" ? String(row.robot).toUpperCase() + " 发布学生策略" : "策略身份待提供"))}</p><p>评测环境：${escape(provenance.runtime || "待提供")}</p>${notes.map((note) => `<p>${escape(note)}</p>`).join("")}${asArray(row.videos).filter(pairedHistoricalVideo).map((video) => `${linkHTML(video, "同步视频")}<p>共同时间轴对比 · ${escape(String(video.description || "视频仅为个例证据").replace(/SHA 为本地原视频；云端原文件未下载做字节哈希。\s*/g, ""))}</p>`).join("")}</div></details>`;
   }
   function readerNote(note) {
     const text = String(note);
@@ -220,6 +220,7 @@
     const ranked = rows.filter((row) => (ranks.get(row.id) || {}).rank != null).length;
     $("result-count").textContent = `${rows.length} 条${state.scope === "aggregate" ? "聚合" : "逐动作"}记录 · ${ranked} 条有组内名次 · 缺失值列于末尾`;
     $("download-csv").disabled = !rows.length;
+    $("download-json").disabled = !extension;
   }
   function renderOverview() {
     const summary = pairedSummaryFor(state.data);
@@ -252,6 +253,26 @@
     return null;
   }
   const CN_METRICS = { body_pos_mm: "身体位置误差", body_ori_rad: "身体姿态误差", wrist_ori_rad: "手腕姿态误差", wrist_pos_mm: "手腕位置误差", root_pos_m: "根节点端点误差", episode_return: "归一化跟踪回报", progress_pct: "动作完成度" };
+  let extension = null;
+  function mergeExtension(base, extra) {
+    if (!extra || extra.schema !== "rp1-g1-public-extreme5-handoff-v1" || extra.dataset !== "extreme5" || extra.lafan40_statistics_changed !== false || extra.results.length !== 12 || extra.comparisons.length !== 1) throw new Error("Extreme5 配对数据格式不兼容");
+    const result = { ...base, datasets: [...base.datasets, { id: "extreme5", label: "Extreme5 · 空翻与转体", expected_motions: 5 }], results: [...base.results, ...extra.results.map(row => {
+      const episodes = row.scope === "aggregate" ? extra.results.filter(r => r.scope === "per_motion" && r.robot === row.robot) : [row];
+      const counts = new Map();
+      episodes.forEach(r => { const reason = r.failure?.category || "no_threshold_failure"; counts.set(reason, (counts.get(reason) || 0) + 1); });
+      return { ...row, failures: [...counts].map(([reason, count]) => ({ reason, count, denominator: episodes.length, unit: "episodes" })) };
+    })], comparisons: [...base.comparisons, ...extra.comparisons], main_public_scope: base.public_scope, extensions: { extreme5: { source: "./extreme5.json", aggregate_sha256: extra.aggregate_sha256, methods: extra.methods, diagnostics: extra.diagnostics } } };
+    const pairs = pairedMotionCases(result), motions = new Set(pairs.map(rows => rows[0].dataset + "/" + rows[0].motion_id));
+    if (pairs.length !== 90 || motions.size !== 45) throw new Error("Extreme5 配对数量不一致");
+    result.public_scope = { ...base.public_scope, unique_motions: motions.size, paired_cases: pairs.length, episodes: pairs.length * 2, aggregate_rows: 10, result_rows: 190, comparison_groups: 5 };
+    return result;
+  }
+  function renderExtension() {
+    if (!extension) { $("extreme-results").innerHTML=emptyHTML("Extreme5 暂时无法载入", "当前显示 Common40 冻结数据；可直接读取 Extreme5 JSON 附件。"); return; }
+    const comparison = extension.comparisons[0], rows = comparison.expected_participants.map(id => state.data.results.find(r => r.id === id));
+    const delta = comparison.paired_deltas.progress_pct;
+    $("extreme-results").innerHTML = `<div class="section-heading compact"><div><p class="eyebrow">EXTREME5 / INDEPENDENT GROUP</p><h3>空翻与转体：5 个配对动作（N=5）</h3><p>踢月转体、侧空翻、后空翻、前空翻与毽子后空翻，共 10 个机器人回合。</p></div><span class="scope-label">5 / 5 共同动作</span></div><div class="method-grid"><article><h3>完成度 ${fmt(valueOf(rows[0],"progress_pct"),2)}% / ${fmt(valueOf(rows[1],"progress_pct"),2)}%</h3><p>RP1 / G1；差值 ${signed(delta.value,2)} pp，95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp。G1 在本组的首次失败前完成度较高。</p></article><article><h3>未触发失败阈值 0 / 5</h3><p>两侧各 5 个动作均触发失败阈值。完整回放与失败时刻保留，完成度表示首次失败发生的位置。</p></article><article><h3>分别报告精度与完成度</h3><p>身体与手腕误差使用各侧首次失败前窗口；根节点使用完整回放的最后有效同步策略采样帧。均值与配对区间如下。</p></article></div><details class="disclosure"><summary>Extreme5 七项指标与评分窗口<span>5 个配对动作 · 95% CI</span></summary><div class="detail-content"><div class="table-scroll"><table class="paired-table"><thead><tr><th>指标</th><th>单位</th><th>RP1 均值</th><th>G1 均值</th><th>RP1 − G1</th><th>95% CI</th><th>配对动作数</th></tr></thead><tbody>${METRICS.filter(m=>comparison.paired_deltas[m.key]).map(m=>{const d=comparison.paired_deltas[m.key];return `<tr><td>${CN_METRICS[m.key]}</td><td>${m.unit}</td><td>${fmt(valueOf(rows[0],m.key),m.digits)}</td><td>${fmt(valueOf(rows[1],m.key),m.digits)}</td><td>${signed(d.value,m.digits)} ${d.unit==="pp"?"pp":m.unit}</td><td>[${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}] ${d.unit==="pp"?"pp":m.unit}</td><td>${d.n_motions}</td></tr>`}).join("")}</tbody></table></div><p>身体位置诊断（mm，50 Hz 评分采样，每周期首个物理子步）：各自失败前 / 共同失败前 / 全程评分窗口。RP1 ${["own_prefailure_body_mm","common_prefailure_body_mm","full_replay_body_mm"].map(k=>fmt(extension.diagnostics.rp1[k],2)).join(" / ")}；G1 ${["own_prefailure_body_mm","common_prefailure_body_mm","full_replay_body_mm"].map(k=>fmt(extension.diagnostics.g1[k],2)).join(" / ")}。主指标使用各自失败前窗口；这些诊断窗口另列。</p></div></details><p class="report-links"><a href="./extreme5.json" target="_blank" rel="noopener noreferrer">Extreme5 JSON ↗</a> <a href="./extreme5.csv" download>10 回合 CSV ↓</a> <span>本组视频待制作。</span></p>`;
+  }
   const signed = (value, digits) => `${value > 0 ? "+" : ""}${fmt(value, digits)}`;
   function pairedIntervalSVG(delta, digits, unit, dark = false) {
     const bound = Math.max(Math.abs(delta.ci95[0]), Math.abs(delta.ci95[1]), Math.abs(delta.value)) * 1.18 || 1;
@@ -266,7 +287,7 @@
       $("paired-summary").innerHTML = ""; $("paired-all-metrics").innerHTML = ""; return;
     }
     const { rp1, g1, comparison, delta, crossesZero } = summary;
-    $("hero-chart").innerHTML = `<p class="eyebrow">COMPLETION / 40 PAIRED MOTIONS</p><h2>动作完成度</h2><p class="chart-context">平均动作推进比例 · 数值越高越好</p>${[rp1,g1].map((row) => `<div class="progress-row"><div class="progress-label"><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,"progress_pct"),2)}<small>%</small></strong></div><div class="progress-track" aria-hidden="true"><div class="progress-fill ${row.robot}" style="width:${valueOf(row,"progress_pct")}%"></div></div></div>`).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value,2)}<small> pp</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp · 40 个配对动作（N=40）</p>${pairedIntervalSVG(delta,2,"pp",true)}<p class="hero-conclusion">${crossesZero ? "完成度差值的 95% 置信区间跨零。" : "完成度差值的 95% 置信区间与零分离。"}</p></div>`;
+    $("hero-chart").innerHTML = `<p class="eyebrow">COMPLETION / 40 PAIRED MOTIONS</p><h2>动作完成度</h2><p class="chart-context">首次失败前动作推进比例 · 数值越高越好</p>${[rp1,g1].map((row) => `<div class="progress-row"><div class="progress-label"><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,"progress_pct"),2)}<small>%</small></strong></div><div class="progress-track" aria-hidden="true"><div class="progress-fill ${row.robot}" style="width:${valueOf(row,"progress_pct")}%"></div></div></div>`).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value,2)}<small> pp</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp · 40 个配对动作（N=40）</p>${pairedIntervalSVG(delta,2,"pp",true)}<p class="hero-conclusion">${crossesZero ? "完成度差值的 95% 置信区间跨零。" : "完成度差值的 95% 置信区间与零分离。"}</p></div>`;
     const conclusions = {body_pos_mm:"RP1 均值较低 · 区间上界接近零",body_ori_rad:"RP1 身体姿态误差较低",wrist_ori_rad:"G1 手腕姿态误差较低"};
     $("paired-summary").innerHTML = ["body_pos_mm","body_ori_rad","wrist_ori_rad"].map((key) => {
       const m=metricDefinition(key), d=comparison.paired_deltas[key];
@@ -313,6 +334,10 @@
   }
   function renderFairness() {
     const selected = filters();
+    if (selected.dataset === "extreme5" && extension) {
+      const rows = [["动作 / seed", "5 个动作 / seed 0", "5 个动作 / seed 0", "matched", "共同源窗、根运动和时间端点已核验"], ["运行频率", "策略 50 Hz / 物理 200 Hz", "策略 50 Hz / 物理 200 Hz", "matched", "原始数组及导数保留，使用两侧较短共同源窗"], ["初态与模式", "参考帧 0 / 零速度 / 原生位置 PD", "参考帧 0 / 零速度 / 原生位置 PD", "matched", "仅初始 XY / yaw 对齐；完整回放，无恢复或重置"], ["策略 / 模型参数", "RP1 28 DoF 发布学生", "G1 29 DoF v1.1 发布学生", "disclosed_difference", "各自冻结控制参数见模型参数区，训练及重定向差异见适用范围"]];
+      $("fairness-body").innerHTML=rows.map(([item,rp1,g1,status,evidence])=>`<tr><td>${item}</td><td>${rp1}</td><td>${g1}</td><td>${statusBadge(status)}</td><td>${evidence}</td></tr>`).join(""); return;
+    }
     const rows = state.data.fairness.filter((row) => ["phase", "condition", "mode"].every((key) => !row[key] || row[key] === "all" || selected[key] === "all" || row[key] === selected[key]));
     $("fairness-body").innerHTML = rows.length ? rows.map((row) => `<tr><td>${escape(row.item)}${row.phase && row.phase !== "all" ? `<span class="record-meta">${escape(phaseLabel(row.phase))}</span>` : ""}</td><td>${escape(row.rp1)}</td><td>${escape(row.g1)}</td><td>${statusBadge(row.status)}</td><td>${escape(String(row.evidence || "待提供").replace(/每回合 manifest；/g, ""))}</td></tr>`).join("") : `<tr><td colspan="5" class="empty-cell"><strong>公平条件核验待导入</strong><p>应逐项提供 runtime、执行器、控制 / 物理步长、初态、终止、seed、训练预算、归一化器及 retarget 身份。</p></td></tr>`;
   }
@@ -324,9 +349,9 @@
       missing_policy: "保留有效、无效、删失与待完成记录；均值要求完整的每动作 seed 集，缺失成绩保留 null 及原因。",
       rank_policy: "参与者、完成状态、协议、配对身份及指标分母齐全一致时，计算组内名次。"
     };
-    $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] ? methodText[key] : "待提供")}</dd>`).join("") + `<dt>条件覆盖</dt><dd>主比较：40 动作 / 40 对 / 80 回合；敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。共 85 个条件与 seed 配对，覆盖 40 个独立动作。</dd>`;
+    $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] ? methodText[key] : "待提供")}</dd>`).join("") + `<dt>条件覆盖</dt><dd>Common40：40 动作 / 40 对 / 80 回合；敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。${extension ? "Extreme5：5 / 5 / 10，独立报告。" : ""}${extension ? "合计 90 个条件与 seed 配对，45 个不同动作。" : "Common40 当前载入 85 对、40 个动作；Extreme5 数据待载入。"}</dd>`;
     const all=asArray(state.data.downloads), reports=all.filter(d=>/feishu\.cn\/(docx|file)\//.test(d.url)&&/技术报告/.test(d.label));
-    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>共同动作版报告 common_v07 · PDF / DOCX v3，PDF 10 页。资料需飞书组织权限。</p>`;
+    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>现有云端报告为 common_v07 · PDF / DOCX v3。加入 Extreme5 与模型参数的统一报告正在更新；资料需飞书组织权限。</p>`;
     const historical=all.filter(d=>!reports.includes(d)&&/feishu\.cn/.test(d.url)&&pairedHistoricalVideo(d));
     $("historical-links").innerHTML = `<p>共有动作的既有双机器人同步回放。</p>${historical.length ? historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("") : "<p>尚无可核验的既有同步回放。</p>"}`;
     const notes = [
@@ -372,9 +397,26 @@
       $("video-grid").addEventListener("click",e=>{const b=e.target.closest("button[data-motion]");if(b)selectPublicVideo(media.items.find(i=>i.motion_id===b.dataset.motion));});
     } catch(error) {pending();console.warn("公共视频尚未通过索引核验：",error.message);}
   }
+  async function renderHardware() {
+    try {
+      const response = await fetch("./hardware.json", { cache: "no-store" });
+      if (!response.ok) throw new Error("模型参数读取失败");
+      const data = await response.json();
+      if (data.schema !== "rp1-g1-public-hardware-comparison-v1" || data.joint_rows.length !== 29 || data.per_robot.rp1.actuated_joint_count !== 28 || data.per_robot.g1.actuated_joint_count !== 29) throw new Error("模型参数契约不兼容");
+      const joint = name => data.joint_rows.find(r=>r.joint_name===name);
+      $("hardware-overview").innerHTML = `<article class="finding-card"><h3>驱动关节与模型质量</h3><div class="finding-values">${["rp1","g1"].map(robot=>`<div><span><i class="dot ${robot}"></i>${robot.toUpperCase()}</span><strong>${data.per_robot[robot].actuated_joint_count}<small>DoF</small></strong><p>${fmt(data.per_robot[robot].model_mass_kg,2)} kg</p></div>`).join("")}</div><p>质量为模型惯性质量之和。G1 多一个腰部 pitch 轴，RP1 该位置为 n/a。</p></article><article class="finding-card"><h3>模型活动范围（ROM）</h3>${[["waist_roll_joint","腰部 roll"],["left_shoulder_roll_joint","左肩 roll"],["left_wrist_roll_joint","左腕 roll"]].map(([name,label])=>`<p><b>${label}</b><br>RP1 ${fmt(joint(name).rp1.effective_constraint_limits.rom_deg,1)}° / G1 ${fmt(joint(name).g1.effective_constraint_limits.rom_deg,1)}°</p>`).join("")}</article><article class="finding-card"><h3>控制与执行器</h3><p>原生位置 PD：目标角 = 默认角 + action × scale。</p>${["rp1","g1"].map(robot=>{const caps=data.joint_rows.filter(r=>r[robot].present).map(r=>r[robot].policy_control.effort_limit_config_Nm);return `<p><b>${robot.toUpperCase()} 配置力矩上限</b><br>${fmt(Math.min(...caps),1)}–${fmt(Math.max(...caps),1)} N·m（依关节）</p>`;}).join("")}<p>实际 force 限制、PD、armature 与摩擦在逐关节明细中列出。</p></article>`;
+      const describe = (name, robot) => {
+        const r = name[robot]; if (!r.present) return `<p>${robot.toUpperCase()}：n/a · ${escape(r.reason)}</p>`;
+        const l=r.effective_constraint_limits, c=r.policy_control, a=r.effective_actuator, axis=r.coordinate_contract, soft=r.training_soft_limit;
+        return `<div class="joint-spec"><h4>${robot.toUpperCase()}</h4><p>模型角范围 [${fmt(l.lower_rad,4)}, ${fmt(l.upper_rad,4)}] rad；ROM ${fmt(l.rom_rad,4)} rad。</p><p>实际 force [${a.actuator_forcerange_Nm.map(x=>fmt(x,3)).join(", ")}] N·m；声明速度 ${fmt(c.velocity_limit_declared_rad_s,3)} rad/s；运行器速度限幅：${c.velocity_limit_runtime_clamp ? "启用" : "未启用"}。</p><p>kp ${fmt(c.kp_Nm_per_rad,3)} N·m/rad；kd ${fmt(c.kd_Nm_s_per_rad,3)} N·m·s/rad；scale ${fmt(c.action_scale_rad_per_unit,4)} rad/action；默认角 ${fmt(c.default_zero_action_target_rad,4)} rad。</p><p>armature ${fmt(a.armature_kg_m2,6)} kg·m²；摩擦 ${fmt(a.frictionloss_Nm,3)} N·m；被动阻尼 ${fmt(a.passive_viscous_damping_Nm_s_rad,3)} N·m·s/rad。</p><p>子 body 轴 [${axis.axis_in_child_body_frame.join(", ")}]，参考角 ${fmt(axis.mjcf_reference_angle_rad,3)} rad，正方向按右手规则；父体 ${escape(r.parent_body)} → 子体 ${escape(r.child_body)}。</p><p>训练惩罚软限：${isNumber(soft.factor) ? `保存配置系数 ${fmt(soft.factor,2)}，推导 [${fmt(soft.derived_lower_rad,4)}, ${fmt(soft.derived_upper_rad,4)}] rad；训练 tensor 未直接核验` : "原权重级历史配置未知"}。模型目标角硬裁剪：${c.target_hard_range_clipped ? "启用" : "未启用"}。</p></div>`;
+      };
+      const summaryCell=r=>r.present ? `<span>[${fmt(r.effective_constraint_limits.lower_deg,1)}, ${fmt(r.effective_constraint_limits.upper_deg,1)}]°</span><span class="metric-detail">ROM ${fmt(r.effective_constraint_limits.rom_deg,1)}°</span>` : `<span class="metric-na">n/a</span>`;
+      $("hardware-table").innerHTML = `<table class="hardware-table"><thead><tr><th>解剖关节 / 轴与控制明细</th><th>RP1 模型限位 / ROM</th><th>G1 模型限位 / ROM</th><th>RP1 配置力矩上限</th><th>G1 配置力矩上限</th></tr></thead><tbody>${data.joint_rows.map(row=>`<tr><td><details><summary>${escape(row.joint_name)}</summary><div class="joint-details">${describe(row,"rp1")}${describe(row,"g1")}</div></details></td><td>${summaryCell(row.rp1)}</td><td>${summaryCell(row.g1)}</td><td>${fmt(row.rp1.policy_control?.effort_limit_config_Nm,1)} N·m</td><td>${fmt(row.g1.policy_control?.effort_limit_config_Nm,1)} N·m</td></tr>`).join("")}</tbody></table>`;
+    } catch (error) { $("hardware-overview").innerHTML=emptyHTML("模型参数暂时无法载入",error.message); }
+  }
   function render() {
     const rows = filteredRows().sort(compareRows), ranks = ranksForMetric(state.data, state.metric);
-    renderHeaders(); renderRows(rows, ranks); renderOverview(); renderPairedSummary(); renderMotionChart(); renderFailures(rows); renderFairness(); renderEvidence();
+    renderHeaders(); renderRows(rows, ranks); renderOverview(); renderPairedSummary(); renderExtension(); renderMotionChart(); renderFailures(rows); renderFairness(); renderEvidence();
     $("view-aggregate").setAttribute("aria-pressed", String(state.scope === "aggregate"));
     $("view-per-motion").setAttribute("aria-pressed", String(state.scope === "per_motion"));
     $("sort-direction").textContent = state.direction === "asc" ? "升序 ↑" : "降序 ↓";
@@ -398,12 +440,12 @@
   }
   function csvExport(rows) {
     const base = ["id", "label", "phase", "robot", "dataset", "condition", "mode", "seed", "scope", "motion_id", "status", "status_reason"];
-    const fields = ["coverage_numerator", "coverage_denominator", "coverage_unit", "coverage_reason", "paired_numerator", "paired_denominator", "paired_unit", "paired_reason", "comparison_id", "paired_sample_set_sha256", "checkpoint_sha256", "source_sha256", "config_sha256", "protocol_sha256", "raw_links_json", "videos_json", "failures_json"];
+    const fields = ["coverage_numerator", "coverage_denominator", "coverage_unit", "coverage_reason", "paired_numerator", "paired_denominator", "paired_unit", "paired_reason", "comparison_id", "paired_sample_set_sha256", "checkpoint_sha256", "source_sha256", "config_sha256", "protocol_sha256", "execution_protocol_sha256", "raw_links_json", "videos_json", "failures_json"];
     const metricFields = ["value", "reason", "coverage_numerator", "coverage_denominator", "coverage_unit", "ci_low", "ci_high", "ci_level", "ci_method", "ci_resampling_unit", "ci_n_clusters", "ci_n_seeds", "ci_reason", "sample_set_sha256"];
     const header = [...base, ...fields, ...METRICS.flatMap((metric) => metricFields.map((field) => metric.key + "_" + field))];
     return "\uFEFF" + [header, ...rows.map((row) => {
       const c = row.coverage || {}, p = row.paired_coverage || {}, pairing = row.pairing || {}, provenance = row.provenance || {};
-      return [...base.map((key) => row[key]), c.numerator, c.denominator, c.unit, c.reason, p.numerator, p.denominator, p.unit, p.reason, pairing.comparison_id, pairing.sample_set_sha256, (row.checkpoint || {}).sha256, provenance.source_sha256, provenance.config_sha256, provenance.protocol_sha256, JSON.stringify(asArray(provenance.raw_links)), JSON.stringify(asArray(row.videos)), JSON.stringify(asArray(row.failures)), ...METRICS.flatMap(({ key }) => {
+      return [...base.map((key) => row[key]), c.numerator, c.denominator, c.unit, c.reason, p.numerator, p.denominator, p.unit, p.reason, pairing.comparison_id, pairing.sample_set_sha256, (row.checkpoint || {}).sha256, provenance.source_sha256, provenance.config_sha256, provenance.protocol_sha256, provenance.execution_protocol_sha256, JSON.stringify(asArray(provenance.raw_links)), JSON.stringify(asArray(row.videos)), JSON.stringify(asArray(row.failures)), ...METRICS.flatMap(({ key }) => {
         const m = (row.metrics || {})[key] || {}, mc = m.coverage || {}, ci = m.ci || {};
         return [valueOf(row, key), m.reason, mc.numerator, mc.denominator, mc.unit, ci.low, ci.high, ci.level, ci.method, ci.resampling_unit, ci.n_clusters, ci.n_seeds, ci.reason, m.sample_set_sha256];
       })];
@@ -448,6 +490,11 @@
         const response = await fetch("./data.json", { cache: "no-store", credentials: "same-origin" });
         if (!response.ok) throw new Error(`data.json 读取失败（HTTP ${response.status}）`);
         state.data = normalizeData(await response.json()); state.origin = "data.json";
+        const extraResponse = await fetch("./extreme5.json", { cache: "no-store", credentials: "same-origin" });
+        if (!extraResponse.ok) throw new Error("Extreme5 数据读取失败");
+        const candidate = await extraResponse.json();
+        const combined = normalizeData(mergeExtension(state.data, candidate));
+        extension = candidate; state.data = combined; state.origin = "data.json + extreme5.json";
       }
     } catch (error) {
       notice = `${error.message} 页面保持 pending，不以空值替代实验成绩。`;
@@ -459,9 +506,9 @@
     if (state.data.updated_utc) $("updated-at").setAttribute("datetime", state.data.updated_utc);
     const issues = state.issues.length ? ` 有 ${state.issues.length} 处字段缺失或非有限值，已显式标为 n/a；请检查数据生成端。` : "";
     $("load-notice").textContent = notice || `${state.data.status_message || "快照已载入；结论范围以各记录的协议、覆盖与来源为准。"} 数据来源：${state.origin}。${issues}`;
-    populateFilters(); bindEvents(); render(); await renderPublicMedia();
+    populateFilters(); bindEvents(); render(); await Promise.all([renderPublicMedia(), renderHardware()]);
   }
   /* Pure helpers exposed for offline contract checks; no scores or fixtures are bundled. */
-  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, pairedMotionCases, pairedHistoricalVideo, validPublicMedia, pairedIntervalSVG, metrics: METRICS };
+  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, mergeExtension, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, pairedMotionCases, pairedHistoricalVideo, validPublicMedia, pairedIntervalSVG, metrics: METRICS };
   init();
 })();

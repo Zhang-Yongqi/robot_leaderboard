@@ -1,0 +1,2062 @@
+{
+  "schema": "rp1-g1-public-extreme5-handoff-v1",
+  "dataset": "extreme5",
+  "title": "RP1 与 G1：5条空翻／转体动作",
+  "count_label": "5个配对动作（N=5），10个机器人回合",
+  "aggregate_sha256": "086c0fa83a2eae58156c23610dd55d430fb53e4f14f5b18f7d17e6d19513544b",
+  "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+  "scientific_numeric_protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+  "paired_samples": [
+    {
+      "motion": "Take_143_Skeleton0",
+      "seed": 0,
+      "runs": {
+        "rp1": "extreme5_Take_143_Skeleton0_rp1_aligned_nominal_seed0",
+        "g1": "extreme5_Take_143_Skeleton0_g1_aligned_nominal_seed0_attempt2"
+      }
+    },
+    {
+      "motion": "Take_144_Skeleton0",
+      "seed": 0,
+      "runs": {
+        "rp1": "extreme5_Take_144_Skeleton0_rp1_aligned_nominal_seed0",
+        "g1": "extreme5_Take_144_Skeleton0_g1_aligned_nominal_seed0"
+      }
+    },
+    {
+      "motion": "Take_146_Skeleton0",
+      "seed": 0,
+      "runs": {
+        "rp1": "extreme5_Take_146_Skeleton0_rp1_aligned_nominal_seed0",
+        "g1": "extreme5_Take_146_Skeleton0_g1_aligned_nominal_seed0"
+      }
+    },
+    {
+      "motion": "Take_148_Skeleton0",
+      "seed": 0,
+      "runs": {
+        "rp1": "extreme5_Take_148_Skeleton0_rp1_aligned_nominal_seed0",
+        "g1": "extreme5_Take_148_Skeleton0_g1_aligned_nominal_seed0"
+      }
+    },
+    {
+      "motion": "Take_149_Skeleton0",
+      "seed": 0,
+      "runs": {
+        "rp1": "extreme5_Take_149_Skeleton0_rp1_aligned_nominal_seed0",
+        "g1": "extreme5_Take_149_Skeleton0_g1_aligned_nominal_seed0"
+      }
+    }
+  ],
+  "results": [
+    {
+      "id": "paired_extreme5_nominal_native_position_20261014_rp1",
+      "label": "RP1 public student · Common14",
+      "phase": "A",
+      "robot": "rp1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "aggregate",
+      "motion_id": null,
+      "status": "complete",
+      "status_reason": "5个有效回合；5个回合均触发失败阈值",
+      "coverage": {
+        "numerator": 5,
+        "denominator": 5,
+        "unit": "motions",
+        "reason": "5个完整配对动作"
+      },
+      "paired_coverage": {
+        "numerator": 5,
+        "denominator": 5,
+        "unit": "motions",
+        "reason": "5个完整配对动作"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 35.816776752471924,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 30.013807862997055,
+            "high": 41.07977636158466,
+            "level": 0.95,
+            "unit": "mm",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.11165116727352142,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 0.09890498369932174,
+            "high": 0.12995157539844512,
+            "level": 0.95,
+            "unit": "rad",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.9101041512451026,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 0.664547468788266,
+            "high": 1.2405890302632727,
+            "level": 0.95,
+            "unit": "m",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 37.61857710778713,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 31.701446324586865,
+            "high": 44.53981593251228,
+            "level": 0.95,
+            "unit": "mm",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.1283833846449852,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 0.09931258708238602,
+            "high": 0.16309583485126494,
+            "level": 0.95,
+            "unit": "rad",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "episode_return": {
+          "value": 1.01050791980886,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 0.9503728647319466,
+            "high": 1.0508508458067376,
+            "level": 0.95,
+            "unit": "unitless",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "progress_pct": {
+          "value": 55.16739155085201,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 52.59717022581528,
+            "high": 57.024072913532045,
+            "level": 0.95,
+            "unit": "%",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "no_threshold_failure": {
+        "numerator": 0,
+        "denominator": 5,
+        "unit": "motions"
+      }
+    },
+    {
+      "id": "paired_extreme5_nominal_native_position_20261014_g1",
+      "label": "G1 MimicLite v1.1 · Common14",
+      "phase": "A",
+      "robot": "g1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "aggregate",
+      "motion_id": null,
+      "status": "complete",
+      "status_reason": "5个有效回合；5个回合均触发失败阈值",
+      "coverage": {
+        "numerator": 5,
+        "denominator": 5,
+        "unit": "motions",
+        "reason": "5个完整配对动作"
+      },
+      "paired_coverage": {
+        "numerator": 5,
+        "denominator": 5,
+        "unit": "motions",
+        "reason": "5个完整配对动作"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 29.087218642234802,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 25.03596693277359,
+            "high": 33.2107774913311,
+            "level": 0.95,
+            "unit": "mm",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.09793969094753266,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 0.0858350709080696,
+            "high": 0.1100443109869957,
+            "level": 0.95,
+            "unit": "rad",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "root_pos_m": {
+          "value": 1.055604795365013,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 0.7516526605707196,
+            "high": 1.5275225917077306,
+            "level": 0.95,
+            "unit": "m",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 27.050600200891495,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 21.478351950645447,
+            "high": 32.712721079587936,
+            "level": 0.95,
+            "unit": "mm",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.10141524821519851,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 0.0868521973490715,
+            "high": 0.11597829908132554,
+            "level": 0.95,
+            "unit": "rad",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "episode_return": {
+          "value": 1.0532620971125666,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 1.0077843913346483,
+            "high": 1.0885001767779152,
+            "level": 0.95,
+            "unit": "unitless",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "progress_pct": {
+          "value": 56.54313355356805,
+          "reason": "5个动作等权",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 5,
+            "denominator": 5,
+            "unit": "motions",
+            "reason": "5个完整配对动作"
+          },
+          "ci": {
+            "low": 54.66532729646183,
+            "high": 57.9491339033384,
+            "level": 0.95,
+            "unit": "%",
+            "method": "paired motion percentile bootstrap",
+            "resampling_unit": "motion",
+            "n_clusters": 5,
+            "n_seeds": 1,
+            "resamples": 10000,
+            "reason": "固定权重与本组动作"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "no_threshold_failure": {
+        "numerator": 0,
+        "denominator": 5,
+        "unit": "motions"
+      }
+    },
+    {
+      "id": "extreme5_Take_143_Skeleton0_g1_aligned_nominal_seed0_attempt2",
+      "label": "踢月转体",
+      "phase": "A",
+      "robot": "g1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_143_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发height阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 28.259024024009705,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.09946442395448685,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.7054328218233651,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 24.789132177829742,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.09869175404310226,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.038268499180328,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 56.27906976744186,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "height",
+        "first_policy_index": 241,
+        "source_time_s": 4.84,
+        "simulation_time_s": 4.824999809265137
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 431,
+        "native_frames": 431,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_144_Skeleton0_g1_aligned_nominal_seed0",
+      "label": "侧空翻",
+      "phase": "A",
+      "robot": "g1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_144_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发both阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 26.177138090133667,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.08225492388010025,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.9414006740629449,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 23.86493608355522,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.08329186588525772,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.0756151964867142,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 57.27069351230425,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "both",
+        "first_policy_index": 255,
+        "source_time_s": 5.12,
+        "simulation_time_s": 5.105000019073486
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 448,
+        "native_frames": 448,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_146_Skeleton0_g1_aligned_nominal_seed0",
+      "label": "后空翻",
+      "phase": "A",
+      "robot": "g1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_146_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发height阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 33.13662111759186,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.11492840200662613,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.7087331835357351,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 33.89449790120125,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.12301900237798691,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.0897412247915956,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 58.288770053475936,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "height",
+        "first_policy_index": 217,
+        "source_time_s": 4.36,
+        "simulation_time_s": 4.34499979019165
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 375,
+        "native_frames": 376,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_148_Skeleton0_g1_aligned_nominal_seed0",
+      "label": "前空翻",
+      "phase": "A",
+      "robot": "g1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_148_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发height阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 22.283267229795456,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.08260054141283035,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.9266309304230275,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 17.436377704143524,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.0844927504658699,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.0937016189098359,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 57.948717948717956,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "height",
+        "first_policy_index": 225,
+        "source_time_s": 4.5200000000000005,
+        "simulation_time_s": 4.505000114440918
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 391,
+        "native_frames": 392,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_149_Skeleton0_g1_aligned_nominal_seed0",
+      "label": "毽子后空翻",
+      "phase": "A",
+      "robot": "g1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_149_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发height阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 35.580042749643326,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.11045016348361969,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 1.9958263669799914,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 35.26805713772774,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.11758086830377579,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 0.9689839461943591,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 52.92841648590022,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "height",
+        "first_policy_index": 243,
+        "source_time_s": 4.88,
+        "simulation_time_s": 4.864999771118164
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 462,
+        "native_frames": 463,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_143_Skeleton0_rp1_aligned_nominal_seed0",
+      "label": "踢月转体",
+      "phase": "A",
+      "robot": "rp1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_143_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发height阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 45.668575912714005,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.10423771291971207,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.647860031464483,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 40.66287353634834,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.08833888173103333,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.0226456942946411,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 55.58139534883721,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "7fe3c1fca5570abb08de9af23bdc618e604d565fbf85a9bf80c44883d5f8af02",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "height",
+        "first_policy_index": 238,
+        "source_time_s": 4.78,
+        "simulation_time_s": 4.764999866485596
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 431,
+        "native_frames": 431,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_144_Skeleton0_rp1_aligned_nominal_seed0",
+      "label": "侧空翻",
+      "phase": "A",
+      "robot": "rp1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_144_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发height阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 30.277056619524956,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.0966469869017601,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.7475646275597215,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 29.886936768889427,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.1022413820028305,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.0257876116690754,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 55.48098434004475,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "height",
+        "first_policy_index": 247,
+        "source_time_s": 4.96,
+        "simulation_time_s": 4.945000171661377
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 448,
+        "native_frames": 448,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_146_Skeleton0_rp1_aligned_nominal_seed0",
+      "label": "后空翻",
+      "phase": "A",
+      "robot": "rp1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_146_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发gravity阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 27.225295081734657,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.09849661588668823,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.6315926219881597,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 31.54551237821579,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.11540240794420242,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.067559668565179,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 57.48663101604278,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "gravity",
+        "first_policy_index": 214,
+        "source_time_s": 4.3,
+        "simulation_time_s": 4.284999847412109
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 375,
+        "native_frames": 375,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_148_Skeleton0_rp1_aligned_nominal_seed0",
+      "label": "前空翻",
+      "phase": "A",
+      "robot": "rp1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_148_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发height阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 38.11609745025635,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.11268115043640137,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 0.9995789481556221,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 35.64233332872391,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.1410427987575531,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 1.0402106220905598,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 57.179487179487175,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "height",
+        "first_policy_index": 222,
+        "source_time_s": 4.46,
+        "simulation_time_s": 4.445000171661377
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 391,
+        "native_frames": 391,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    },
+    {
+      "id": "extreme5_Take_149_Skeleton0_rp1_aligned_nominal_seed0",
+      "label": "毽子后空翻",
+      "phase": "A",
+      "robot": "rp1",
+      "dataset": "extreme5",
+      "condition": "nominal",
+      "mode": "native_position",
+      "seed": "0",
+      "scope": "per_motion",
+      "motion_id": "Take_149_Skeleton0",
+      "status": "complete",
+      "status_reason": "完整回放，触发gravity阈值",
+      "coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "episodes",
+        "reason": "完整有效回合"
+      },
+      "paired_coverage": {
+        "numerator": 1,
+        "denominator": 1,
+        "unit": "motions",
+        "reason": "双侧完整"
+      },
+      "metrics": {
+        "body_pos_mm": {
+          "value": 37.796858698129654,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "body_ori_rad": {
+          "value": 0.14619337022304535,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "root_pos_m": {
+          "value": 1.523924527057527,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_pos_mm": {
+          "value": 50.355229526758194,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "wrist_ori_rad": {
+          "value": 0.19489145278930664,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "episode_return": {
+          "value": 0.8963360024248441,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "progress_pct": {
+          "value": 50.108459869848154,
+          "reason": "原回合评分",
+          "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+          "coverage": {
+            "numerator": 1,
+            "denominator": 1,
+            "unit": "episodes",
+            "reason": "完整有效回合"
+          }
+        },
+        "gpu_train_hours": {
+          "value": null,
+          "reason": "训练GPU小时未知",
+          "sample_set_sha256": "",
+          "coverage": {
+            "numerator": 0,
+            "denominator": null,
+            "unit": "training runs",
+            "reason": "未提供"
+          }
+        }
+      },
+      "pairing": {
+        "comparison_id": "paired_extreme5_nominal_native_position_20261014",
+        "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+        "verified": true,
+        "reason": "相同动作、条件、seed、时间窗及数值协议"
+      },
+      "provenance": {
+        "protocol_sha256": "776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065",
+        "execution_protocol_sha256": "5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035",
+        "runtime": "50Hz_reference_200Hz_physics"
+      },
+      "failure": {
+        "category": "gravity",
+        "first_policy_index": 230,
+        "source_time_s": 4.62,
+        "simulation_time_s": 4.605000019073486
+      },
+      "source_window": {
+        "start_frame": 0,
+        "end_exclusive": 462,
+        "native_frames": 462,
+        "reference_hz": 50
+      },
+      "rollout_complete": true,
+      "censored": false
+    }
+  ],
+  "comparisons": [
+    {
+      "id": "paired_extreme5_nominal_native_position_20261014",
+      "label": "Extreme5 / nominal / native_position",
+      "verified": true,
+      "expected_participants": [
+        "paired_extreme5_nominal_native_position_20261014_rp1",
+        "paired_extreme5_nominal_native_position_20261014_g1"
+      ],
+      "sample_set_sha256": "20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb",
+      "reason": "5个配对动作（N=5），10个机器人回合",
+      "protocol": "Common14 / matched seed0 / motion equal weighting",
+      "provisional": false,
+      "expected_paired_motions": 5,
+      "paired_deltas": {
+        "body_pos_mm": {
+          "value": 6.729558110237122,
+          "ci95": [
+            -0.657820329070094,
+            14.116936549544338
+          ],
+          "unit": "mm",
+          "n_motions": 5
+        },
+        "body_ori_rad": {
+          "value": 0.01371147632598877,
+          "ci95": [
+            -0.002888292074203491,
+            0.029207938909530648
+          ],
+          "unit": "rad",
+          "n_motions": 5
+        },
+        "root_pos_m": {
+          "value": -0.14550064411991012,
+          "ci95": [
+            -0.31399732857250884,
+            -0.006512956732864228
+          ],
+          "unit": "m",
+          "n_motions": 5
+        },
+        "wrist_pos_mm": {
+          "value": 10.567976906895638,
+          "ci95": [
+            3.436199948191644,
+            16.649313271045685
+          ],
+          "unit": "mm",
+          "n_motions": 5
+        },
+        "wrist_ori_rad": {
+          "value": 0.026968136429786682,
+          "ci95": [
+            -0.003397883474826807,
+            0.05733415633440017
+          ],
+          "unit": "rad",
+          "n_motions": 5
+        },
+        "episode_return": {
+          "value": -0.042754177303706675,
+          "ci95": [
+            -0.06042109319904421,
+            -0.02450819354055067
+          ],
+          "unit": "unitless",
+          "n_motions": 5
+        },
+        "progress_pct": {
+          "value": -1.3757420027160294,
+          "ci95": [
+            -2.2018081497765185,
+            -0.7471898826208023
+          ],
+          "unit": "pp",
+          "n_motions": 5
+        }
+      },
+      "cohort_metadata": {
+        "strict_pair": true,
+        "metadata_status": [],
+        "source_provenance": []
+      }
+    }
+  ],
+  "metrics": {
+    "body_pos_mm": {
+      "unit": "mm",
+      "delta_unit": "mm",
+      "higher_is_better": false
+    },
+    "body_ori_rad": {
+      "unit": "rad",
+      "delta_unit": "rad",
+      "higher_is_better": false
+    },
+    "root_pos_m": {
+      "unit": "m",
+      "delta_unit": "m",
+      "higher_is_better": false
+    },
+    "wrist_pos_mm": {
+      "unit": "mm",
+      "delta_unit": "mm",
+      "higher_is_better": false
+    },
+    "wrist_ori_rad": {
+      "unit": "rad",
+      "delta_unit": "rad",
+      "higher_is_better": false
+    },
+    "episode_return": {
+      "unit": "unitless",
+      "delta_unit": "unitless",
+      "higher_is_better": true
+    },
+    "progress_pct": {
+      "unit": "%",
+      "delta_unit": "pp",
+      "higher_is_better": true
+    }
+  },
+  "methods": {
+    "reference_hz": 50,
+    "physics_hz": 200,
+    "start_frame": 0,
+    "seed": 0,
+    "landmarks": "common14_ankle_roll",
+    "recovery_added": false,
+    "selection": "全部5个预先指定动作，保留自然失败后的完整回放",
+    "tracking_window": "身体与腕部误差取各侧首次失败前；root取共同终点",
+    "initialization": "原生参考初始姿态、零速度、仅初始XY与yaw对齐",
+    "bootstrap": {
+      "unit": "motion",
+      "resamples": 10000,
+      "seed": 20261013,
+      "confidence": 0.95
+    },
+    "endpoint_handling": "原始50Hz数组及导数保留；末端以两侧较短源窗为共同边界"
+  },
+  "analysis": [
+    "G1首次失败前平均完成度较高：56.543%，RP1为55.167%，差值为−1.376个百分点。",
+    "两侧5条动作均触发失败阈值；完成度表示首次失败发生的位置。",
+    "G1身体及腕部位置误差较低，RP1完整回放终点root误差较低。"
+  ],
+  "applicability": [
+    "比较对象为冻结公开学生策略与其模型、控制配置构成的仿真系统。",
+    "区间按本组5个动作重采样；训练阶段、重定向和机器人参数共同影响结果。",
+    "历史人类源哈希与完整训练暴露信息未提供；共同动作身份、时序和根部运动已数值核验。"
+  ],
+  "diagnostics": {
+    "rp1": {
+      "own_prefailure_body_mm": 35.816776752471924,
+      "common_prefailure_body_mm": 35.81677718008712,
+      "full_replay_body_mm": 318.4749024518827
+    },
+    "g1": {
+      "own_prefailure_body_mm": 29.087218642234802,
+      "common_prefailure_body_mm": 21.90855844083249,
+      "full_replay_body_mm": 307.63593988429045
+    }
+  },
+  "media": {
+    "available": false,
+    "state": "待制作",
+    "items": []
+  },
+  "lafan40_statistics_changed": false
+}

@@ -3,13 +3,15 @@
 
 Run without arguments to verify the distributable bundle. Add --source-data to
 independently compare every result's metrics, CI, coverage and pairing with the
-hash-approved private input. The input is read only and never copied. A changed
+hash-approved Common40 private input. Separate Extreme5 and hardware files must
+match their reviewed public projection hashes. Private inputs are never copied. A changed
 scientific version requires review and an explicit change to this contract.
 Exit 1 means publication must stop; exit 0 records only the checks performed.
 This static verifier does not claim browser QA or external link availability.
 """
 import argparse
 from collections import Counter
+import csv
 import hashlib
 from html.parser import HTMLParser
 import ipaddress
@@ -29,6 +31,37 @@ NOMINAL_SAMPLE_SHA = '185327685ec34743ef24e818f57480664249489746fadfc7ed359a94f9
 # Scientific fields of the reviewed 178-row intersection, before changing any
 # public copy or links. This pins every retained value, CI, sample and failure.
 PAIRED_SCIENCE_SHA = '162e44a657d28953694998a72a2e2b1fe1394b06fe9e3e5d46f073746c20decb'
+HARDWARE_JSON_SHA = '5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af'
+HARDWARE_CSV_SHA = '78972776c7640ec62e03bffda14caf0fb530a170ca3751109e66a79ac57614de'
+EXTREME_JSON_SHA = 'a2d3e11f3f05737b89d4332fc384a95d93eefd819f3ff76eb203a2b4c5b3803e'
+EXTREME_CSV_SHA = '34fc4c3e1d08b3c8f30757f21efa8675e4e090ba050221e5a5d7d219c04473c1'
+EXTREME_AGGREGATE_SHA = '086c0fa83a2eae58156c23610dd55d430fb53e4f14f5b18f7d17e6d19513544b'
+EXTREME_SAMPLE_SHA = '20a4c0c34c458b6c3df712d984da5dad097d89a8ecfc175432f4285343da51fb'
+EXTREME_NUMERIC_SHA = '776bc9267c40a18af0f619fae326209d0c349bab55c0deeb27c5049b12def065'
+EXTREME_EXECUTION_V1_SHA = '7fe3c1fca5570abb08de9af23bdc618e604d565fbf85a9bf80c44883d5f8af02'
+EXTREME_EXECUTION_V2_SHA = '5051871e0aed48da72317c616692d75d1fb7def6eeaf5a3921d75640638a5035'
+EXTREME_ID = 'paired_extreme5_nominal_native_position_20261014'
+EXTREME_FRAMES = {'Take_143_Skeleton0': 431, 'Take_144_Skeleton0': 448,
+                  'Take_146_Skeleton0': 375, 'Take_148_Skeleton0': 391,
+                  'Take_149_Skeleton0': 462}
+DISPLAY_SCOPE = {
+    'datasets': 2, 'unique_motion_ids': 45, 'paired_cases': 90, 'episodes': 180,
+    'aggregate_rows': 10, 'result_rows': 190, 'comparison_groups': 5,
+    'groups_remain_separate': True,
+}
+EXTENSIONS = {
+    'extreme5': {
+        'json': 'extreme5.json', 'csv': 'extreme5.csv',
+        'aggregate_sha256': EXTREME_AGGREGATE_SHA,
+        'json_sha256': EXTREME_JSON_SHA, 'csv_sha256': EXTREME_CSV_SHA,
+    },
+    'hardware': {
+        'json': 'hardware.json', 'csv': 'hardware.csv',
+        'source_sha256': '7c3ab345adbaf55d12fe6a5bc8a3923dab7257bd7df82b248c46e651214cce8c',
+        'json_sha256': HARDWARE_JSON_SHA, 'csv_sha256': HARDWARE_CSV_SHA,
+    },
+    'handoff_sha256': '6afe9c674cc85df00d67016cedb0dfb0da23d27705b09adf00c79c0ac9e30cd2',
+}
 PAIR_KEY = ('phase', 'dataset', 'condition', 'mode', 'motion_id', 'seed',
             'protocol_sha256', 'runtime')
 PUBLIC_SCOPE = {
@@ -62,6 +95,8 @@ METRICS = {'body_pos_mm', 'body_ori_rad', 'root_pos_m', 'gpu_train_hours',
 PUBLISH_FILES = {
     '.gitignore', '.nojekyll', 'README.md', 'DATA_PROVENANCE.md',
     'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json', 'media.json', 'favicon.svg',
+    'hardware.json', 'hardware.csv',
+    'extreme5.json', 'extreme5.csv',
     'scripts/update_snapshot.py', 'scripts/verify_public.py',
 }
 EXCLUDED_DIRS = {'.git', '.agents', '.aws', '.codex', '.private', 'qa', '__pycache__'}
@@ -261,6 +296,7 @@ class Audit:
         require(m['result_rows'] == 178 and m['comparison_groups'] == 4, 'manifest count mismatch')
         require(m['scientific_contract']['coverage'] == SCIENTIFIC_COVERAGE,
                 'manifest scientific coverage must describe only the paired public cohort')
+        require(m['public_scope'] == PUBLIC_SCOPE, 'manifest immutable Common40 scope differs')
         files = m.get('files')
         if files is not None:
             if isinstance(files, dict):
@@ -353,7 +389,9 @@ class Audit:
             content = (self.root / name).read_text(encoding='utf-8')
             require(not SECRET.search(content), name + ': possible credential')
             # Generic localhost preview docs and privacy-detector source code are safe.
-            if name in {'index.html', 'app.js', 'style.css', 'DATA_PROVENANCE.md', 'RELEASE_MANIFEST.json'}:
+            if name in {'index.html', 'app.js', 'style.css', 'DATA_PROVENANCE.md',
+                        'RELEASE_MANIFEST.json', 'hardware.json', 'hardware.csv',
+                        'extreme5.json', 'extreme5.csv'}:
                 require(not LOCAL_PATH.search(content), name + ': absolute local path')
                 # URL.hostname is a browser API used to label permissioned links.
                 scanned = content.replace('.hostname', '') if name == 'app.js' else content
@@ -417,6 +455,368 @@ class Audit:
         content = (self.root / 'media.json').read_text()
         require(not SECRET.search(content) and not LOCAL_PATH.search(content) and
                 not INFRA.search(content), 'public media contains private information')
+
+    def hardware_contract(self):
+        # These are exact copies of the independently reviewed public projection.
+        # No private model, checkpoint, raw CSV or physics input is read here.
+        json_path, csv_path = self.root / 'hardware.json', self.root / 'hardware.csv'
+        require(sha(json_path.read_bytes()) == HARDWARE_JSON_SHA,
+                'hardware JSON differs from the frozen public whitelist projection')
+        require(sha(csv_path.read_bytes()) == HARDWARE_CSV_SHA,
+                'hardware CSV differs from the frozen public whitelist projection')
+        hardware = read_json(json_path)
+        require(set(hardware) == {'schema', 'title', 'dataset_asset_basis', 'per_robot',
+                                  'joint_rows', 'field_definitions', 'applicability',
+                                  'sources_appendix'}, 'hardware public root fields differ')
+        require(hardware['schema'] == 'rp1-g1-public-hardware-comparison-v1',
+                'hardware schema differs')
+        require(hardware['dataset_asset_basis']['counts'] == {
+            'rp1_actuated': 28, 'g1_actuated': 29, 'total_individual_robot_joints': 57,
+            'anatomical_pairs': 28, 'comparison_rows': 29, 'g1_only': ['waist_pitch_joint']},
+            'hardware joint/position counts differ')
+        require(set(hardware['per_robot']) == {'rp1', 'g1'}, 'hardware robots differ')
+        for robot, count, mass in [('rp1', 28, 40.72637536),
+                                   ('g1', 29, 33.74104199999999)]:
+            model = hardware['per_robot'][robot]
+            require(model['actuated_joint_count'] == model['effective_actuator_count'] == count
+                    and model['floating_base_dof'] == 6 and model['raw_MJCF_actuator_count'] == 0,
+                    'hardware model actuator/base counts differ')
+            require(model['model_mass_kg'] == mass and
+                    model['model_mass_is_manufacturer_specification'] is False and
+                    model['manufacturer_specification_status'] == 'unknown',
+                    'hardware model mass/manufacturer boundary differs')
+        definitions = hardware['field_definitions']
+        for name, unit in {'effective_constraint_limits': 'rad / degree',
+                           'model_mass_kg': 'kg', 'effort_limit_config_Nm': 'Nm',
+                           'actuator_forcerange_Nm': 'Nm',
+                           'velocity_limit_declared_rad_s': 'rad/s;另列degree/s',
+                           'kp_Nm_per_rad': 'Nm/rad',
+                           'kd_Nm_s_per_rad': 'Nm·s/rad'}.items():
+            require(definitions[name]['unit'] == unit, 'hardware units differ: ' + name)
+        rows = hardware['joint_rows']
+        require(len(rows) == len({row['joint_name'] for row in rows}) == 29,
+                'hardware must contain 29 unique anatomical positions')
+        require(sum(row['rp1']['present'] for row in rows) == 28 and
+                sum(row['g1']['present'] for row in rows) == 29 and
+                sum(row['rp1']['present'] and row['g1']['present'] for row in rows) == 28,
+                'hardware presence/pair counts differ')
+        try:
+            with csv_path.open(encoding='utf-8', newline='') as handle:
+                reader = csv.DictReader(handle, strict=True)
+                columns = reader.fieldnames
+                csv_rows = list(reader)
+        except csv.Error as error:
+            raise AuditError('hardware CSV cannot be parsed') from error
+        require(len(csv_rows) == 29 and columns is not None and
+                len(columns) == len(set(columns)) == 76 and
+                not any(name.endswith(('_source_xml', '_source_line')) for name in columns),
+                'hardware CSV shape/column privacy differs')
+
+        def csv_cell(record, name, value):
+            cell = record[name]
+            if value is None:
+                valid = cell == ''
+            elif type(value) is bool:
+                valid = cell.lower() == str(value).lower()
+            elif type(value) in (int, float):
+                valid = float(cell) == value
+            else:
+                valid = cell == value
+            require(valid, 'hardware CSV/JSON value differs: ' + name)
+
+        for row, record in zip(rows, csv_rows):
+            csv_cell(record, 'joint_name', row['joint_name'])
+            csv_cell(record, 'reference_pose_axis_dot', row['reference_pose_axis_dot'])
+            csv_cell(record, 'rom_rp1_minus_g1_deg', row['rom_rp1_minus_g1_deg'])
+            require(row['signed_q_ranges_directly_comparable'] is False,
+                    'hardware must retain separate coordinate conventions')
+            if row['rp1']['present'] and row['g1']['present']:
+                require(row['mapping_status'] == 'paired_anatomical_label' and
+                        record['mapping_status'] == 'SAME_ANATOMICAL_LABEL_DIFFERENT_KINEMATIC_CONVENTIONS',
+                        'hardware anatomical mapping status differs')
+            for robot in ('rp1', 'g1'):
+                joint = row[robot]
+                csv_cell(record, robot + '_present', joint['present'])
+                if not joint['present']:
+                    require(robot == 'rp1' and row['joint_name'] == 'waist_pitch_joint' and
+                            joint['status'] == 'n/a' and row['mapping_status'] == 'g1_only_rp1_not_applicable'
+                            and row['reference_pose_axis_dot'] is None and
+                            row['rom_rp1_minus_g1_rad'] is None and row['rom_rp1_minus_g1_deg'] is None,
+                            'unmatched waist pitch must remain not applicable')
+                    require(record['mapping_status'] == 'G1_ONLY_RP1_NOT_APPLICABLE' and
+                            record['rp1_training_soft_status'] == 'NOT_APPLICABLE_NO_JOINT' and
+                            record['rp1_rated_peak_physical_status'] == 'NOT_APPLICABLE_NO_JOINT' and
+                            all(record[name] == '' for name in columns if name.startswith('rp1_')
+                                and name not in {'rp1_present', 'rp1_training_soft_status',
+                                                 'rp1_rated_peak_physical_status'}),
+                            'unmatched waist pitch CSV must retain blank numeric values')
+                    continue
+                require(joint['status'] == 'available', 'present hardware joint unavailable')
+                limits, control, actuator = (joint['effective_constraint_limits'],
+                                             joint['policy_control'], joint['effective_actuator'])
+                require(limits['jnt_limited'] is True and
+                        limits['lower_rad'] < limits['upper_rad'] and
+                        math.isclose(limits['rom_rad'], limits['upper_rad'] - limits['lower_rad'],
+                                     abs_tol=1e-12), 'hardware ROM/range differs')
+                for name in ('lower', 'upper', 'rom'):
+                    for unit in ('rad', 'deg'):
+                        numeric(limits[name + '_' + unit], 'hardware.range', nullable=False)
+                        csv_cell(record, robot + '_' + name + '_' + unit, limits[name + '_' + unit])
+                    require(math.isclose(limits[name + '_deg'], math.degrees(limits[name + '_rad']),
+                                         abs_tol=1e-10), 'hardware degree conversion differs')
+                force = actuator['actuator_forcerange_Nm']
+                require(actuator['actuator_forcelimited'] is True and
+                        actuator['actuator_ctrllimited'] is False and
+                        actuator['gear'] == [1., 0., 0., 0., 0., 0.] and
+                        force[0] == -force[1] and force[1] > 0 and
+                        math.isclose(force[1], control['effort_limit_config_Nm'], abs_tol=1e-5),
+                        'hardware effective PD force cap differs')
+                require(control['velocity_limit_runtime_clamp'] is False and
+                        control['target_hard_range_clipped'] is False and
+                        math.isclose(control['velocity_limit_declared_deg_s'],
+                                     math.degrees(control['velocity_limit_declared_rad_s']), abs_tol=1e-9),
+                        'hardware declared velocity/runtime distinction differs')
+                for column, value in {
+                    'effort_config_Nm': control['effort_limit_config_Nm'],
+                    'velocity_declared_rad_s': control['velocity_limit_declared_rad_s'],
+                    'velocity_declared_deg_s': control['velocity_limit_declared_deg_s'],
+                    'forcerange_lower_Nm': force[0], 'forcerange_upper_Nm': force[1],
+                    'actuator_forcelimited': actuator['actuator_forcelimited'],
+                    'actuator_ctrllimited': actuator['actuator_ctrllimited'],
+                    'jnt_limited': limits['jnt_limited'],
+                    'kp_Nm_rad': control['kp_Nm_per_rad'],
+                    'kd_Nm_s_rad': control['kd_Nm_s_per_rad'],
+                    'action_scale': control['action_scale_rad_per_unit'],
+                    'default_target_rad': control['default_zero_action_target_rad'],
+                    'armature_kg_m2': actuator['armature_kg_m2'],
+                    'frictionloss_Nm': actuator['frictionloss_Nm'],
+                    'passive_viscous_damping_Nm_s_rad': actuator['passive_viscous_damping_Nm_s_rad']}.items():
+                    csv_cell(record, robot + '_' + column, value)
+                coordinate = joint['coordinate_contract']
+                for column, field, components in [
+                    ('axis_local_', 'axis_in_child_body_frame', 'xyz'),
+                    ('axis_root_ref_', 'axis_in_model_root_at_reference_pose', 'xyz'),
+                    ('mount_quat_', 'child_mount_in_parent_quat_wxyz', 'wxyz')]:
+                    for component, value in zip(components, coordinate[field]):
+                        csv_cell(record, robot + '_' + column + component, value)
+                manufacturer = joint['manufacturer_physical_spec']
+                require(manufacturer['status'] == 'unknown' and
+                        all(value is None for key, value in manufacturer.items() if key != 'status'),
+                        'manufacturer hardware specifications must remain unknown')
+                csv_cell(record, robot + '_rated_peak_physical_status', 'UNKNOWN')
+                soft = joint['training_soft_limit']
+                require(soft['runtime_training_tensor_snapshot_verified'] is False and
+                        (soft['factor'] == 0.9 if robot == 'rp1' else
+                         soft['factor'] is None and soft['derived_rom_rad'] is None),
+                        'hardware saved/unknown training limit boundary differs')
+                csv_cell(record, robot + '_training_soft_status', soft['status'])
+                for bound in ('lower', 'upper'):
+                    csv_cell(record, robot + '_training_soft_derived_' + bound + '_rad',
+                             soft['derived_' + bound + '_rad'])
+        content = json_path.read_text() + csv_path.read_text()
+        require(not SECRET.search(content) and not LOCAL_PATH.search(content) and
+                not INFRA.search(content) and
+                not re.search(r'checkpoint_latest|\b[0-9a-f]{64}\b|\bH200\b|luobo1|zp-nc67|'
+                              r'password|credential|private_key', content, re.I),
+                'hardware public files contain private information')
+        for source in hardware['sources_appendix']:
+            self.link(source['url'], 'hardware.source')
+
+    def extension_manifest(self):
+        require(self.manifest.get('extensions') == EXTENSIONS,
+                'manifest reviewed extension identities differ')
+        require(self.manifest.get('display_scope') == DISPLAY_SCOPE,
+                'manifest combined display scope differs; scientific groups remain separate')
+
+    def extreme_contract(self):
+        # Keep the new cohort separate from immutable Common40 data/source checks.
+        # Exact public byte hashes pin every result, CI, failure and diagnostic.
+        json_path, csv_path = self.root / 'extreme5.json', self.root / 'extreme5.csv'
+        require(sha(json_path.read_bytes()) == EXTREME_JSON_SHA,
+                'Extreme5 JSON differs from the reviewed public projection')
+        require(sha(csv_path.read_bytes()) == EXTREME_CSV_SHA,
+                'Extreme5 CSV differs from the reviewed public projection')
+        extension = read_json(json_path)
+        require(set(extension) == {'schema', 'dataset', 'title', 'count_label',
+                                  'aggregate_sha256', 'sample_set_sha256',
+                                  'scientific_numeric_protocol_sha256', 'paired_samples',
+                                  'results', 'comparisons', 'metrics', 'methods', 'analysis',
+                                  'applicability', 'diagnostics', 'media',
+                                  'lafan40_statistics_changed'}, 'Extreme5 public fields differ')
+        require(extension['schema'] == 'rp1-g1-public-extreme5-handoff-v1' and
+                extension['dataset'] == 'extreme5' and
+                extension['aggregate_sha256'] == EXTREME_AGGREGATE_SHA and
+                extension['sample_set_sha256'] == EXTREME_SAMPLE_SHA and
+                extension['scientific_numeric_protocol_sha256'] == EXTREME_NUMERIC_SHA and
+                extension['lafan40_statistics_changed'] is False,
+                'Extreme5 scientific version or Common40 independence differs')
+        require(extension['media'] == {'available': False, 'state': '待制作', 'items': []},
+                'Extreme5 new media requires separate publication review')
+        units = {'body_pos_mm': 'mm', 'body_ori_rad': 'rad', 'root_pos_m': 'm',
+                 'wrist_pos_mm': 'mm', 'wrist_ori_rad': 'rad',
+                 'episode_return': 'unitless', 'progress_pct': '%'}
+        require(set(extension['metrics']) == set(units), 'Extreme5 metric definitions differ')
+        for name, unit in units.items():
+            require(extension['metrics'][name] == {
+                'unit': unit, 'delta_unit': 'pp' if name == 'progress_pct' else unit,
+                'higher_is_better': name in {'episode_return', 'progress_pct'}},
+                'Extreme5 metric units/direction differ: ' + name)
+        methods = extension['methods']
+        require((methods['reference_hz'], methods['physics_hz'], methods['start_frame'],
+                 methods['seed'], methods['landmarks'], methods['recovery_added']) ==
+                (50, 200, 0, 0, 'common14_ankle_roll', False), 'Extreme5 execution methods differ')
+        require(methods['bootstrap'] == {'unit': 'motion', 'resamples': 10000,
+                                        'seed': 20261013, 'confidence': 0.95},
+                'Extreme5 bootstrap contract differs')
+        results = extension['results']
+        require(len(results) == len({row['id'] for row in results}) == 12 and
+                Counter(row['scope'] for row in results) == {'aggregate': 2, 'per_motion': 10},
+                'Extreme5 result scope counts differ')
+        require(not {row['id'] for row in results}.intersection(row['id'] for row in self.data['results']),
+                'Extreme5 IDs collide with Common40')
+        episodes = {row['id']: row for row in results if row['scope'] == 'per_motion'}
+        aggregates = {row['robot']: row for row in results if row['scope'] == 'aggregate'}
+        require(set(aggregates) == {'rp1', 'g1'}, 'Extreme5 aggregate robots differ')
+        pairs = {}
+        for row in results:
+            loc = 'extreme5.' + row['id']
+            require((row['phase'], row['dataset'], row['condition'], row['mode'], row['seed']) ==
+                    ('A', 'extreme5', 'nominal', 'native_position', '0') and
+                    row['robot'] in {'rp1', 'g1'} and row['status'] == 'complete',
+                    'Extreme5 frozen row identity/status differs')
+            require(row['pairing']['comparison_id'] == EXTREME_ID and
+                    row['pairing']['sample_set_sha256'] == EXTREME_SAMPLE_SHA and
+                    row['pairing']['verified'] is True, 'Extreme5 row pair identity differs')
+            require(row['provenance']['protocol_sha256'] == EXTREME_NUMERIC_SHA and
+                    row['provenance']['runtime'] == '50Hz_reference_200Hz_physics',
+                    'Extreme5 shared numeric protocol/runtime differs')
+            for field in ('coverage', 'paired_coverage'):
+                coverage(row[field], loc + '.' + field)
+                n = 5 if row['scope'] == 'aggregate' else 1
+                require(row[field]['numerator'] == row[field]['denominator'] == n,
+                        'Extreme5 coverage differs')
+            require(set(row['metrics']) == METRICS, 'Extreme5 missing metric')
+            unknown = row['metrics']['gpu_train_hours']
+            require(unknown['value'] is None and unknown['reason'] and
+                    unknown['sample_set_sha256'] == '' and 'ci' not in unknown,
+                    'Extreme5 training cost must retain unknown status')
+            coverage(unknown['coverage'], loc + '.gpu_train_hours.coverage')
+            for name, unit in units.items():
+                cell = row['metrics'][name]
+                numeric(cell['value'], loc + '.' + name, nullable=False)
+                require(cell['reason'] and cell['sample_set_sha256'] == EXTREME_SAMPLE_SHA,
+                        'Extreme5 metric sample/reason differs')
+                coverage(cell['coverage'], loc + '.' + name + '.coverage')
+                require(cell['coverage']['numerator'] == cell['coverage']['denominator'] == n,
+                        'Extreme5 metric denominator differs')
+                if name == 'progress_pct':
+                    require(0 <= cell['value'] <= 100, 'Extreme5 progress outside 0–100')
+                if row['scope'] == 'aggregate':
+                    ci = cell['ci']
+                    keys(ci, CI_KEYS, loc + '.' + name + '.ci')
+                    numeric(ci['low'], loc + '.ci.low', nullable=False)
+                    numeric(ci['high'], loc + '.ci.high', nullable=False)
+                    require(ci['low'] <= ci['high'] and ci['level'] == 0.95 and
+                            ci['unit'] == unit and ci['method'] == 'paired motion percentile bootstrap'
+                            and ci['resampling_unit'] == 'motion' and ci['n_clusters'] == 5
+                            and ci['n_seeds'] == 1 and ci['resamples'] == 10000 and ci['reason'],
+                            'Extreme5 metric CI/unit/sample contract differs')
+                else:
+                    require('ci' not in cell, 'Extreme5 episode must not invent an episode CI')
+            if row['scope'] == 'aggregate':
+                require(row['id'] == EXTREME_ID + '_' + row['robot'] and row['motion_id'] is None and
+                        row['no_threshold_failure'] == {'numerator': 0, 'denominator': 5, 'unit': 'motions'},
+                        'Extreme5 aggregate/no-threshold-failure boundary differs')
+                continue
+            require(row['motion_id'] in EXTREME_FRAMES and row['rollout_complete'] is True
+                    and row['censored'] is False, 'Extreme5 complete replay/source motion differs')
+            identity = pair_key(row)
+            members = pairs.setdefault(identity, {})
+            require(row['robot'] not in members, 'Extreme5 duplicate robot pairing key')
+            members[row['robot']] = row
+            frames = EXTREME_FRAMES[row['motion_id']]
+            extra = int(row['robot'] == 'g1' and row['motion_id'] in {
+                'Take_146_Skeleton0', 'Take_148_Skeleton0', 'Take_149_Skeleton0'})
+            require(row['source_window'] == {'start_frame': 0, 'end_exclusive': frames,
+                                             'native_frames': frames + extra, 'reference_hz': 50},
+                    'Extreme5 common endpoint/native source window differs')
+            execution = (EXTREME_EXECUTION_V1_SHA if row['robot'] == 'rp1' and
+                         row['motion_id'] == 'Take_143_Skeleton0' else EXTREME_EXECUTION_V2_SHA)
+            require(row['provenance']['execution_protocol_sha256'] == execution,
+                    'Extreme5 original execution protocol identity differs')
+            failure = row['failure']
+            require(failure['category'] in {'height', 'gravity', 'both'} and
+                    type(failure['first_policy_index']) is int and
+                    0 <= failure['first_policy_index'] < frames - 1,
+                    'Extreme5 natural failure record missing/invalid')
+            numeric(failure['source_time_s'], loc + '.failure.source_time_s', nullable=False)
+            numeric(failure['simulation_time_s'], loc + '.failure.simulation_time_s', nullable=False)
+            require(math.isclose(failure['source_time_s'],
+                                 (failure['first_policy_index'] + 1) / 50, abs_tol=1e-10),
+                    'Extreme5 first failure source clock differs')
+        require(len(pairs) == 5 and all(set(members) == {'rp1', 'g1'} for members in pairs.values()),
+                'Extreme5 must contain five exact RP1/G1 pairs')
+        samples = extension['paired_samples']
+        require(len(samples) == 5 and {sample['motion'] for sample in samples} == set(EXTREME_FRAMES),
+                'Extreme5 sample motion identities differ')
+        for sample in samples:
+            require(sample['seed'] == 0 and set(sample['runs']) == {'rp1', 'g1'},
+                    'Extreme5 paired sample seed/robots differ')
+            for robot, run_id in sample['runs'].items():
+                row = episodes.get(run_id)
+                require(row is not None and (row['robot'], row['motion_id'], row['seed']) ==
+                        (robot, sample['motion'], '0'), 'Extreme5 sample/run binding differs')
+        require(len(extension['comparisons']) == 1, 'Extreme5 comparison count differs')
+        comparison = extension['comparisons'][0]
+        require(comparison['id'] == EXTREME_ID and comparison['verified'] is True
+                and comparison['provisional'] is False and comparison['expected_paired_motions'] == 5
+                and comparison['sample_set_sha256'] == EXTREME_SAMPLE_SHA
+                and set(comparison['expected_participants']) == {EXTREME_ID + '_' + r for r in aggregates}
+                and set(comparison['paired_deltas']) == set(units), 'Extreme5 comparison identities differ')
+        for name, unit in units.items():
+            delta = comparison['paired_deltas'][name]
+            numeric(delta['value'], 'extreme5.delta.' + name, nullable=False)
+            require(delta['n_motions'] == 5 and delta['unit'] == ('pp' if name == 'progress_pct' else unit)
+                    and len(delta['ci95']) == 2, 'Extreme5 paired CI/unit/denominator differs')
+            for value in delta['ci95']:
+                numeric(value, 'extreme5.delta.ci95', nullable=False)
+            require(delta['ci95'][0] <= delta['ci95'][1], 'Extreme5 paired CI reversed')
+            require(math.isclose(delta['value'], aggregates['rp1']['metrics'][name]['value'] -
+                                 aggregates['g1']['metrics'][name]['value'], abs_tol=1e-12),
+                    'Extreme5 delta must be RP1 minus G1')
+        try:
+            with csv_path.open(encoding='utf-8', newline='') as handle:
+                reader = csv.DictReader(handle, strict=True)
+                csv_rows = list(reader)
+        except csv.Error as error:
+            raise AuditError('Extreme5 CSV cannot be parsed') from error
+        require(reader.fieldnames == ['run_id', 'robot', 'motion_id', 'motion_label', 'dataset',
+                                      'condition', 'seed', *units, 'failure_category',
+                                      'failure_time_s', 'common_frames'] and
+                len(csv_rows) == len({row['run_id'] for row in csv_rows}) == 10,
+                'Extreme5 CSV columns/episode identities differ')
+        require({row['run_id'] for row in csv_rows} == set(episodes), 'Extreme5 CSV episode set differs')
+        for record in csv_rows:
+            row = episodes[record['run_id']]
+            require(all(record[name] == row[name] for name in
+                        ('robot', 'motion_id', 'dataset', 'condition', 'seed')) and
+                    record['motion_label'] == row['label'] and
+                    record['failure_category'] == row['failure']['category'] and
+                    float(record['failure_time_s']) == row['failure']['source_time_s'] and
+                    int(record['common_frames']) == row['source_window']['end_exclusive'],
+                    'Extreme5 CSV identity/failure/source window differs')
+            for name in units:
+                require(float(record[name]) == row['metrics'][name]['value'],
+                        'Extreme5 CSV metric differs: ' + name)
+        content = json_path.read_text() + csv_path.read_text()
+        require(not SECRET.search(content) and not LOCAL_PATH.search(content) and
+                not INFRA.search(content), 'Extreme5 public files contain private information')
+        combined = self.data['results'] + results
+        require(len(combined) == 190 and
+                len({row['motion_id'] for row in combined if row['scope'] == 'per_motion'}) == 45 and
+                Counter(row['scope'] for row in combined) == {'aggregate': 10, 'per_motion': 180} and
+                len(self.data['comparisons']) + len(extension['comparisons']) == 5,
+                'combined display scope differs; cohorts must remain separate')
 
     def counts_and_missing(self):
         rows = self.data['results']
@@ -644,6 +1044,9 @@ class Audit:
                           ('verified_pair_identities_and_nominal_contract', self.pairing_and_nominal),
                           ('immutable_retained_scientific_values', self.retained_scientific_values),
                           ('public_media_pending_boundary', self.public_media),
+                          ('frozen_hardware_metadata_and_csv_contract', self.hardware_contract),
+                          ('independent_extreme5_science_and_csv_contract', self.extreme_contract),
+                          ('reviewed_extensions_and_separate_display_scope', self.extension_manifest),
                           ('internal_targets_and_reviewed_https_links', self.links)]:
             self.run_check(label, fn)
         if self.source_path is not None:
@@ -656,6 +1059,11 @@ class Audit:
                 'paired_cases': self.data.get('public_scope', {}).get('paired_cases'),
                 'paired_episodes': len(self.episodes_by_id),
                 'unique_common_motions': len({row['motion_id'] for row in self.episodes_by_id.values()}),
+                'display_scope': self.manifest.get('display_scope'),
+                'extensions_sha256': {'hardware_json': HARDWARE_JSON_SHA,
+                                      'hardware_csv': HARDWARE_CSV_SHA,
+                                      'extreme5_json': EXTREME_JSON_SHA,
+                                      'extreme5_csv': EXTREME_CSV_SHA},
                 'checked': self.checked, 'errors': self.errors,
                 'unique_external_links': len(self.external_links),
                 'unique_internal_links': len(self.internal_links),

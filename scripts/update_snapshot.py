@@ -2,7 +2,10 @@
 """Project a hash-approved comparison snapshot into a public field whitelist.
 
 Standard library only. Never follows a path or copies an evidence attachment
-from the input. Updating requires an explicitly reviewed source SHA.
+from the comparison input. Updating requires an explicitly reviewed source SHA.
+The four frozen public extensions are retained only after identity/schema checks;
+--extensions-manifest can initialize them from the reviewed private handoff's
+explicit public allowlist. It never imports new experiments or private artifacts.
 """
 import argparse
 from collections import defaultdict
@@ -277,6 +280,82 @@ def validate_projection(source, out):
     assert 'source_status' not in encoded
     assert len({x['id'] for x in out['results']}) == len(out['results'])
 
+def reviewed_extensions(dest, handoff_path=None):
+    """Preflight all four exact public attachments before writing any output.
+
+    Reuse the publication contract, not private source/model assets. An explicit
+    handoff is the only initialization path for a directory without the reviewed
+    extension metadata. Its pinned bytes authorize exactly four public files.
+    """
+    from verify_public import DISPLAY_SCOPE, EXTENSIONS
+
+    expected = {
+        'public_extreme5.json': ('extreme5.json', EXTENSIONS['extreme5']['json_sha256'],
+                                 'rp1-g1-public-extreme5-handoff-v1'),
+        'public_extreme5_episodes.csv': ('extreme5.csv', EXTENSIONS['extreme5']['csv_sha256'], None),
+        'public_hardware_comparison.json': ('hardware.json', EXTENSIONS['hardware']['json_sha256'],
+                                            'rp1-g1-public-hardware-comparison-v1'),
+        'public_hardware_comparison.csv': ('hardware.csv', EXTENSIONS['hardware']['csv_sha256'], None),
+    }
+    previous = {}
+    previous_path = dest / 'RELEASE_MANIFEST.json'
+    if previous_path.exists():
+        assert previous_path.is_file() and not previous_path.is_symlink(), 'Unsafe previous manifest'
+        previous = json.loads(previous_path.read_bytes())
+    payloads = {}
+    if handoff_path is None:
+        assert previous.get('extensions') == EXTENSIONS and previous.get('display_scope') == DISPLAY_SCOPE, (
+            'Reviewed extension metadata is required; initialize with --extensions-manifest '
+            'using the formal frozen handoff')
+        inputs = {name: dest / spec[0] for name, spec in expected.items()}
+    else:
+        raw = handoff_path.read_bytes()
+        assert sha(raw) == EXTENSIONS['handoff_sha256'], 'Unreviewed extensions handoff'
+        handoff = json.loads(raw)
+        assert handoff['schema'] == 'rp1-g1-extreme5-hardware-website-handoff-v1'
+        assert handoff['expected_combined_public_counts'] == DISPLAY_SCOPE
+        entries = {entry['filename']: entry for entry in handoff['public_allowlist']}
+        assert len(handoff['public_allowlist']) == len(entries) == 4 and set(entries) == set(expected), (
+            'Extensions handoff is not the four-file public allowlist')
+        inputs = {}
+        for name, entry in entries.items():
+            assert entry['sha256'] == expected[name][1], 'Extensions handoff file identity differs'
+            inputs[name] = Path(entry['local_path'])
+    for source_name, (name, digest, schema) in expected.items():
+        path = inputs[source_name]
+        assert path.is_file() and not path.is_symlink(), (
+            'Missing reviewed public extension: ' + name + '; obtain the formal frozen handoff')
+        raw = path.read_bytes()
+        assert sha(raw) == digest, 'Unreviewed public extension: ' + name
+        if schema is not None:
+            assert json.loads(raw)['schema'] == schema, 'Public extension schema differs: ' + name
+        if handoff_path is not None:
+            assert len(raw) == entries[source_name]['bytes'], 'Public extension byte count differs'
+        payloads[name] = raw
+    metadata = dict(extensions=deepcopy(EXTENSIONS), display_scope=deepcopy(DISPLAY_SCOPE))
+    # These are already public version labels, not the private handoff body.
+    for name in ('report_revision', 'report_scope_receipt_sha256',
+                 'presentation_revision', 'presentation_updated_utc'):
+        if name in previous:
+            assert isinstance(previous[name], str) and not PRIVATE.search(previous[name]), (
+                'Private or invalid public revision metadata')
+            metadata[name] = previous[name]
+    return metadata, payloads
+
+def public_file_hashes(dest):
+    """Hash existing publication-whitelisted files; never enumerate/copy evidence."""
+    from verify_public import PUBLISH_FILES
+
+    files = {}
+    for name in sorted(PUBLISH_FILES - {'RELEASE_MANIFEST.json'}):
+        path = dest / name
+        if not path.exists():
+            continue
+        assert path.is_file() and not path.is_symlink(), 'Unsafe public bundle file: ' + name
+        raw = path.read_bytes()
+        files[name] = dict(bytes=len(raw), sha256=sha(raw))
+    return files
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--source-data', type=Path, required=True)
@@ -285,6 +364,8 @@ def main():
     parser.add_argument('--handoff', type=Path, required=True)
     parser.add_argument('--expected-handoff-sha', required=True)
     parser.add_argument('--output-dir', type=Path, default=Path('.'))
+    parser.add_argument('--extensions-manifest', type=Path,
+                        help='formal frozen Extreme5/hardware private handoff; copy only its four public files')
     args = parser.parse_args()
     handoff_raw = args.handoff.read_bytes()
     assert sha(handoff_raw) == args.expected_handoff_sha, 'Unreviewed handoff manifest'
@@ -316,9 +397,17 @@ def main():
     validate_projection(source, out)
     assert args.source_data.read_bytes() == raw, 'Source changed during build'
     dest = args.output_dir
+    extension_metadata, extension_payloads = reviewed_extensions(dest, args.extensions_manifest)
     dest.mkdir(parents=True, exist_ok=True)
     data = (json.dumps(out, ensure_ascii=False, separators=(',', ':'), allow_nan=False)+'\n').encode()
     (dest/'data.json').write_bytes(data)
+    for name, payload in extension_payloads.items():
+        path = dest / name
+        # Default reuse preserves the exact existing bytes and file identities.
+        # An explicitly pinned handoff may initialize only these four files.
+        if not path.exists() or path.read_bytes() != payload:
+            assert args.extensions_manifest is not None, 'Public extension changed during build'
+            path.write_bytes(payload)
     manifest = dict(schema='rp1-g1-public-snapshot-v1',
                     consumed_handoff_version=handoff['version'],
                     consumed_handoff_sha256=args.expected_handoff_sha,
@@ -341,9 +430,12 @@ def main():
     manifest['scientific_contract']['coverage'] = dict(unique_common_motions=out['public_scope']['unique_motions'],
         paired_cases=out['public_scope']['paired_cases'], paired_episodes=out['public_scope']['episodes'],
         aggregate_rows=out['public_scope']['aggregate_rows'], comparison_groups=out['public_scope']['comparison_groups'])
+    manifest.update(extension_metadata)
+    manifest['files'] = public_file_hashes(dest)
     (dest/'RELEASE_MANIFEST.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
     print(json.dumps(dict(data_version=manifest['data_version'],
-                         public_data_sha256=sha(data), result_rows=len(out['results']))))
+                         public_data_sha256=sha(data), result_rows=len(out['results']),
+                         extensions=list(extension_payloads), display_scope=manifest['display_scope'])))
 
 if __name__ == '__main__':
     main()

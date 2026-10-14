@@ -14,7 +14,7 @@
   <a class="skip-link" href="#results">跳到研究结果</a>
   <header class="site-header"><div class="wrap header-inner">
     <a class="brand" href="#top" aria-label="RP1 与 G1 研究首页"><span class="brand-symbol">R<span>×</span>G</span><span>Motion study<small>RP1 / G1</small></span></a>
-    <nav aria-label="主导航"><a href="#results">研究结果</a><a href="#videos">动作回放</a><a href="#method">评测方法</a><a href="#data">开放数据</a></nav>
+    <nav aria-label="主导航"><a href="#results">研究结果</a><a href="#videos">动作回放</a><a href="#hardware">模型参数</a><a href="#method">评测方法</a><a href="#data">开放数据</a></nav>
     <a class="header-link" href="https://github.com/Zhang-Yongqi/robot_leaderboard" target="_blank" rel="noopener noreferrer">GitHub ↗</a>
   </div></header>
   <main id="top">
@@ -28,23 +28,31 @@
       <div id="paired-summary" class="finding-grid"></div>
       <p class="result-note">身体位置差值区间的上界接近零，这一优势的统计证据较弱。身体与手腕指标使用首次失败阈值前的跟踪窗口。</p>
       <details class="disclosure metrics-disclosure"><summary>查看全部七项配对指标<span>均值 · 单位 · 差值 · 95% CI</span></summary><div id="paired-all-metrics" class="table-scroll" tabindex="0" role="region" aria-label="全部配对指标"></div></details>
+      <div id="extreme-results" class="extension-results" aria-live="polite"></div>
     </section>
     <section id="videos" class="video-section" aria-labelledby="videos-title"><div class="wrap">
       <div class="section-heading"><div><p class="eyebrow">02 / SYNCHRONIZED MOTION</p><h2 id="videos-title">让动作本身说话。</h2><p id="video-intro">新一批计划采用左侧 RP1、右侧 G1 的完整同步回放，共用时间轴与相机尺度，并保留真实失败后的过程。</p></div><span id="video-coverage" class="scope-label">新视频准备中</span></div>
       <div id="public-videos"></div><p class="video-footnote">同步回放复用已保存的完整状态，保留失败后的过程，便于观察动作表现。</p>
     </div></section>
+    <section id="hardware" class="section wrap" aria-labelledby="hardware-title">
+      <div class="section-heading"><div><p class="eyebrow">03 / ROBOT MODEL PARAMETERS</p><h2 id="hardware-title">关节、范围与控制参数。</h2><p>与评测一致的冻结模型和原生位置控制，按解剖轴比较 RP1 与 G1。</p></div></div>
+      <div id="hardware-overview" class="finding-grid" aria-live="polite"><p>正在读取模型参数…</p></div>
+      <p class="result-note">模型限位和仿真力矩限制按各自局部轴、零位与安装坐标解释；速度为资产声明值，当前运行器未实施速度限幅。制造商额定与峰值力矩暂无独立记录。</p>
+      <details id="hardware-details" class="disclosure"><summary>逐关节比较<span>29 个对照位置 · 限位 · ROM · 力矩 · PD</span></summary><div class="detail-content"><p>表内角度使用各模型自己的坐标，ROM 为上限减下限。展开关节可查看弧度、轴、实际执行器限制及训练软限；缺少对应关节显示 n/a。手机可横向滑动查看两侧数值。</p><div id="hardware-table" class="table-scroll" tabindex="0" role="region" aria-label="RP1与G1逐关节参数"></div></div></details>
+      <div class="report-links"><a href="./hardware.csv" download>逐关节 CSV ↓</a> <a href="./hardware.json" target="_blank" rel="noopener noreferrer">完整模型参数 JSON ↗</a></div>
+    </section>
     <section id="method" class="section wrap" aria-labelledby="method-title">
-      <div class="section-heading"><div><p class="eyebrow">03 / READING THE EVIDENCE</p><h2 id="method-title">共同协议，逐项比较。</h2><p>采用两套发布学生策略，保留各自的训练数据、重定向与控制参数。</p></div></div>
-      <div class="method-grid"><article><span class="method-number">01</span><h3>同一组动作</h3><p>共同 40 段 LAFAN 动作，CPU ONNX 推理，策略 50 Hz、物理 200 Hz。使用原生位置控制和统一失败阈值，连续记录完整回合，无恢复或重置。</p></article><article><span class="method-number">02</span><h3>精度与完成度分别看</h3><p>身体与手腕采用失败前误差；完成度观察动作推进。根节点端点误差使用完整回放末端，初始 XY 与 yaw 对齐、保留 Z。</p></article><article><span class="method-number">03</span><h3>以动作为统计单位</h3><p>主比较为 40 个配对动作、80 个机器人回合。动作等权，配对 bootstrap 10,000 次；敏感性、重复和初态扰动分别以 5 个动作为统计单位。</p></article></div>
+      <div class="section-heading"><div><p class="eyebrow">04 / READING THE EVIDENCE</p><h2 id="method-title">共同协议，逐项比较。</h2><p>采用两套发布学生策略，保留各自的训练数据、重定向与控制参数。</p></div></div>
+      <div class="method-grid"><article><span class="method-number">01</span><h3>同一组动作</h3><p>共同 40 段 LAFAN 动作，CPU ONNX 推理，策略 50 Hz、物理 200 Hz。使用原生位置控制和统一失败阈值，连续记录完整回合，无恢复或重置。</p></article><article><span class="method-number">02</span><h3>精度与完成度分别看</h3><p>身体与手腕采用失败前误差；完成度记录首次失败前的动作推进；未触发失败时取自然终点。根节点端点误差使用完整回放末端，初始 XY 与 yaw 对齐、保留 Z。</p></article><article><span class="method-number">03</span><h3>以动作为统计单位</h3><p>主比较为 40 个配对动作、80 个机器人回合。动作等权，配对 bootstrap 10,000 次；敏感性、重复和初态扰动分别以 5 个动作为统计单位。</p></article></div>
       <div class="boundary"><h3>策略与评测范围</h3><p>RP1 为原版 28 DoF ROA 学生策略，G1 为 29 DoF v1.1；RP1 发布包使用原版名称。发布方声明两者的训练规模为 8 卡 × 每卡 8192 环境。</p><p>各动作、条件与 seed 按真实身份配对，失败与删失结果保留原因和分母；各条件独立统计。同配置重训尚未开始，暂无结果。</p></div>
       <details class="disclosure"><summary>完整方法与评测条件<span>统计口径 · 适用范围 · 公平条件</span></summary><div class="detail-content"><div class="evidence-grid"><div><h3>聚合与置信区间</h3><dl id="statistics"></dl></div><div><h3>适用范围与局限</h3><ul id="limitations" class="notes"></ul></div></div><div id="fairness"><h3>公平条件与已披露差异</h3><p class="subtle">此表响应下方数据区的策略、条件与执行模式筛选。</p><div class="table-scroll" tabindex="0" role="region" aria-label="公平条件表"><table class="fairness-table"><thead><tr><th>条件</th><th>RP1</th><th>G1</th><th>核验状态</th><th>依据</th></tr></thead><tbody id="fairness-body"></tbody></table></div></div></div></details>
     </section>
     <section id="data" class="section data-section wrap" aria-labelledby="data-title">
-      <div class="section-heading"><div><p class="eyebrow">04 / OPEN RESEARCH</p><h2 id="data-title">结论有出处，数据可检查。</h2><p>公开摘要仅包含共有动作的真实可配对项目，保留均值、区间、失败结果与有效分母。详细报告及既有同步回放需原有访问权限。</p></div></div>
-      <div class="resource-grid"><a href="./data.json" target="_blank" rel="noopener noreferrer"><span>01 / DATA</span><h3>评测数据 <b>↗</b></h3><p>完整公开 JSON 快照，包含有效样本与缺失原因。</p></a><a href="./DATA_PROVENANCE.md" target="_blank" rel="noopener noreferrer"><span>02 / METHODS</span><h3>方法与来源 <b>↗</b></h3><p>指标定义、科学数据版本与更新方法。</p></a><a href="https://github.com/Zhang-Yongqi/robot_leaderboard" target="_blank" rel="noopener noreferrer"><span>03 / REPOSITORY</span><h3>项目仓库 <b>↗</b></h3><p>网站源码与版本记录，便于检查引用。</p></a></div>
+      <div class="section-heading"><div><p class="eyebrow">05 / OPEN RESEARCH</p><h2 id="data-title">结论有出处，数据可检查。</h2><p>公开摘要包含 Common40 与独立 Extreme5 配对组，保留均值、区间、失败结果与有效分母。详细报告及既有同步回放需原有访问权限。</p></div></div>
+      <div class="resource-grid"><a href="./data.json" target="_blank" rel="noopener noreferrer"><span>01 / DATA</span><h3>Common40 数据 <b>↗</b></h3><p>冻结 JSON 快照；全部两组记录可由下方“全部配对 JSON”导出。</p></a><a href="./DATA_PROVENANCE.md" target="_blank" rel="noopener noreferrer"><span>02 / METHODS</span><h3>方法与来源 <b>↗</b></h3><p>指标定义、科学数据版本与更新方法。</p></a><a href="https://github.com/Zhang-Yongqi/robot_leaderboard" target="_blank" rel="noopener noreferrer"><span>03 / REPOSITORY</span><h3>项目仓库 <b>↗</b></h3><p>网站源码与版本记录，便于检查引用。</p></a></div>
       <div id="downloads" class="report-links"></div>
       <details id="explorer" class="disclosure data-disclosure"><summary>探索共同配对记录<span>筛选 · 逐动作图表 · CSV 下载</span></summary><div class="detail-content">
-        <section id="leaderboard"><div class="section-heading compact"><div><h3>评测记录</h3><p>按指标浏览记录；名次在完整的同条件配对组内计算。</p></div><div class="actions"><button id="download-csv" type="button" class="button secondary">筛选 CSV ↓</button><button id="download-json" type="button" class="button secondary">快照 JSON ↓</button></div></div>
+        <section id="leaderboard"><div class="section-heading compact"><div><h3>评测记录</h3><p>按指标浏览记录；名次在完整的同条件配对组内计算。</p></div><div class="actions"><button id="download-csv" type="button" class="button secondary">筛选 CSV ↓</button><button id="download-json" type="button" class="button secondary">全部配对 JSON ↓</button></div></div>
           <form id="filters" class="filters" aria-label="筛选评测结果"><label>策略来源<select id="filter-phase" name="phase"><option value="all">全部来源</option><option value="A">原版发布策略</option><option value="B">同配置重训 · 暂无结果</option></select></label><label>机器人<select id="filter-robot" name="robot"></select></label><label>数据集<select id="filter-dataset" name="dataset"></select></label><label>条件<select id="filter-condition" name="condition"></select></label><label>执行模式<select id="filter-mode" name="mode"></select></label><label>评测 seed<select id="filter-seed" name="seed"></select></label><label class="search-field">动作或策略<input id="filter-search" name="search" type="search" placeholder="输入动作名称" autocomplete="off"></label><button type="reset" class="reset">重置筛选</button></form>
           <div class="table-toolbar"><div class="segmented" role="group" aria-label="结果粒度"><button id="view-aggregate" type="button" aria-pressed="true" data-scope="aggregate">聚合指标</button><button id="view-per-motion" type="button" aria-pressed="false" data-scope="per_motion">逐动作</button></div><div class="sort-controls"><label for="sort-metric">排序 / 图表指标</label><select id="sort-metric"></select><button id="sort-direction" type="button" class="direction" aria-label="切换排序方向">升序 ↑</button></div></div>
           <p id="result-count" class="result-count" role="status" aria-live="polite"></p><div class="table-scroll" tabindex="0" role="region" aria-label="完整指标结果表"><table id="results-table"><caption class="sr-only">指标值、有效覆盖与置信区间；缺失值不按零计入。</caption><thead id="results-head"></thead><tbody id="results-body"></tbody></table></div><div id="pagination" class="pagination"></div>
