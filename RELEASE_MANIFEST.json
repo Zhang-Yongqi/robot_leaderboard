@@ -126,16 +126,16 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 15550,
-      "sha256": "36705c063709965d7577fa5604a9800684f293eb264494ee745b90b87bd3966b"
+      "bytes": 15652,
+      "sha256": "415510600966ae8627a09318271006bc6b0e785b2873fa7ae9b6f0c170590f59"
     },
     "README.md": {
-      "bytes": 7900,
-      "sha256": "4fe19f267fc6f72c3259dd37c5eab21d7ed2a2a8cf1dac412b5037a922b30f6a"
+      "bytes": 8002,
+      "sha256": "1d300220f22cec61f513b66f657977700ac38ad274db9bb6c8af127ef5651eb8"
     },
     "app.js": {
-      "bytes": 74330,
-      "sha256": "99f5a17182c00c6a9419dcceab9771d1bbd89b22d5bf5695d86c69d7ed753970"
+      "bytes": 74327,
+      "sha256": "2f7af7aca303edcbaec9d42346bb7c868d75ba8edd2c2da5723efd913a42e5b7"
     },
     "data.json": {
       "bytes": 894089,
@@ -171,7 +171,7 @@
     },
     "index.html": {
       "bytes": 13478,
-      "sha256": "cd2be8c92b41e0406f7cb2a70de666e75fefd0c8b2a1a7b1c272d9c7fbe4cce0"
+      "sha256": "069648285881c1d04312f7a38749efb20096da4ff0677974a9ca88d8424fb3fe"
     },
     "media.json": {
       "bytes": 173,
@@ -193,7 +193,7 @@
   "report_revision": "common_v07_20261014",
   "report_scope_receipt_sha256": "c1c438e46fc9092e728ce07dd9a436ff6ad0f2640e501b2db04fa69ecfd77928",
   "presentation_revision": "20261014-fullwindow-primary-with-original-diagnostics",
-  "presentation_updated_utc": "2026-10-14T10:59:25.344006+00:00",
+  "presentation_updated_utc": "2026-10-14T11:04:26.897701+00:00",
   "display_scope": {
     "datasets": 2,
     "unique_motion_ids": 45,
@@ -231,5 +231,5 @@
     },
     "handoff_sha256": "6afe9c674cc85df00d67016cedb0dfb0da23d27705b09adf00c79c0ac9e30cd2"
   },
-  "expanded_report_update_status": "18-page fullwindow PDF / DOCX uploaded as version 5; native Feishu body synchronization and readback in progress"
+  "expanded_report_update_status": "V5 synchronized at original native Feishu/PDF/DOCX URLs; native15tables888cells full readback passed;4original diagnostic figures and8source links retained;PDF18pages"
 }

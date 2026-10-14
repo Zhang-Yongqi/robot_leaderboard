@@ -62,7 +62,7 @@ Progress 记录首次阈值位置，未触发时取参考末端；完整回放�
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)
 - [新公开视频索引](media.json)：当前 0/40。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。18 页全程报告 PDF / DOCX 已在原链接更新为 **版本 5**，飞书正文正在同步核对。当前数值见全程 JSON / CSV。报告及既有同步视频需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。18 页全程报告的飞书正文、PDF / DOCX 已在原链接同步为 **版本 5（V5 已同步）**；正文 15 表、888 单元格完整回读通过，4 张原版诊断图和 8 个来源链接保留。当前数值见全程 JSON / CSV。报告及既有同步视频需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
 ## 本地预览
 
