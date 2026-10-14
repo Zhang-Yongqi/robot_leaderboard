@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build reviewed full-window staging with semantic completion and optional ROOT2.
+"""Build reviewed full-window, completion, ROOT2 and single-endpoint staging.
 
 Inputs are read only. Only explicit identity and full-window fields are selected.
 Each result retains only four frozen provenance hashes; absent hashes are null.
@@ -18,7 +18,8 @@ from pathlib import Path
 import re
 import tempfile
 from source_contract import (prepare_schema5, reviewed_root_adapter, framework_status,
-    ROOT_METRICS, ROOTWINDOW_FIELDS, ROOT_WINDOW)
+    ROOT_METRICS, ROOTWINDOW_FIELDS, ROOT_WINDOW, prepare_schema6,
+    reviewed_endpoint_adapter, ENDPOINT_METRIC, ENDPOINT_METRICS, ENDPOINT_WINDOW)
 
 FULL_SOURCE_SHA = '119d981f07983b060b038e860ac0da9b2d5c10c166fc637b83d179cbf6bda5dd'
 IDENTITY_SHA = 'd7c902304aba5ca0588275b4b366f7bb799ee6e5a243c1bc8866ad059fb12aa4'
@@ -81,6 +82,9 @@ COMPARISON_COLUMNS_V5 = COMPARISON_COLUMNS[:-6] + [field for metric in ROOT_METR
     (metric, metric + '_ci95_low', metric + '_ci95_high')] + ['root_metric_window'] + COMPLETION_COLUMNS_V4 + [
     'completion_possible_fraction_low', 'completion_possible_fraction_high',
     'completion_possible_pct_low', 'completion_possible_pct_high', 'completion_summary_json']
+EPISODE_COLUMNS_V6 = EPISODE_COLUMNS_V5 + [ENDPOINT_METRIC, 'endpoint_metric_window', 'endpoint_sample_count']
+COMPARISON_COLUMNS_V6 = COMPARISON_COLUMNS_V5 + [ENDPOINT_METRIC,
+    ENDPOINT_METRIC + '_ci95_low', ENDPOINT_METRIC + '_ci95_high', 'endpoint_metric_window', 'endpoint_sample_count']
 
 
 def require(ok, message):
@@ -388,6 +392,8 @@ def completion_columns(completion):
 
 
 def csv_columns(data, scope):
+    if data['schema_version'] == 6:
+        return EPISODE_COLUMNS_V6 if scope == 'per_motion' else COMPARISON_COLUMNS_V6
     if data['schema_version'] == 5:
         return EPISODE_COLUMNS_V5 if scope == 'per_motion' else COMPARISON_COLUMNS_V5
     if data['schema_version'] == 4:
@@ -397,7 +403,8 @@ def csv_columns(data, scope):
 
 def csv_records(data, scope):
     comparisons = {c['id']: c for c in data['comparisons']}
-    metrics = FULL4 + ROOT_METRICS if data['schema_version'] == 5 else FULL4
+    metrics = FULL4 + ROOT_METRICS + ENDPOINT_METRICS if data['schema_version'] == 6 else (
+              FULL4 + ROOT_METRICS if data['schema_version'] == 5 else FULL4)
     records = []
     for row in data['results']:
         if row['scope'] != scope:
@@ -411,7 +418,7 @@ def csv_records(data, scope):
             record.update({k: row['fullwindow'][k] for k in ('run_id', 'case_id', 'full_recorded_frames',
                           'reference_common_frames', 'reference_start_s', 'reference_end_s')})
             record.update({name: row['metrics'][name]['value'] for name in metrics})
-            if data['schema_version'] == 5:
+            if data['schema_version'] in (5, 6):
                 record.update({'root_' + key: row['rootwindow'][key] for key in ROOTWINDOW_FIELDS})
         else:
             comparison = comparisons[row['pairing']['comparison_id']]
@@ -421,9 +428,11 @@ def csv_records(data, scope):
                 cell = row['metrics'][name]
                 record.update({name: cell['value'], name + '_ci95_low': cell['ci95'][0],
                                name + '_ci95_high': cell['ci95'][1]})
-            if data['schema_version'] == 5:
+            if data['schema_version'] in (5, 6):
                 record['root_metric_window'] = ROOT_WINDOW
-        if data['schema_version'] in (4, 5):
+        if data['schema_version'] == 6:
+            record.update(endpoint_metric_window=ENDPOINT_WINDOW, endpoint_sample_count=1)
+        if data['schema_version'] in (4, 5, 6):
             obj = row['completion']
             record.update(completion_status=obj['status'], motion_completed=(json.dumps(obj['completed'])
                 if obj['completed'] is not None else None),
@@ -466,8 +475,16 @@ def main():
     parser.add_argument('--source-root', type=Path,
                         help='reviewed six-error public JSON with its SHA-bound sibling public episode CSV')
     parser.add_argument('--root-adapter', help='code-registered reviewed root adapter ID; no arbitrary module loading')
+    parser.add_argument('--source-endpoint', type=Path,
+                        help='reviewed endpoint JSON with its SHA-bound public_sevenerror_episodes.csv sibling')
+    parser.add_argument('--endpoint-adapter', help='code-registered endpoint adapter ID; no arbitrary module loading')
     args = parser.parse_args()
     require(not args.root_adapter or args.source_root, '--root-adapter requires --source-root')
+    require(not args.endpoint_adapter or args.source_endpoint, '--endpoint-adapter requires --source-endpoint')
+    if args.source_endpoint:
+        require(args.source_root is not None and args.source_completion is not None,
+                '--source-endpoint requires the intact reviewed six-error and completion inputs')
+        reviewed_endpoint_adapter(args.endpoint_adapter)
     if args.source_root:
         require(args.source_completion is not None, '--source-root requires the frozen schema-4 completion input')
         reviewed_root_adapter(args.root_adapter)
@@ -481,6 +498,8 @@ def main():
     data = project(parse_json(raw), parse_json(identity_raw), args.publication, completion)
     if args.source_root:
         data = prepare_schema5(data, args.source_root, args.root_adapter, args.publication)
+    if args.source_endpoint:
+        data = prepare_schema6(data, args.source_endpoint, args.endpoint_adapter, args.publication)
     outputs = {'data.json': (json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode(),
                'episodes.csv': csv_bytes(data, 'per_motion'), 'comparisons.csv': csv_bytes(data, 'aggregate')}
     require(args.fullwindow_source.read_bytes() == raw and args.identity_map.read_bytes() == identity_raw,
@@ -491,7 +510,7 @@ def main():
     for name, content in outputs.items():
         (dest / name).write_bytes(content)
     print(json.dumps({'schema_version': data['schema_version'], 'publication_contract_eligible': args.publication,
-        'completion_ready': data['schema_version'] in (4, 5), 'publication_state': data['publication_state'], 'counts': COUNTS,
+        'completion_ready': data['schema_version'] in (4, 5, 6), 'publication_state': data['publication_state'], 'counts': COUNTS,
         'files': {name: {'bytes': len(content), 'sha256': sha(content)} for name, content in outputs.items()},
         'framework': framework_status()},
         ensure_ascii=False))

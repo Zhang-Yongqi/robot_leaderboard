@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Audit reviewed full-window v3/v4 and six-error schema-5 contracts.
+"""Audit reviewed full-window v3/v4, six-error v5 and endpoint v6 contracts.
 
 --preview permits internal pending/null completion inspection. It never enables
 publication. The full four-error contract may be published independently; new
@@ -20,7 +20,10 @@ import sys
 from urllib.parse import unquote, urlsplit
 from source_contract import (protect_baseline, framework_status, reviewed_root_adapter, prepare_schema5,
     ROOT_METRICS, ROOT_SOURCE_SHA, ROOT_CSV_SHA, ROOT_WINDOW, ROOT_WINDOW_LABEL,
-    ROOT_PUBLIC_STATE, ROOT_PREVIEW_STATE, ROOT_METHOD_FIELDS, ROOTWINDOW_FIELDS, rootwindow_from_baseline)
+    ROOT_PUBLIC_STATE, ROOT_PREVIEW_STATE, ROOT_METHOD_FIELDS, ROOTWINDOW_FIELDS, rootwindow_from_baseline,
+    reviewed_endpoint_adapter, prepare_schema6, protect_schema5, ENDPOINT_METRIC, ENDPOINT_METRICS,
+    ENDPOINT_SOURCE_SHA, ENDPOINT_CSV_SHA, ENDPOINT_WINDOW, ENDPOINT_PUBLIC_STATE, ENDPOINT_PREVIEW_STATE,
+    ENDPOINT_METHOD_FIELDS, ENDPOINT_DEFINITION_FIELDS, SIX_CORE_SHA, schema5_digest)
 from update_snapshot import (COMPLETION_CONTRACT, COMPARISON_COLUMNS, COUNTS,
     EPISODE_COLUMNS, FULL4, FULL_SOURCE_SHA, IDENTITY_SHA, PENDING, PREVIEW_STATE, PUBLIC_STATE,
     PROVENANCE_FIELDS, PROVENANCE_SHA, WINDOW, csv_bytes, episode_key, group_key,
@@ -81,6 +84,12 @@ def exact_keys(obj, names, location):
     require(type(obj) is dict and set(obj) == set(names), location + ': public fields differ')
 
 
+def same_json(left, right):
+    """Preserve source numeric/boolean types; Python equality equates True and 1."""
+    return json.dumps(left, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False) == \
+           json.dumps(right, ensure_ascii=False, sort_keys=True, separators=(',', ':'), allow_nan=False)
+
+
 def number(value, location):
     require(type(value) in (int, float) and math.isfinite(value), location + ': expected finite number')
 
@@ -121,7 +130,7 @@ class Links(HTMLParser):
 
 class Audit:
     def __init__(self, root, preview=False, source=None, identities=None, completion=None,
-                 source_root=None, root_adapter=None):
+                 source_root=None, root_adapter=None, source_endpoint=None, endpoint_adapter=None):
         self.root = Path(root).resolve()
         self.preview = preview
         self.source = source
@@ -129,13 +138,20 @@ class Audit:
         self.completion_source = completion
         self.root_source, self.root_adapter = source_root, root_adapter
         self.data = read_json(self.root / 'data.json')
-        self.has_root = self.data.get('schema_version') == 5
-        self.metrics = FULL4 + ROOT_METRICS if self.has_root else FULL4
+        self.endpoint_source, self.endpoint_adapter = source_endpoint, endpoint_adapter
+        if source_endpoint is not None or self.data.get('schema_version') == 6:
+            reviewed_endpoint_adapter(endpoint_adapter)
+        self.has_endpoint = self.data.get('schema_version') == 6
+        self.has_root = self.data.get('schema_version') in (5, 6)
+        self.metrics = FULL4 + ROOT_METRICS + ENDPOINT_METRICS if self.has_endpoint else (
+                       FULL4 + ROOT_METRICS if self.has_root else FULL4)
         self.publish_files = PUBLISH_FILES if self.has_root else PUBLISH_FILES_V4
         self.root_source_verified = False
+        self.endpoint_source_verified = False
         self.checked, self.errors = [], []
         self.value_checks = {'episode_values': 0, 'aggregate_scalars': 0, 'paired_delta_scalars': 0}
         self.root_value_checks = {'episode_values': 0, 'aggregate_scalars': 0, 'paired_delta_scalars': 0}
+        self.endpoint_value_checks = {'episode_values': 0, 'aggregate_scalars': 0, 'paired_delta_scalars': 0}
         self.provenance_checks = {'hash_values': 0, 'null_values': 0, 'source_fields': 0}
         self.completion_checks = {'episode_labels': 0, 'aggregate_summaries': 0, 'motion_summaries': 0}
         self.episodes, self.cases, self.aliases, self.by_id = {}, {}, {}, {}
@@ -149,11 +165,13 @@ class Audit:
 
     def schema(self):
         d = self.data
-        exact_keys(d, TOP_KEYS | ({'root_extension'} if self.has_root else set()), 'data')
-        require(type(d['schema_version']) is int and d['schema_version'] in (3, 4, 5) and
+        exact_keys(d, TOP_KEYS | ({'root_extension'} if self.has_root else set()) |
+                   ({'endpoint_extension'} if self.has_endpoint else set()), 'data')
+        require(type(d['schema_version']) is int and d['schema_version'] in (3, 4, 5, 6) and
                 d['phase'] == 'A' and d['counts'] == COUNTS, 'Reviewed schema/physical scope differs')
-        semantic = d['schema_version'] in (4, 5)
-        expected_state = ((ROOT_PREVIEW_STATE if self.preview else ROOT_PUBLIC_STATE) if self.has_root else
+        semantic = d['schema_version'] in (4, 5, 6)
+        expected_state = ((ENDPOINT_PREVIEW_STATE if self.preview else ENDPOINT_PUBLIC_STATE) if self.has_endpoint else
+                          (ROOT_PREVIEW_STATE if self.preview else ROOT_PUBLIC_STATE) if self.has_root else
                           (COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE) if semantic else
                           (PREVIEW_STATE if self.preview else PUBLIC_STATE))
         expected_contract = ({'status': 'verified', 'rule_version': CRITERION_ID,
@@ -169,7 +187,8 @@ class Audit:
             require(definition['unit'] == ('mm' if name.endswith('_mm') else 'rad')
                     and definition['higher_is_better'] is False, 'Full-window units/direction differ')
         exact_keys(d['methods'], {'fullwindow', 'units', 'weighting', 'bootstrap'} |
-                   ({'completion'} if semantic else set()) | ({'root'} if self.has_root else set()), 'methods')
+                   ({'completion'} if semantic else set()) | ({'root'} if self.has_root else set()) |
+                   ({'root_endpoint'} if self.has_endpoint else set()), 'methods')
         if self.has_root:
             require(d['root_extension'] == {'status': 'verified', 'source_sha256': ROOT_SOURCE_SHA,
                 'metrics': list(ROOT_METRICS), 'window_label': ROOT_WINDOW_LABEL}, 'Root source extension differs')
@@ -179,6 +198,23 @@ class Audit:
                 method['completion_unchanged'] is True and method['completion_does_not_filter_errors'] is True and
                 type(method['new_physical_episodes']) is int and method['new_physical_episodes'] == 0,
                 'Independent root window or no-new-experiment preservation differs')
+        if self.has_endpoint:
+            extension = d['endpoint_extension']
+            exact_keys(extension, {'status', 'source_sha256', 'metrics', 'definition'}, 'Endpoint extension')
+            require(extension['status'] == 'verified' and extension['source_sha256'] == ENDPOINT_SOURCE_SHA and
+                    extension['metrics'] == [ENDPOINT_METRIC], 'Endpoint source identity differs')
+            definition = extension['definition']
+            exact_keys(definition, ENDPOINT_DEFINITION_FIELDS, 'Endpoint definition')
+            require(definition == {'unit': 'mm', 'label': '根部终点位置误差', 'role': 'endpoint_position_error',
+                'higher_is_better': False, 'sample_count': 1, 'window': ENDPOINT_WINDOW} and
+                type(definition['sample_count']) is int, 'Endpoint definition/single-sample window differs')
+            method = d['methods']['root_endpoint']
+            exact_keys(method, ENDPOINT_METHOD_FIELDS, 'Endpoint method')
+            require(method['window'] == ENDPOINT_WINDOW and type(method['sample_count_per_episode']) is int and
+                method['sample_count_per_episode'] == 1 and method['existing_six_errors_and_completion_unchanged'] is True and
+                type(method['new_physical_episodes']) is int and method['new_physical_episodes'] == 0,
+                'Endpoint method/window/preservation differs')
+            require(schema5_digest(d) == SIX_CORE_SHA, 'Preserved six-error scientific digest differs')
         require(d['methods']['bootstrap'] == BOOTSTRAP, 'Paired motion bootstrap protocol differs')
         require(len(d['datasets']) == 2 and {(x['id'], x['expected_motions']) for x in d['datasets']} ==
                 {('lafan40', 40), ('extreme5', 5)}, 'Two datasets must remain separate')
@@ -217,7 +253,8 @@ class Audit:
             require(row['coverage'] == {'numerator': n, 'denominator': n,
                     'unit': 'episodes' if is_episode else 'motions'}, 'Coverage unit/denominator differs')
             for name, cell in row['metrics'].items():
-                counters = self.root_value_checks if name in ROOT_METRICS else self.value_checks
+                counters = self.endpoint_value_checks if name in ENDPOINT_METRICS else (
+                           self.root_value_checks if name in ROOT_METRICS else self.value_checks)
                 exact_keys(cell, {'value', 'unit', 'ci95', 'n_motions'}, 'metric cell')
                 number(cell['value'], 'full-window value')
                 require(cell['value'] >= 0 and cell['unit'] == self.data['metrics'][name]['unit']
@@ -325,7 +362,8 @@ class Audit:
                 bounds(delta['ci95'], 'paired interval')
                 require(delta['unit'] == self.data['metrics'][metric]['unit'] and delta['n_motions'] == motions,
                         'Paired interval units/denominator differ')
-                counters = self.root_value_checks if metric in ROOT_METRICS else self.value_checks
+                counters = self.endpoint_value_checks if metric in ENDPOINT_METRICS else (
+                           self.root_value_checks if metric in ROOT_METRICS else self.value_checks)
                 counters['paired_delta_scalars'] += 3
                 values = c['paired_motion_values'][metric]
                 require(len(values) == len({x['motion_id'] for x in values}) == motions,
@@ -523,25 +561,38 @@ class Audit:
                 self.provenance_checks['source_fields'] += 1
         require(self.provenance_checks['source_fields'] == 760, 'Incomplete scientific provenance source comparison')
         completion = read_completion(self.completion_source) if self.completion_source else None
-        require((self.data['schema_version'] in (4, 5)) == (completion is not None), 'Completion source/schema differs')
+        require((self.data['schema_version'] in (4, 5, 6)) == (completion is not None), 'Completion source/schema differs')
         expected = project(parse_json(raw), identities, publication=not self.preview, completion=completion)
         if self.data['schema_version'] == 4:
             protect_baseline(expected, self.data)
         if self.has_root:
-            require(self.root_source is not None, 'Schema 5 requires the reviewed root JSON/CSV source comparison')
+            require(self.root_source is not None, 'Root metrics require the reviewed six-error JSON/CSV source comparison')
             adapter = reviewed_root_adapter(self.root_adapter)
-            protect_baseline(expected, self.data, root_metric_units=adapter.root_metric_units,
-                top_fields=adapter.public_top_fields, row_fields=adapter.public_row_fields,
-                method_fields=adapter.public_method_fields)
+            if not self.has_endpoint:
+                protect_baseline(expected, self.data, root_metric_units=adapter.root_metric_units,
+                    top_fields=adapter.public_top_fields, row_fields=adapter.public_row_fields,
+                    method_fields=adapter.public_method_fields)
             expected = prepare_schema5(expected, self.root_source, self.root_adapter, not self.preview)
             require(self.data['root_extension'] == expected['root_extension'] and
                     self.data['methods']['root'] == expected['methods']['root'], 'Root source method/identity differs')
         else:
             require(self.root_source is None, 'Root source requires a schema-5 public projection')
+        if self.has_endpoint:
+            require(self.endpoint_source is not None, 'Schema 6 requires the reviewed endpoint JSON/CSV source comparison')
+            adapter = reviewed_endpoint_adapter(self.endpoint_adapter)
+            protect_schema5(expected, self.data, endpoint_metric_units=adapter.endpoint_metric_units,
+                top_fields=adapter.public_top_fields, row_fields=adapter.public_row_fields,
+                method_fields=adapter.public_method_fields)
+            expected = prepare_schema6(expected, self.endpoint_source, self.endpoint_adapter, not self.preview)
+            require(same_json(self.data['endpoint_extension'], expected['endpoint_extension']) and
+                    same_json(self.data['methods']['root_endpoint'], expected['methods']['root_endpoint']),
+                    'Endpoint source definition/method/identity differs')
+        else:
+            require(self.endpoint_source is None, 'Endpoint source requires a schema-6 public projection')
         for name in ('schema_version', 'publication_state', 'fullwindow_source_sha256', 'identity_map_sha256',
                      'counts', 'metrics', 'results', 'comparisons', 'phase', 'primary_comparison_ids',
                      'secondary_comparison_ids', 'completion_contract'):
-            require(self.data[name] == expected[name], 'Projection differs from frozen source: ' + name)
+            require(same_json(self.data[name], expected[name]), 'Projection differs from frozen source: ' + name)
         if completion is not None:
             require(self.data['methods']['completion'] == expected['methods']['completion'],
                     'Completion definition differs from frozen public source')
@@ -549,6 +600,7 @@ class Audit:
         require(Path(self.source).read_bytes() == raw and Path(self.identities).read_bytes() == identity_raw,
                 'Private input changed during audit')
         self.root_source_verified = self.has_root
+        self.endpoint_source_verified = self.has_endpoint
 
     def privacy(self):
         for value in walk(self.data):
@@ -606,12 +658,16 @@ class Audit:
         require(manifest['fullwindow_source_sha256'] == self.data['fullwindow_source_sha256'] and
                 manifest['identity_map_sha256'] == IDENTITY_SHA and
                 manifest['completion_contract'] == self.data['completion_contract'], 'Manifest source closure differs')
-        if self.data['schema_version'] in (4, 5):
+        if self.data['schema_version'] in (4, 5, 6):
             require(manifest['completion_source_csv_sha256'] == COMPLETION_CSV_SHA,
                     'Manifest public completion CSV source identity differs')
         if self.has_root:
             require(manifest['root_extension'] == self.data['root_extension'] and
                     manifest['root_source_csv_sha256'] == ROOT_CSV_SHA, 'Manifest root JSON/CSV source closure differs')
+        if self.has_endpoint:
+            require(manifest['endpoint_extension'] == self.data['endpoint_extension'] and
+                    manifest['endpoint_source_csv_sha256'] == ENDPOINT_CSV_SHA,
+                    'Manifest endpoint JSON/CSV source closure differs')
         files = manifest['files']
         require(set(files) == self.publish_files - {'RELEASE_MANIFEST.json'}, 'Manifest file allowlist differs')
         for name, record in files.items():
@@ -646,13 +702,16 @@ class Audit:
                 self.link(value)
 
     def publication_gate(self):
-        if not self.preview and self.data['schema_version'] in (4, 5):
+        if not self.preview and self.data['schema_version'] in (4, 5, 6):
             require(self.source is not None and self.identities is not None and self.completion_source is not None and
                     'frozen_source_720_values_and_original_ID_mapping' in self.checked,
                     'Private framework publication eligibility requires the complete frozen source comparison')
         if self.has_root:
             require(self.root_source is not None and self.root_source_verified,
                     'Schema 5 requires the complete reviewed six-error JSON/CSV source comparison')
+        if self.has_endpoint:
+            require(self.endpoint_source is not None and self.endpoint_source_verified,
+                    'Schema 6 requires the complete reviewed endpoint JSON/CSV source comparison')
         if self.data['schema_version'] == 3:
             require(self.data['publication_state'] == (PREVIEW_STATE if self.preview else PUBLIC_STATE)
                     and self.data['completion_contract'] == COMPLETION_CONTRACT,
@@ -660,9 +719,10 @@ class Audit:
             for obj in self.data['results'] + self.data['comparisons']:
                 pending(obj['completion'])
         else:
-            expected_state = ((ROOT_PREVIEW_STATE if self.preview else ROOT_PUBLIC_STATE) if self.has_root else
+            expected_state = ((ENDPOINT_PREVIEW_STATE if self.preview else ENDPOINT_PUBLIC_STATE) if self.has_endpoint else
+                             (ROOT_PREVIEW_STATE if self.preview else ROOT_PUBLIC_STATE) if self.has_root else
                              (COMPLETION_PREVIEW_STATE if self.preview else COMPLETION_PUBLIC_STATE))
-            require(self.data['schema_version'] in (4, 5) and self.data['publication_state'] == expected_state and
+            require(self.data['schema_version'] in (4, 5, 6) and self.data['publication_state'] == expected_state and
                     self.data['completion_contract'] == {'status': 'verified', 'rule_version': CRITERION_ID,
                     'source_sha256': COMPLETION_SOURCE_SHA}, 'Only the frozen semantic completion contract is eligible')
 
@@ -673,14 +733,17 @@ class Audit:
                          ('canonical_csv_exports', self.exports), ('publication_file_allowlist', self.bundle),
                          ('privacy', self.privacy)]:
             self.check(name, fn)
-        if any(arg is not None for arg in (self.source, self.identities, self.completion_source, self.root_source)):
+        if any(arg is not None for arg in (self.source, self.identities, self.completion_source, self.root_source,
+                                         self.endpoint_source)):
             self.check('frozen_source_720_values_and_original_ID_mapping', self.sources)
         self.check('reviewed_completion_publication_gate', self.publication_gate)
         return {'ok': not self.errors, 'publication_allowed': not self.errors and not self.preview,
-            'completion_ready': not self.errors and self.data.get('schema_version') in (4, 5), 'preview_only': self.preview,
+            'completion_ready': not self.errors and self.data.get('schema_version') in (4, 5, 6), 'preview_only': self.preview,
             'schema_version': self.data.get('schema_version'), 'counts': self.data.get('counts'),
             'completion_status': self.data.get('completion_contract', {}).get('status'),
             'value_checks': self.value_checks, 'root_value_checks': self.root_value_checks,
+            'endpoint_value_checks': self.endpoint_value_checks,
+            'endpoint_source_compared': self.endpoint_source_verified,
             'root_source_compared': self.root_source_verified, 'provenance_checks': self.provenance_checks,
             'completion_checks': self.completion_checks,
             'source_compared': 'frozen_source_720_values_and_original_ID_mapping' in self.checked,
@@ -701,14 +764,22 @@ def main():
     parser.add_argument('--source-root', type=Path,
                         help='reviewed six-error public JSON with its SHA-bound sibling public episode CSV')
     parser.add_argument('--root-adapter', help='code-registered reviewed root adapter ID')
+    parser.add_argument('--source-endpoint', type=Path,
+                        help='reviewed endpoint JSON with its SHA-bound public_sevenerror_episodes.csv sibling')
+    parser.add_argument('--endpoint-adapter', help='code-registered reviewed endpoint adapter ID')
     parser.add_argument('--report', type=Path)
     args = parser.parse_args()
     try:
         require(not args.root_adapter or args.source_root, '--root-adapter requires --source-root')
+        require(not args.endpoint_adapter or args.source_endpoint, '--endpoint-adapter requires --source-endpoint')
+        if args.source_endpoint:
+            require(args.source_root is not None and args.source_completion is not None,
+                    '--source-endpoint requires the intact reviewed six-error and completion inputs')
+            reviewed_endpoint_adapter(args.endpoint_adapter)
         if args.source_root:
             reviewed_root_adapter(args.root_adapter)
         report = Audit(args.repo_root, args.preview, args.source_fullwindow, args.identity_map, args.source_completion,
-                       args.source_root, args.root_adapter).run()
+                       args.source_root, args.root_adapter, args.source_endpoint, args.endpoint_adapter).run()
     except (ValueError, TypeError, KeyError, IndexError, OSError) as error:
         report = {'ok': False, 'publication_allowed': False, 'errors': [str(error)]}
     report['framework'] = framework_status()

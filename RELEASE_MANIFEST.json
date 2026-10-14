@@ -1,6 +1,6 @@
 {
-  "schema_version": 5,
-  "public_data_sha256": "77c2729060bb0f052a3a38d602332bc45ed576d7a88c6dca6663f9b2c1f57870",
+  "schema_version": 6,
+  "public_data_sha256": "85d2136ba2d1b34fc894393428cc70e2996dc38d0966ad9f971a267bdab85c4c",
   "counts": {
     "episode_records": 180,
     "paired_cases": 90,
@@ -16,19 +16,19 @@
     "rule_version": "fall_recovery_terminal_tracking_v2",
     "source_sha256": "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f"
   },
-  "publication_state": "fullwindow_semantic_completion_root_metrics_published",
-  "generated_utc": "2026-10-14T15:08:38.982812+00:00",
+  "publication_state": "fullwindow_semantic_completion_root_endpoint_published",
+  "generated_utc": "2026-10-14T16:48:20.842909+00:00",
   "media_state": {
     "public_new_common40": 0,
     "public_new_extreme5": 0,
     "source_media_sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
   },
   "report_state": {
-    "version": 7,
-    "status": "V7已同步",
-    "native_version": 7,
-    "pdf_version": 7,
-    "docx_version": 7,
+    "version": 8,
+    "status": "V8已同步",
+    "native_version": 8,
+    "pdf_version": 8,
+    "docx_version": 8,
     "pdf_preview_pages": 15,
     "docx_preview_pages": null
   },
@@ -49,28 +49,28 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 17324,
-      "sha256": "7bd98bd3df1fdbdc75b85d6dd9a1ad6096068ddadd59f5ba62ba78b09113a9b7"
+      "bytes": 20197,
+      "sha256": "36e0557b9629400a28566f7f7ee4231419b3c41993cfdfd62bd7531d41810892"
     },
     "README.md": {
-      "bytes": 10365,
-      "sha256": "24f4d6f5b7879413c1270f49615e6dfb656e282562a85150d6ed3f2c5466bfa7"
+      "bytes": 12540,
+      "sha256": "50b469f82c8a61c599435c63d7f15ccd4a2d4700e5824cd4f58612e74db1fe7d"
     },
     "app.js": {
-      "bytes": 72867,
-      "sha256": "5bf0c3ed013f8ef086246a028d9498759b8144b88a274133113b0c22862fcdfe"
+      "bytes": 84854,
+      "sha256": "3e55b54b4f433c2e98577eab1a0611579cae0f0b06c64367b3df44026c6737f9"
     },
     "comparisons.csv": {
-      "bytes": 48515,
-      "sha256": "02aac1e0ce8d07e6f41740035ee20631ec55a7108a0d8af1cf5a42ca38e710ae"
+      "bytes": 49670,
+      "sha256": "3d3f959186fe9f9c90c5ce0e36f128e14a40e249d887cceaf9b9681b286d4197"
     },
     "data.json": {
-      "bytes": 898062,
-      "sha256": "77c2729060bb0f052a3a38d602332bc45ed576d7a88c6dca6663f9b2c1f57870"
+      "bytes": 949407,
+      "sha256": "85d2136ba2d1b34fc894393428cc70e2996dc38d0966ad9f971a267bdab85c4c"
     },
     "episodes.csv": {
-      "bytes": 162109,
-      "sha256": "b7c51612a98f1fa7f091279c7a99e7cfbb03b034899c83473c496023a0398cf8"
+      "bytes": 173946,
+      "sha256": "18ad30fc68fd3ff8fa4500c27110e638e4af1fe2a7a3fcde0d3e1d8df2e67513"
     },
     "favicon.svg": {
       "bytes": 279,
@@ -85,28 +85,28 @@
       "sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af"
     },
     "index.html": {
-      "bytes": 13733,
-      "sha256": "8f42a54cce785e7f880e5a0898fb6e41616997a671f3102c33f7aa1257fbf3f1"
+      "bytes": 14708,
+      "sha256": "438ddac9e19c1f6eb6937738928b943d7f1aab36cc621e88f5f6f5d01f5de7f7"
     },
     "media.json": {
       "bytes": 173,
       "sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
     },
     "scripts/source_contract.py": {
-      "bytes": 17585,
-      "sha256": "f2af7fc0d3036ec91998f6db66f6bc0fd42ce699a7cf08765ceab4928c214881"
+      "bytes": 33633,
+      "sha256": "016e11fee77c1c3371590d6e37d285e10a50c793323993e9c8ab4312cc5f9c36"
     },
     "scripts/update_snapshot.py": {
-      "bytes": 31339,
-      "sha256": "b0dd2f1abe4fdba468b957d43c4ca1fd604da56d661720888dea06207bce2401"
+      "bytes": 32889,
+      "sha256": "4667fbd4ca588337200a45907b718bfdcaa9477fd9ab843b8208a2036b690bca"
     },
     "scripts/verify_public.py": {
-      "bytes": 49923,
-      "sha256": "1e039501e91383fae647dabdaaed511a33d0806a0e7a1b59030fb0f6b32382a2"
+      "bytes": 55748,
+      "sha256": "e867bd3aebe94b85e5373481b2218d28bbe0f430381498aa1e7838a71d12236d"
     },
     "style.css": {
-      "bytes": 23277,
-      "sha256": "c7496974c4cdbb2943f98748bfa55f820eed51b97b977b4564d532c629bc4397"
+      "bytes": 28524,
+      "sha256": "38b208935fa426b2a1f3c2a9127f9e64f6df7a67d215f7a4257969a8815e5ef6"
     }
   },
   "completion_source_csv_sha256": "7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b",
@@ -119,5 +119,21 @@
     ],
     "window_label": "50 Hz 参考时刻对应的同刻根状态（来自原 200 Hz 轨迹）"
   },
-  "root_source_csv_sha256": "5f3706b8f5644d606432e0c1653a54b43f6f0bef4468b7a9cfc34e6b1765c257"
+  "root_source_csv_sha256": "5f3706b8f5644d606432e0c1653a54b43f6f0bef4468b7a9cfc34e6b1765c257",
+  "endpoint_extension": {
+    "status": "verified",
+    "source_sha256": "f932d85e4583544eeb942cd8eecf9804fda26dc849cc96d7d713f481044604f2",
+    "metrics": [
+      "root_endpoint_pos_mm"
+    ],
+    "definition": {
+      "unit": "mm",
+      "label": "根部终点位置误差",
+      "role": "endpoint_position_error",
+      "higher_is_better": false,
+      "sample_count": 1,
+      "window": "last_valid_same_time_reference_root_endpoint"
+    }
+  },
+  "endpoint_source_csv_sha256": "93aeea60a60c93b302b2e9bb035fe822841e42214f1b589dcd8c7c1ea22114b7"
 }

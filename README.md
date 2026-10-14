@@ -1,6 +1,6 @@
 # RP1 / G1 Robot Motion Benchmark
 
-RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全程身体、手腕与根部的位置、姿态六项误差。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试；motion 跟踪任务完成率依据几何、参考轨迹与有效末端证据单独报告。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
+RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全程身体、手腕与根部的位置、姿态六项误差，以及独立的根部终点位置误差。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试；motion 跟踪任务完成率依据几何、参考轨迹与有效末端证据单独报告。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
 
 ## 评测条件
 
@@ -22,7 +22,7 @@ RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全
 
 身体与手腕四项误差使用既有轨迹全部 **50 Hz 首次物理子步**评分样本，`motion_t=1..N_common−1`；`N_common` 为共同参考帧数。frame0 用于初始化，200 Hz 末端 hold 不增加评分样本。原四项评分窗口、数值与区间保持不变。
 
-根部两项使用原 200 Hz 物理轨迹中与 **50 Hz 参考时刻同刻**的根状态，完整保留有效参考帧 `1..N_common−1`，包含失控后样本，末后 hold 不计入。首个共同有效同刻样本 **0.02 s** 为固定 XY/yaw 对齐锚点，Z 不平移；随后不逐帧重新拟合。根位置为三维距离的全窗算术均值（mm）；根姿态将实际与参考 wxyz 四元数单位化，用同一固定 yaw 左乘实际姿态，再对相对姿态的最短旋转角取全窗算术均值（rad），保留 roll/pitch 误差，q 与 −q 等价。六项均为越低越好。
+根部两项使用原 200 Hz 物理轨迹中与 **50 Hz 参考时刻同刻**的根状态，完整保留有效参考帧 `1..N_common−1`，包含失控后样本，末后 hold 不计入。首个共同有效同刻样本 **0.02 s** 为固定 XY/yaw 对齐锚点，Z 不平移；随后不逐帧重新拟合。根位置为三维距离的全窗算术均值（mm）；根姿态将实际与参考 wxyz 四元数单位化，用同一固定 yaw 左乘实际姿态，再对相对姿态的最短旋转角取全窗算术均值（rad），保留 roll/pitch 误差，q 与 −q 等价。位置误差按 mm 保留三位小数，姿态按 rad 保留四位；数值越低越好。显示精度下并列仅表示显示值相同，配对差异及其区间按未舍入来源解释，不由显示名次推断。
 
 | 组 / 指标 | RP1 | G1 | RP1−G1 | 95% 配对区间 | 单位 |
 | --- | ---: | ---: | ---: | --- | --- |
@@ -42,6 +42,20 @@ RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全
 Common40 的身体、手腕四项误差与根姿态误差均值为 RP1 较低，配对差值区间均位于零以下；根位置均值为 RP1 较低，但差值区间跨零。Extreme5 的身体与手腕位置均值为 G1 较低，身体、手腕、根部的姿态误差与根位置误差均值为 RP1 较低；仅手腕姿态差值区间位于零以下，其余五项跨零。三个敏感性组各以 5 个动作为统计单位，身体与手腕四项差值区间均跨零；名义重复、根初态扰动的根姿态区间位于零以下，部署敏感性的根位置区间位于零以上，其余根部区间跨零。
 
 统计先在同动作的完整相同 seed 集内平均，再对动作等权；95% 区间采用 10,000 次配对动作 bootstrap。完整均值、区间、逐回合数值与评分窗口见[公开 JSON](data.json)及[评测说明](DATA_PROVENANCE.md)。
+
+## 根部终点位置误差
+
+`root_endpoint_pos_mm` 使用每回合最后合法参考时刻 **m=N_common−1** 的世界根 XYZ，与参考同刻取样；每回合 **1 个终点样本**。沿用首个共同有效同刻样本 **0.02 s** 的固定 XY/yaw 对齐，Z 保持绝对值，末后 **20 ms hold** 排除。失败后仍保留合法末点，完成标签不用于筛掉或重判终点记录。 此项描述单个末端的空间偏差，与六项全程均值分开报告。
+
+| 数据组 | 动作 N | RP1 均值 [95% 区间] | G1 均值 [95% 区间] | RP1−G1 [95% 配对区间] | 单位 |
+| --- | ---: | --- | --- | --- | --- |
+| Common40 主组 | 40 | 1384.994 [1015.245, 1799.709] | 1671.610 [1259.900, 2139.424] | -286.616 [-624.173, 39.947] | mm |
+| Extreme5 主组 | 5 | 910.962 [665.976, 1240.754] | 1054.553 [750.898, 1527.027] | -143.591 [-313.427, -2.892] | mm |
+| 部署敏感性 | 5 | 1439.810 [537.187, 2342.433] | 1149.236 [355.107, 1943.365] | 290.574 [36.770, 544.378] | mm |
+| 名义重复 | 5 | 1529.744 [384.028, 3044.259] | 1023.525 [232.239, 1855.871] | 506.219 [-459.103, 1560.896] | mm |
+| 根初态扰动 | 5 | 1325.266 [440.389, 2245.413] | 1159.723 [355.828, 1963.618] | 165.543 [-415.809, 709.689] | mm |
+
+Common40 终点误差均值为 RP1 较低，但配对差值区间跨零。Extreme5 区间位于零以下，支持本组 RP1 终点误差较低；双方动作完成率仍为 0%，终点偏差与任务结局分别报告。部署敏感性的区间位于零以上，支持该条件下 G1 较低；名义重复与根初态扰动的区间跨零。
 
 ## Motion 跟踪任务完成率
 
@@ -67,15 +81,17 @@ Common40 的身体、手腕四项误差与根姿态误差均值为 RP1 较低，
 
 ## 数据与报告
 
-- [公开配对结果 JSON](data.json)：190 条记录，六项全程误差及语义任务完成率。
-- [逐回合 CSV](episodes.csv)：180 条机器人回合。
-- [聚合比较 CSV](comparisons.csv)：10 条机器人聚合记录。
+- [公开配对结果 JSON](data.json)：190 条记录，六项全程误差、根部终点位置误差及语义任务完成率。
+- [逐回合 CSV](episodes.csv)：180 条机器人回合、46 列。
+- [聚合比较 CSV](comparisons.csv)：10 条机器人聚合记录、55 列。
 - 硬件模型与控制参数：[JSON](hardware.json) / [CSV](hardware.csv)。
 - [条件、指标与结果分析](DATA_PROVENANCE.md)。
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)。
 - [新公开视频索引](media.json)：当前 0/40。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。《RP1与G1全程跟踪精度与动作完成率》**V7 已同步**，正文、PDF 与 DOCX 均已更新到原地址，包含六项全程误差与任务完成率。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。《RP1与G1全程跟踪精度与动作完成率》**V8 已同步**，正文、PDF 与 DOCX 均已更新到原地址，包含六项全程误差、独立根部终点位置误差与任务完成率。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+
+共同失败动作与 Extreme5 已列为后续复测重录范围；本版继续采用当前冻结结果。
 
 ## 本地预览
 
@@ -87,13 +103,14 @@ python3 -m http.server 8080 --bind 127.0.0.1
 
 ## 可重复更新
 
-从冻结的六项全程误差与任务完成率公共科学输入、私有身份映射生成公开字段投影，调用参数以发布脚本 `--help` 为准。
+从冻结的六项全程误差、根部终点位置误差与任务完成率公共科学输入、私有身份映射生成公开字段投影，调用参数以发布脚本 `--help` 为准。
 
 ```sh
 python3 scripts/update_snapshot.py \
   --fullwindow-source /path/to/archived/public_fullwindow.json \
   --source-completion /path/to/reviewed/public_completion_fullwindow.json \
   --source-root /path/to/reviewed/public_sixerror_completion.json \
+  --source-endpoint /path/to/reviewed/public_sevenerror_completion.json \
   --identity-map /path/to/private/identity-map.json \
   --output-dir .private/publication_staging \
   --publication
@@ -103,13 +120,14 @@ python3 scripts/verify_public.py \
   --source-fullwindow /path/to/archived/public_fullwindow.json \
   --source-completion /path/to/reviewed/public_completion_fullwindow.json \
   --source-root /path/to/reviewed/public_sixerror_completion.json \
+  --source-endpoint /path/to/reviewed/public_sevenerror_completion.json \
   --identity-map /path/to/private/identity-map.json
 ```
 
-`--source-completion` 的 JSON 同目录须包含 `public_completion_episodes.csv`，`--source-root` 的 JSON 同目录须包含 `public_sixerror_episodes.csv`；两份 CSV 分别按冻结 SHA256 核验，摘要见来源附录。历史全程输入保留为四项误差的窗口与回归锚；根部两项由 `--source-root` 独立接入。
+当前正式复合科学来源为 `public_sevenerror_completion.json` 与 `public_sevenerror_episodes.csv`；文件包含六项全程误差、独立终点值、每机器人均值与区间、配对差值区间及完成率。终点每回合一个样本，原六项全程窗口、数值、CI 与完成率保持冻结来源。各输入的冻结 SHA256 见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)。schema 6 公开输出为 `data.json`、`episodes.csv`、`comparisons.csv`，自身摘要见发布清单。JSON 与 CSV 保留科学协议、执行协议、配置和来源摘要；原未记录字段为 null。私有身份映射不进入公开目录。
 
-生成目录包含三份公开数据文件。用于验证和发布的 `.private/publication_candidate` 须包含完整 **18 个白名单公开文件**及更新后的 `RELEASE_MANIFEST.json`，包括 `scripts/source_contract.py`；生成目录本身不构成完整发布包。`--root-adapter` 可省略，默认使用已注册的 `public_six_fullwindow_errors_v3`。
+`--source-completion`、`--source-root` 与 `--source-endpoint` 的 JSON 同目录分别须包含 `public_completion_episodes.csv`、`public_sixerror_episodes.csv` 与 `public_sevenerror_episodes.csv`，各自按冻结 SHA256 核验。历史全程、完成率及根部输入保留原有回归锚，终点独立接入。`--endpoint-adapter` 可省略，默认使用已注册的 `public_root_endpoint_completion_v8`。
 
-当前复合科学来源为 `public_sixerror_completion.json` 与 `public_sixerror_episodes.csv`，包含六项误差及其均值与区间、语义完成标签、完成比例、分母与配对身份。新增根部两项直接读取冻结结果，既有四项误差及完成率保持原值；科学来源摘要见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)。公开输出为 `data.json`、`episodes.csv`、`comparisons.csv`，自身摘要见发布清单。JSON 与 CSV 保留原科学协议、执行协议、配置和来源摘要；原未记录字段为 null。私有身份映射不进入公开目录。
+生成目录包含三份公开数据文件。验证与发布的完整候选须包含 **18 个白名单公开文件**及更新后的 `RELEASE_MANIFEST.json`，包括 `scripts/source_contract.py`；三份生成数据本身不构成完整发布包。
 
 公开投影经独立核验及静态、桌面和手机浏览器 QA 后发布。科学来源与公开投影的摘要分别记录，报告云端更新单独核验。GitHub Pages 发布源为 `main / (root)`。

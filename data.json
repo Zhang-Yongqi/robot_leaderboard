@@ -1,6 +1,6 @@
 {
-  "schema_version": 5,
-  "publication_state": "fullwindow_semantic_completion_root_metrics_published",
+  "schema_version": 6,
+  "publication_state": "fullwindow_semantic_completion_root_endpoint_published",
   "fullwindow_source_sha256": "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f",
   "identity_map_sha256": "d7c902304aba5ca0588275b4b366f7bb799ee6e5a243c1bc8866ad059fb12aa4",
   "counts": {
@@ -40,6 +40,11 @@
     "full_root_ori_rad": {
       "unit": "rad",
       "label": "全程根姿态误差",
+      "higher_is_better": false
+    },
+    "root_endpoint_pos_mm": {
+      "unit": "mm",
+      "label": "根部终点位置误差",
       "higher_is_better": false
     }
   },
@@ -265,6 +270,15 @@
             1.3447855667173392
           ],
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1439.8099786222633,
+          "unit": "mm",
+          "ci95": [
+            537.1871776900715,
+            2342.4327795544555
+          ],
+          "n_motions": 5
         }
       }
     },
@@ -487,6 +501,15 @@
           "ci95": [
             0.07532538373910987,
             1.3378576140395328
+          ],
+          "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1149.236279649723,
+          "unit": "mm",
+          "ci95": [
+            355.10716179105395,
+            1943.365397508392
           ],
           "n_motions": 5
         }
@@ -1378,6 +1401,15 @@
             0.6623685856588191
           ],
           "n_motions": 40
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1384.9940423528615,
+          "unit": "mm",
+          "ci95": [
+            1015.2454369182688,
+            1799.70931949613
+          ],
+          "n_motions": 40
         }
       }
     },
@@ -2267,6 +2299,15 @@
             0.8006114431185112
           ],
           "n_motions": 40
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1671.6101883299366,
+          "unit": "mm",
+          "ci95": [
+            1259.8999133351988,
+            2139.4242903390086
+          ],
+          "n_motions": 40
         }
       }
     },
@@ -2493,6 +2534,15 @@
             1.2378182694725604
           ],
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1529.743882339952,
+          "unit": "mm",
+          "ci95": [
+            384.02768067058133,
+            3044.2592643603357
+          ],
+          "n_motions": 5
         }
       }
     },
@@ -2717,6 +2767,15 @@
           "ci95": [
             0.07454875829779696,
             1.3419788442642184
+          ],
+          "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1023.5248651087256,
+          "unit": "mm",
+          "ci95": [
+            232.2388299972102,
+            1855.8705132098644
           ],
           "n_motions": 5
         }
@@ -2947,6 +3006,15 @@
             1.322438666413123
           ],
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1325.2657581552212,
+          "unit": "mm",
+          "ci95": [
+            440.38890771142525,
+            2245.4133789696016
+          ],
+          "n_motions": 5
         }
       }
     },
@@ -3175,6 +3243,15 @@
             1.343391128399522
           ],
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1159.7229386064203,
+          "unit": "mm",
+          "ci95": [
+            355.8278180353187,
+            1963.6180591775214
+          ],
+          "n_motions": 5
         }
       }
     },
@@ -3254,6 +3331,12 @@
         "full_root_ori_rad": {
           "value": 1.9598899762719066,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 6027.00221969102,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -3354,6 +3437,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1169.5668515537618,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -3450,6 +3539,12 @@
         "full_root_ori_rad": {
           "value": 0.0765245335626393,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 665.2688500323899,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -3550,6 +3645,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2465.751967661791,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -3646,6 +3747,12 @@
         "full_root_ori_rad": {
           "value": 0.08754748440021248,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1762.3035412155318,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -3746,6 +3853,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 4555.620944283469,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -3842,6 +3955,12 @@
         "full_root_ori_rad": {
           "value": 0.06017787304260653,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1444.9012554422043,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -3942,6 +4061,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 364.12332611586777,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -4038,6 +4163,12 @@
         "full_root_ori_rad": {
           "value": 0.2835798825031795,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 711.4560731981617,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -4138,6 +4269,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1127.095474213112,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -4234,6 +4371,12 @@
         "full_root_ori_rad": {
           "value": 0.49325568586141544,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2088.6069893079875,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -4334,6 +4477,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 5797.205113096976,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -4430,6 +4579,12 @@
         "full_root_ori_rad": {
           "value": 0.07268337819521906,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 488.15699137441186,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -4530,6 +4685,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3894.0146490196266,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -4626,6 +4787,12 @@
         "full_root_ori_rad": {
           "value": 0.08984005223182202,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1062.42297605894,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -4726,6 +4893,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 727.8030638786254,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -4822,6 +4995,12 @@
         "full_root_ori_rad": {
           "value": 1.479045601279915,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1485.5375560351465,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -4922,6 +5101,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 916.3617351894633,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -5018,6 +5203,12 @@
         "full_root_ori_rad": {
           "value": 2.0521434737431035,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2321.1602732799793,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -5118,6 +5309,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3518.596017180095,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -5214,6 +5411,12 @@
         "full_root_ori_rad": {
           "value": 2.0101920625970866,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2601.378875337248,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -5314,6 +5517,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3983.4690118647914,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -5410,6 +5619,12 @@
         "full_root_ori_rad": {
           "value": 1.6473149094045443,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2998.6937189422865,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -5510,6 +5725,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1715.2192784376075,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -5606,6 +5827,12 @@
         "full_root_ori_rad": {
           "value": 0.09785284472942743,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 226.07233012899238,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -5706,6 +5933,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1028.6382207402107,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -5802,6 +6035,12 @@
         "full_root_ori_rad": {
           "value": 0.07505106310587722,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 753.3453590799544,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -5902,6 +6141,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 227.2647569013966,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -5998,6 +6243,12 @@
         "full_root_ori_rad": {
           "value": 0.0904971509189985,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1078.0803067926215,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -6098,6 +6349,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 561.6359980671456,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -6194,6 +6451,12 @@
         "full_root_ori_rad": {
           "value": 0.08857705467245776,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1801.1108376562029,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -6294,6 +6557,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2068.426921700693,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -6390,6 +6659,12 @@
         "full_root_ori_rad": {
           "value": 0.10520276417969879,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 327.64347657188137,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -6490,6 +6765,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 254.51997592527286,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -6586,6 +6867,12 @@
         "full_root_ori_rad": {
           "value": 0.06805397226959865,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 851.7542476707258,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -6686,6 +6973,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 449.218674374946,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -6782,6 +7075,12 @@
         "full_root_ori_rad": {
           "value": 0.06754167122916907,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1435.6687890305413,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -6882,6 +7181,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 389.46188426712604,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -6978,6 +7283,12 @@
         "full_root_ori_rad": {
           "value": 0.12501635169731462,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3372.438548525993,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -7078,6 +7389,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 785.0143360699575,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -7174,6 +7491,12 @@
         "full_root_ori_rad": {
           "value": 0.06317952192934026,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 667.2115426481989,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -7274,6 +7597,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1900.122512888209,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -7370,6 +7699,12 @@
         "full_root_ori_rad": {
           "value": 0.3273595218786215,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1812.452273805718,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -7470,6 +7805,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 724.4498036313054,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -7566,6 +7907,12 @@
         "full_root_ori_rad": {
           "value": 0.06280753630093565,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 461.3570575626986,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -7666,6 +8013,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1049.0607645715486,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -7762,6 +8115,12 @@
         "full_root_ori_rad": {
           "value": 0.0766282546118728,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2171.038352352201,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -7862,6 +8221,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 383.46350098633854,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -7958,6 +8323,12 @@
         "full_root_ori_rad": {
           "value": 0.4134282291675173,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 4043.1592367289395,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -8058,6 +8429,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1401.3234424486327,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -8154,6 +8531,12 @@
         "full_root_ori_rad": {
           "value": 0.048488805791364366,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 573.4541965351775,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -8254,6 +8637,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1261.0359278651842,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -8350,6 +8739,12 @@
         "full_root_ori_rad": {
           "value": 0.053836390245442296,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2112.332821447628,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -8450,6 +8845,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 4500.043864054015,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -8546,6 +8947,12 @@
         "full_root_ori_rad": {
           "value": 2.1236820867029125,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3686.213987002706,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -8646,6 +9053,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1980.572006835291,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -8742,6 +9155,12 @@
         "full_root_ori_rad": {
           "value": 2.074431755905894,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3977.399718957273,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -8842,6 +9261,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1611.4739547159463,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -8938,6 +9363,12 @@
         "full_root_ori_rad": {
           "value": 1.6961832121817935,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3488.273903100713,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -9038,6 +9469,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1664.075963683518,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -9134,6 +9571,12 @@
         "full_root_ori_rad": {
           "value": 0.05705164528954539,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 694.1321464786763,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -9234,6 +9677,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 753.4370227069278,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -9330,6 +9779,12 @@
         "full_root_ori_rad": {
           "value": 0.05111467301411731,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 57.08876595611324,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -9430,6 +9885,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1586.9895243745982,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -9526,6 +9987,12 @@
         "full_root_ori_rad": {
           "value": 0.062265054603998296,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 66.66585022808762,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -9626,6 +10093,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 739.6177941700298,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -9722,6 +10195,12 @@
         "full_root_ori_rad": {
           "value": 0.04557491132561746,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 697.6126068875113,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -9822,6 +10301,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1099.0163176470132,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -9918,6 +10403,12 @@
         "full_root_ori_rad": {
           "value": 0.04320117428813623,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 378.45005343456563,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -10018,6 +10509,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 285.5465163285793,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -10114,6 +10611,12 @@
         "full_root_ori_rad": {
           "value": 0.06033491609430077,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 502.191756777879,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -10214,6 +10717,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 453.2121771581886,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -10310,6 +10819,12 @@
         "full_root_ori_rad": {
           "value": 0.05710779166410084,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 442.5849696939122,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -10410,6 +10925,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 302.457921583073,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -10506,6 +11027,12 @@
         "full_root_ori_rad": {
           "value": 0.05643845208744601,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 567.0084143557401,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -10606,6 +11133,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 264.3249926752533,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -10702,6 +11235,12 @@
         "full_root_ori_rad": {
           "value": 0.06353426690690218,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1656.1726415237285,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -10802,6 +11341,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1710.4527224854337,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -10898,6 +11443,12 @@
         "full_root_ori_rad": {
           "value": 0.048867114742433354,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 793.6557397229461,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -10998,6 +11549,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 243.02504538828111,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -11094,6 +11651,12 @@
         "full_root_ori_rad": {
           "value": 0.4891400868641096,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2235.0269121298047,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -11194,6 +11757,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2174.4618744300797,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -11290,6 +11859,12 @@
         "full_root_ori_rad": {
           "value": 0.10121660743037506,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 897.8494144221916,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -11390,6 +11965,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 108.9538708607418,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -11486,6 +12067,12 @@
         "full_root_ori_rad": {
           "value": 0.05986441025246549,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 329.88932640579725,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -11586,6 +12173,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2246.8877073527156,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -11682,6 +12275,12 @@
         "full_root_ori_rad": {
           "value": 1.8918337820445639,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2823.1633143869926,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -11782,6 +12381,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1572.0618542928628,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -11878,6 +12483,12 @@
         "full_root_ori_rad": {
           "value": 0.05174897030720427,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 185.01411536513018,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -11978,6 +12589,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 371.922901713617,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -12074,6 +12691,12 @@
         "full_root_ori_rad": {
           "value": 0.49325568586141544,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2088.6069893079875,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -12174,6 +12797,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2088.6069893079875,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -12270,6 +12899,12 @@
         "full_root_ori_rad": {
           "value": 0.49325568586141544,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2088.6069893079875,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -12370,6 +13005,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2321.1602732799793,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -12466,6 +13107,12 @@
         "full_root_ori_rad": {
           "value": 2.0521434737431035,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2321.1602732799793,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -12566,6 +13213,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2321.1602732799793,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -12662,6 +13315,12 @@
         "full_root_ori_rad": {
           "value": 0.09785284472942743,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 226.07233012899238,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -12762,6 +13421,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 226.07233012899238,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -12858,6 +13523,12 @@
         "full_root_ori_rad": {
           "value": 0.09785284472942743,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 226.07233012899238,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -12958,6 +13629,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 227.2647569013966,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -13054,6 +13731,12 @@
         "full_root_ori_rad": {
           "value": 0.07723735914941228,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 227.2647569013966,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -13154,6 +13837,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 227.2647569013966,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -13250,6 +13939,12 @@
         "full_root_ori_rad": {
           "value": 0.06020811423036641,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 254.51997592527286,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -13350,6 +14045,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 254.51997592527286,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -13446,6 +14147,12 @@
         "full_root_ori_rad": {
           "value": 0.06020811423036641,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 254.51997592527286,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -13546,6 +14253,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1049.0607645715486,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -13642,6 +14355,12 @@
         "full_root_ori_rad": {
           "value": 0.4423080508101976,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1049.0607645715486,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -13742,6 +14461,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1049.0607645715486,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -13838,6 +14563,12 @@
         "full_root_ori_rad": {
           "value": 1.9011940407548225,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 4500.043864054015,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -13938,6 +14669,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 4500.043864054015,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -14034,6 +14771,12 @@
         "full_root_ori_rad": {
           "value": 1.9011940407548225,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 4500.043864054015,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -14134,6 +14877,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1664.075963683518,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -14230,6 +14979,12 @@
         "full_root_ori_rad": {
           "value": 0.06950578094329342,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1664.075963683518,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -14330,6 +15085,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1664.075963683518,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -14426,6 +15187,12 @@
         "full_root_ori_rad": {
           "value": 0.05111467301411731,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 57.08876595611324,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -14526,6 +15293,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 57.08876595611324,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -14622,6 +15395,12 @@
         "full_root_ori_rad": {
           "value": 0.05111467301411731,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 57.08876595611324,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -14722,6 +15501,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 378.45005343456563,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -14818,6 +15603,12 @@
         "full_root_ori_rad": {
           "value": 0.04320117428813623,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 378.45005343456563,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -14918,6 +15709,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 378.45005343456563,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -15014,6 +15811,12 @@
         "full_root_ori_rad": {
           "value": 0.49259685620834426,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2119.2752886932317,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -15114,6 +15917,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2190.7088262624916,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -15210,6 +16019,12 @@
         "full_root_ori_rad": {
           "value": 0.49448656560199383,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2080.127436457281,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -15310,6 +16125,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2053.216950504301,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -15406,6 +16227,12 @@
         "full_root_ori_rad": {
           "value": 0.4949073211435273,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2053.8035623431138,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -15506,6 +16333,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2353.3828985047376,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -15602,6 +16435,12 @@
         "full_root_ori_rad": {
           "value": 2.053364676923184,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2312.7561271016175,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -15702,6 +16541,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2315.4717698408,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -15798,6 +16643,12 @@
         "full_root_ori_rad": {
           "value": 2.059803608482952,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2364.0777799955567,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -15898,6 +16749,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2316.5996960475,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -15994,6 +16851,12 @@
         "full_root_ori_rad": {
           "value": 0.09881793908060134,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 513.3959953395433,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -16094,6 +16957,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1182.1727713336236,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -16190,6 +17059,12 @@
         "full_root_ori_rad": {
           "value": 0.10029236983744087,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2351.3877173215587,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -16290,6 +17165,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 255.22844853022747,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -16386,6 +17267,12 @@
         "full_root_ori_rad": {
           "value": 0.09816239313634817,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 469.4258754118261,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -16486,6 +17373,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 50.96852507499184,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -16582,6 +17475,12 @@
         "full_root_ori_rad": {
           "value": 0.07728109335048386,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 162.10305802516407,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -16682,6 +17581,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 161.3967583335311,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -16778,6 +17683,12 @@
         "full_root_ori_rad": {
           "value": 0.07741212057536961,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 165.49008645276123,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -16878,6 +17789,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 203.23576163685132,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -16974,6 +17891,12 @@
         "full_root_ori_rad": {
           "value": 0.06031980247904026,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 299.9925958595274,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -17074,6 +17997,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 254.91463317266306,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -17170,6 +18099,12 @@
         "full_root_ori_rad": {
           "value": 0.060162190263227965,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 256.53140987306307,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -17270,6 +18205,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 254.42121043506387,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -17366,6 +18307,12 @@
         "full_root_ori_rad": {
           "value": 0.06020399071249732,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 252.9882826094767,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -17466,6 +18413,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1190.438375987892,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -17562,6 +18515,12 @@
         "full_root_ori_rad": {
           "value": 0.4415144900445233,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1190.0471532770996,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -17662,6 +18621,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1101.228935897242,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -17758,6 +18723,12 @@
         "full_root_ori_rad": {
           "value": 0.4450059609297933,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1434.978972053847,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -17858,6 +18829,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1070.9628727411975,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -17954,6 +18931,12 @@
         "full_root_ori_rad": {
           "value": 2.159189644399975,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 3788.338379373061,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -18054,6 +19037,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1553.79199709847,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -18150,6 +19139,12 @@
         "full_root_ori_rad": {
           "value": 2.0298626477047104,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2222.6135701455787,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -18250,6 +19245,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 5023.583004164952,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -18346,6 +19347,12 @@
         "full_root_ori_rad": {
           "value": 2.0449492964438827,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2255.0166602430177,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -18446,6 +19453,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2126.2035121496074,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -18542,6 +19555,12 @@
         "full_root_ori_rad": {
           "value": 0.06952086704799405,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 2135.620705493678,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -18642,6 +19661,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1964.6862183676958,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -18738,6 +19763,12 @@
         "full_root_ori_rad": {
           "value": 0.06983706173340108,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1811.0493048467063,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -18838,6 +19869,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1752.0511006263102,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -18934,6 +19971,12 @@
         "full_root_ori_rad": {
           "value": 0.05134082749623033,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 129.48498501818037,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -19034,6 +20077,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 105.62604656658401,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -19130,6 +20179,12 @@
         "full_root_ori_rad": {
           "value": 0.05106588267236242,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 172.03494494113312,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -19230,6 +20285,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 81.11263833393177,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -19326,6 +20387,12 @@
         "full_root_ori_rad": {
           "value": 0.05112796769507432,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 207.0817768735474,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -19426,6 +20493,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 346.9329821335017,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -19522,6 +20595,12 @@
         "full_root_ori_rad": {
           "value": 0.04326968869207054,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 364.70917762990916,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -19622,6 +20701,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 377.171375478859,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -19720,6 +20805,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 341.411892085465,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -19816,6 +20907,12 @@
         "full_root_ori_rad": {
           "value": 0.043268807629928525,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 385.46737235306404,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -20059,6 +21156,15 @@
             1.1675062829817326
           ],
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 910.9616164751933,
+          "unit": "mm",
+          "ci95": [
+            665.9763420377287,
+            1240.7541821544103
+          ],
+          "n_motions": 5
         }
       }
     },
@@ -20283,6 +21389,15 @@
             1.2202367282742355
           ],
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1054.5528266140975,
+          "unit": "mm",
+          "ci95": [
+            750.897541470223,
+            1527.0267086566046
+          ],
+          "n_motions": 5
         }
       }
     },
@@ -20362,6 +21477,12 @@
         "full_root_ori_rad": {
           "value": 1.2257686546169981,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 705.81118787956,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -20462,6 +21583,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 940.4349639349158,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -20558,6 +21685,12 @@
         "full_root_ori_rad": {
           "value": 0.7518160377793617,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 708.7391705706771,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -20658,6 +21791,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 922.4590077595243,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -20754,6 +21893,12 @@
         "full_root_ori_rad": {
           "value": 1.2508969351064785,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1995.31980292581,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -20854,6 +21999,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 649.4729812395059,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -20950,6 +22101,12 @@
         "full_root_ori_rad": {
           "value": 1.2797821797396416,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 748.5507559839733,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -21050,6 +22207,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 632.9120104861533,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -21148,6 +22311,12 @@
           "unit": "rad",
           "ci95": null,
           "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1000.3790518565534,
+          "unit": "mm",
+          "ci95": null,
+          "n_motions": 1
         }
       },
       "fullwindow": {
@@ -21244,6 +22413,12 @@
         "full_root_ori_rad": {
           "value": 0.8472102908994491,
           "unit": "rad",
+          "ci95": null,
+          "n_motions": 1
+        },
+        "root_endpoint_pos_mm": {
+          "value": 1523.4932828097812,
+          "unit": "mm",
           "ci95": null,
           "n_motions": 1
         }
@@ -21698,6 +22873,15 @@
             -0.020641479413989226
           ],
           "unit": "rad",
+          "n_motions": 40
+        },
+        "root_endpoint_pos_mm": {
+          "value": -286.6161459770751,
+          "ci95": [
+            -624.173243800247,
+            39.947475418254214
+          ],
+          "unit": "mm",
           "n_motions": 40
         }
       },
@@ -24113,6 +25297,408 @@
             ],
             "repeats_per_robot": 1
           }
+        ],
+        "root_endpoint_pos_mm": [
+          {
+            "motion_id": "dance1_subject1",
+            "rp1": 1049.0607645715486,
+            "g1": 2088.6069893079875,
+            "delta_rp1_minus_g1": -1039.546224736439,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "dance1_subject2",
+            "rp1": 2171.038352352201,
+            "g1": 5797.205113096976,
+            "delta_rp1_minus_g1": -3626.166760744775,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "dance1_subject3",
+            "rp1": 383.46350098633854,
+            "g1": 488.15699137441186,
+            "delta_rp1_minus_g1": -104.69349038807331,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "dance2_subject1",
+            "rp1": 4043.1592367289395,
+            "g1": 3894.0146490196266,
+            "delta_rp1_minus_g1": 149.14458770931287,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "dance2_subject2",
+            "rp1": 1401.3234424486327,
+            "g1": 1062.42297605894,
+            "delta_rp1_minus_g1": 338.9004663896926,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "dance2_subject3",
+            "rp1": 573.4541965351775,
+            "g1": 727.8030638786254,
+            "delta_rp1_minus_g1": -154.34886734344786,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "dance2_subject4",
+            "rp1": 1261.0359278651842,
+            "g1": 1485.5375560351465,
+            "delta_rp1_minus_g1": -224.50162816996226,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "dance2_subject5",
+            "rp1": 2112.332821447628,
+            "g1": 916.3617351894633,
+            "delta_rp1_minus_g1": 1195.9710862581646,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fallAndGetUp1_subject1",
+            "rp1": 4500.043864054015,
+            "g1": 2321.1602732799793,
+            "delta_rp1_minus_g1": 2178.883590774036,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fallAndGetUp1_subject4",
+            "rp1": 3686.213987002706,
+            "g1": 3518.596017180095,
+            "delta_rp1_minus_g1": 167.61796982261103,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fallAndGetUp1_subject5",
+            "rp1": 1980.572006835291,
+            "g1": 2601.378875337248,
+            "delta_rp1_minus_g1": -620.8068685019568,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fallAndGetUp2_subject2",
+            "rp1": 3977.399718957273,
+            "g1": 3983.4690118647914,
+            "delta_rp1_minus_g1": -6.069292907518502,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fallAndGetUp2_subject3",
+            "rp1": 1611.4739547159463,
+            "g1": 2998.6937189422865,
+            "delta_rp1_minus_g1": -1387.2197642263402,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fallAndGetUp3_subject1",
+            "rp1": 3488.273903100713,
+            "g1": 1715.2192784376075,
+            "delta_rp1_minus_g1": 1773.0546246631056,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fight1_subject2",
+            "rp1": 1664.075963683518,
+            "g1": 226.07233012899238,
+            "delta_rp1_minus_g1": 1438.0036335545255,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fight1_subject3",
+            "rp1": 694.1321464786763,
+            "g1": 1028.6382207402107,
+            "delta_rp1_minus_g1": -334.5060742615344,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fight1_subject5",
+            "rp1": 753.4370227069278,
+            "g1": 753.3453590799544,
+            "delta_rp1_minus_g1": 0.09166362697339991,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fightAndSports1_subject1",
+            "rp1": 4555.620944283469,
+            "g1": 6027.00221969102,
+            "delta_rp1_minus_g1": -1471.3812754075516,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fightAndSports1_subject4",
+            "rp1": 1444.9012554422043,
+            "g1": 1169.5668515537618,
+            "delta_rp1_minus_g1": 275.33440388844247,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "jumps1_subject1",
+            "rp1": 364.12332611586777,
+            "g1": 665.2688500323899,
+            "delta_rp1_minus_g1": -301.1455239165221,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "jumps1_subject2",
+            "rp1": 711.4560731981617,
+            "g1": 2465.751967661791,
+            "delta_rp1_minus_g1": -1754.295894463629,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "jumps1_subject5",
+            "rp1": 1127.095474213112,
+            "g1": 1762.3035412155318,
+            "delta_rp1_minus_g1": -635.2080670024197,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "run1_subject2",
+            "rp1": 57.08876595611324,
+            "g1": 227.2647569013966,
+            "delta_rp1_minus_g1": -170.17599094528336,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "run1_subject5",
+            "rp1": 1586.9895243745982,
+            "g1": 1078.0803067926215,
+            "delta_rp1_minus_g1": 508.9092175819767,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "run2_subject1",
+            "rp1": 66.66585022808762,
+            "g1": 561.6359980671456,
+            "delta_rp1_minus_g1": -494.970147839058,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "run2_subject4",
+            "rp1": 739.6177941700298,
+            "g1": 1801.1108376562029,
+            "delta_rp1_minus_g1": -1061.493043486173,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "sprint1_subject2",
+            "rp1": 697.6126068875113,
+            "g1": 2068.426921700693,
+            "delta_rp1_minus_g1": -1370.8143148131817,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "sprint1_subject4",
+            "rp1": 1099.0163176470132,
+            "g1": 327.64347657188137,
+            "delta_rp1_minus_g1": 771.3728410751319,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk1_subject1",
+            "rp1": 378.45005343456563,
+            "g1": 254.51997592527286,
+            "delta_rp1_minus_g1": 123.93007750929277,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk1_subject2",
+            "rp1": 285.5465163285793,
+            "g1": 851.7542476707258,
+            "delta_rp1_minus_g1": -566.2077313421465,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk1_subject5",
+            "rp1": 502.191756777879,
+            "g1": 449.218674374946,
+            "delta_rp1_minus_g1": 52.97308240293302,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk2_subject1",
+            "rp1": 453.2121771581886,
+            "g1": 1435.6687890305413,
+            "delta_rp1_minus_g1": -982.4566118723528,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk2_subject3",
+            "rp1": 442.5849696939122,
+            "g1": 389.46188426712604,
+            "delta_rp1_minus_g1": 53.12308542678619,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk2_subject4",
+            "rp1": 302.457921583073,
+            "g1": 3372.438548525993,
+            "delta_rp1_minus_g1": -3069.98062694292,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk3_subject1",
+            "rp1": 567.0084143557401,
+            "g1": 785.0143360699575,
+            "delta_rp1_minus_g1": -218.00592171421738,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk3_subject2",
+            "rp1": 264.3249926752533,
+            "g1": 667.2115426481989,
+            "delta_rp1_minus_g1": -402.8865499729456,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk3_subject3",
+            "rp1": 1656.1726415237285,
+            "g1": 1900.122512888209,
+            "delta_rp1_minus_g1": -243.9498713644805,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk3_subject4",
+            "rp1": 1710.4527224854337,
+            "g1": 1812.452273805718,
+            "delta_rp1_minus_g1": -101.99955132028435,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk3_subject5",
+            "rp1": 793.6557397229461,
+            "g1": 724.4498036313054,
+            "delta_rp1_minus_g1": 69.20593609164075,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk4_subject1",
+            "rp1": 243.02504538828111,
+            "g1": 461.3570575626986,
+            "delta_rp1_minus_g1": -218.3320121744175,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          }
         ]
       },
       "id": "paired_9b95426b30027f7b",
@@ -25831,6 +27417,15 @@
           ],
           "unit": "rad",
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": -143.59121013890402,
+          "ci95": [
+            -313.4267761034266,
+            -2.8924564599817586
+          ],
+          "unit": "mm",
+          "n_motions": 5
         }
       },
       "paired_motion_values": {
@@ -26140,6 +27735,58 @@
             "rp1": 0.8472102908994491,
             "g1": 1.2508969351064785,
             "delta_rp1_minus_g1": -0.4036866442070294,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          }
+        ],
+        "root_endpoint_pos_mm": [
+          {
+            "motion_id": "Take_143_Skeleton0",
+            "rp1": 649.4729812395059,
+            "g1": 705.81118787956,
+            "delta_rp1_minus_g1": -56.33820664005407,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "Take_144_Skeleton0",
+            "rp1": 748.5507559839733,
+            "g1": 940.4349639349158,
+            "delta_rp1_minus_g1": -191.88420795094248,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "Take_146_Skeleton0",
+            "rp1": 632.9120104861533,
+            "g1": 708.7391705706771,
+            "delta_rp1_minus_g1": -75.82716008452371,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "Take_148_Skeleton0",
+            "rp1": 1000.3790518565534,
+            "g1": 922.4590077595243,
+            "delta_rp1_minus_g1": 77.92004409702906,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "Take_149_Skeleton0",
+            "rp1": 1523.4932828097812,
+            "g1": 1995.31980292581,
+            "delta_rp1_minus_g1": -471.82652011602886,
             "seeds": [
               0
             ],
@@ -26625,6 +28272,15 @@
           ],
           "unit": "rad",
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 506.21901723122636,
+          "ci95": [
+            -459.10287077083035,
+            1560.89568298627
+          ],
+          "unit": "mm",
+          "n_motions": 5
         }
       },
       "paired_motion_values": {
@@ -26992,6 +28648,68 @@
             "rp1": 0.043201174288136225,
             "g1": 0.06020811423036641,
             "delta_rp1_minus_g1": -0.01700693994223018,
+            "seeds": [
+              0,
+              1,
+              42
+            ],
+            "repeats_per_robot": 3
+          }
+        ],
+        "root_endpoint_pos_mm": [
+          {
+            "motion_id": "dance1_subject1",
+            "rp1": 1049.0607645715486,
+            "g1": 2088.6069893079875,
+            "delta_rp1_minus_g1": -1039.546224736439,
+            "seeds": [
+              0,
+              1,
+              42
+            ],
+            "repeats_per_robot": 3
+          },
+          {
+            "motion_id": "fallAndGetUp1_subject1",
+            "rp1": 4500.043864054015,
+            "g1": 2321.1602732799793,
+            "delta_rp1_minus_g1": 2178.883590774036,
+            "seeds": [
+              0,
+              1,
+              42
+            ],
+            "repeats_per_robot": 3
+          },
+          {
+            "motion_id": "fight1_subject2",
+            "rp1": 1664.075963683518,
+            "g1": 226.07233012899238,
+            "delta_rp1_minus_g1": 1438.0036335545255,
+            "seeds": [
+              0,
+              1,
+              42
+            ],
+            "repeats_per_robot": 3
+          },
+          {
+            "motion_id": "run1_subject2",
+            "rp1": 57.08876595611324,
+            "g1": 227.2647569013966,
+            "delta_rp1_minus_g1": -170.17599094528336,
+            "seeds": [
+              0,
+              1,
+              42
+            ],
+            "repeats_per_robot": 3
+          },
+          {
+            "motion_id": "walk1_subject1",
+            "rp1": 378.45005343456563,
+            "g1": 254.51997592527286,
+            "delta_rp1_minus_g1": 123.93007750929277,
             "seeds": [
               0,
               1,
@@ -27571,6 +29289,15 @@
           ],
           "unit": "rad",
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 165.54281954880105,
+          "ci95": [
+            -415.80902884657894,
+            709.6888556674667
+          ],
+          "unit": "mm",
+          "n_motions": 5
         }
       },
       "paired_motion_values": {
@@ -28005,6 +29732,78 @@
             ],
             "repeats_per_robot": 5
           }
+        ],
+        "root_endpoint_pos_mm": [
+          {
+            "motion_id": "dance1_subject1",
+            "rp1": 1197.5312619914557,
+            "g1": 2099.4264128520836,
+            "delta_rp1_minus_g1": -901.8951508606278,
+            "seeds": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "repeats_per_robot": 5
+          },
+          {
+            "motion_id": "fallAndGetUp1_subject1",
+            "rp1": 2968.668722205016,
+            "g1": 2332.4576542980426,
+            "delta_rp1_minus_g1": 636.2110679069733,
+            "seeds": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "repeats_per_robot": 5
+          },
+          {
+            "motion_id": "fight1_subject2",
+            "rp1": 1957.9221682967993,
+            "g1": 954.3221615873559,
+            "delta_rp1_minus_g1": 1003.6000067094434,
+            "seeds": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "repeats_per_robot": 5
+          },
+          {
+            "motion_id": "run1_subject2",
+            "rp1": 139.06807834667535,
+            "g1": 148.6388379046599,
+            "delta_rp1_minus_g1": -9.570759557984559,
+            "seeds": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "repeats_per_robot": 5
+          },
+          {
+            "motion_id": "walk1_subject1",
+            "rp1": 363.1385599361598,
+            "g1": 263.76962638995883,
+            "delta_rp1_minus_g1": 99.36893354620099,
+            "seeds": [
+              0,
+              1,
+              2,
+              3,
+              4
+            ],
+            "repeats_per_robot": 5
+          }
         ]
       },
       "id": "paired_826633abc5b0aceb",
@@ -28393,6 +30192,15 @@
           ],
           "unit": "rad",
           "n_motions": 5
+        },
+        "root_endpoint_pos_mm": {
+          "value": 290.5736989725407,
+          "ci95": [
+            36.76979711316994,
+            544.3776008319112
+          ],
+          "unit": "mm",
+          "n_motions": 5
         }
       },
       "paired_motion_values": {
@@ -28702,6 +30510,58 @@
             "rp1": 0.0435669177276903,
             "g1": 0.05986441025246549,
             "delta_rp1_minus_g1": -0.016297492524775192,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          }
+        ],
+        "root_endpoint_pos_mm": [
+          {
+            "motion_id": "dance1_subject1",
+            "rp1": 2246.8877073527156,
+            "g1": 2235.0269121298047,
+            "delta_rp1_minus_g1": 11.860795222910838,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fallAndGetUp1_subject1",
+            "rp1": 2823.1633143869926,
+            "g1": 2174.4618744300797,
+            "delta_rp1_minus_g1": 648.701439956913,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "fight1_subject2",
+            "rp1": 1572.0618542928628,
+            "g1": 897.8494144221916,
+            "delta_rp1_minus_g1": 674.2124398706712,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "run1_subject2",
+            "rp1": 185.01411536513018,
+            "g1": 108.9538708607418,
+            "delta_rp1_minus_g1": 76.06024450438838,
+            "seeds": [
+              0
+            ],
+            "repeats_per_robot": 1
+          },
+          {
+            "motion_id": "walk1_subject1",
+            "rp1": 371.922901713617,
+            "g1": 329.88932640579725,
+            "delta_rp1_minus_g1": 42.033575307819774,
             "seeds": [
               0
             ],
@@ -29051,6 +30911,18 @@
       "completion_unchanged": true,
       "completion_does_not_filter_errors": true,
       "new_physical_episodes": 0
+    },
+    "root_endpoint": {
+      "window": "last_valid_same_time_reference_root_endpoint",
+      "sample_count_per_episode": 1,
+      "definition": "每回合最后一个合法参考时刻的根三维位置距离，mm；不是全程误差均值",
+      "actual_reference_clock": "同一批既有200Hz物理轨迹在最后合法参考时刻取已有同刻根XYZ；所有参考末帧Ncommon−1合法，末后20ms停留排除",
+      "fixed_anchor": "首个共同有效同刻帧0.02秒固定XY/yaw对齐，绝对Z不移；不使用reset/frame0锚点，不逐帧重拟合",
+      "statistic": "每回合一个终点值；完整固定seed先动作内等权平均，再五个条件组各自动作等权；主数据集不合并",
+      "CI": "沿用PCG64/20261013/10000次配对动作bootstrap，每组重新设seed，linear quantile；CI未作多重比较校正",
+      "not_success_proxy": "完成率独立保留，不由终点位置误差重新判断；失败后末帧仍计入",
+      "existing_six_errors_and_completion_unchanged": true,
+      "new_physical_episodes": 0
     }
   },
   "completion_contract": {
@@ -29060,24 +30932,24 @@
   },
   "report_downloads": [
     {
-      "label": "V7 技术报告正文",
+      "label": "V8 技术报告正文",
       "url": "https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb",
       "access": "需飞书组织权限"
     },
     {
-      "label": "V7 全程报告 PDF",
+      "label": "V8 全程与终点报告 PDF",
       "url": "https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7",
       "access": "需飞书组织权限"
     },
     {
-      "label": "V7 全程报告 DOCX",
+      "label": "V8 全程与终点报告 DOCX",
       "url": "https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce",
       "access": "需飞书组织权限"
     }
   ],
   "fairness": [],
   "stats": {
-    "report_status": "V7 已同步：RP1与G1全程跟踪精度与动作完成率，正文、PDF 和 DOCX 已更新至原地址，含六项全程误差与任务完成率。"
+    "report_status": "V8 已同步：RP1与G1全程跟踪精度与动作完成率，正文、PDF 和 DOCX 已更新至原地址，含六项全程误差、独立根部终点位置误差与任务完成率。"
   },
   "root_extension": {
     "status": "verified",
@@ -29087,5 +30959,20 @@
       "full_root_ori_rad"
     ],
     "window_label": "50 Hz 参考时刻对应的同刻根状态（来自原 200 Hz 轨迹）"
+  },
+  "endpoint_extension": {
+    "status": "verified",
+    "source_sha256": "f932d85e4583544eeb942cd8eecf9804fda26dc849cc96d7d713f481044604f2",
+    "metrics": [
+      "root_endpoint_pos_mm"
+    ],
+    "definition": {
+      "unit": "mm",
+      "label": "根部终点位置误差",
+      "role": "endpoint_position_error",
+      "higher_is_better": false,
+      "sample_count": 1,
+      "window": "last_valid_same_time_reference_root_endpoint"
+    }
   }
 }
