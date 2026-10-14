@@ -1,17 +1,32 @@
 # RP1 / G1 Robot Motion Benchmark
 
-固定公开学生权重的离线仿真比较。所有公开表格、图表、筛选及 CSV / JSON 导出仅包含 RP1 / G1 共有、条件可配对的数据。页面为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
+RP1 与 G1 固定发布学生策略的离线仿真比较，主比较覆盖 **40个配对动作（N=40）**。公开表格、图表、筛选及 CSV / JSON 导出使用双方共有、条件可配对的数据。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
 
-当前范围为 **40 个共同动作、85 个条件/seed 配对、170 条回合记录和 8 条聚合记录**。178 行是展示行数，不是独立实验数。主比较 nominal / native_position 有 40 对；执行模式敏感性、重复性、初速扰动分别有 5、15、25 对，独立报告。30 条确定性重复不增加独立动作数。
+## 评测条件
 
-主比较 Progress：RP1 79.736%，G1 77.269%；RP1−G1 的 95% 配对区间为 [−0.537, 6.980] 个百分点，跨零，不能声称 RP1 稳定优胜。RP1 body 误差较低，G1 wrist 姿态误差较低。Phase B 正式重训尚未开始。
+| 条件 / 执行模式 | 配对动作数 | 条件/seed 配对数 | 机器人回合数 |
+| --- | ---: | ---: | ---: |
+| nominal / native_position | 40 | 40 | 80 |
+| explicit_sensitivity / explicit_deploy | 5 | 5 | 10 |
+| repeat_nominal / native_position | 5 | 15 | 30 |
+| robust_initial_velocity / native_position | 5 | 25 | 50 |
+
+四组分别报告，共 85 个条件/seed 配对、170 条机器人回合及 8 条聚合记录，即 178 个展示行；动作去重后为 40 个。配对依据实际动作、有效条件、模式、seed 和协议身份的交集，保留阈值失败及可配对删失的 null 与原因。历史原始实验数据及旧版本保留在来源项目和 Git 历史中。
+
+## 评测结果与分析
+
+主比较 Progress：RP1 **79.736%**，G1 **77.269%**；RP1−G1 的 95% 配对区间为 **[−0.537, 6.980] 个百分点**，跨零。RP1 body 误差均值较低，G1 wrist 姿态误差均值较低。
+
+统计按动作等权，区间描述固定发布策略与当前动作集。30 条确定性重复保持原独立动作数。身体与手腕误差使用失败前窗口；完整指标定义、评分窗口、训练与 retarget 差异见[评测说明](DATA_PROVENANCE.md)。Phase B 正式重训尚未开始。
+
+## 数据与报告
 
 - [共同动作公开数据](data.json)
-- [指标、配对规则与科学限制](DATA_PROVENANCE.md)
+- [条件、指标与结果分析](DATA_PROVENANCE.md)
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)
-- [新公开视频索引](media.json)：当前 0/40，本次没有上传新媒体。
+- [新公开视频索引](media.json)：当前 0/40。
 
-配对使用实际动作、有效条件、模式、seed 和协议身份的交集，不按成功筛选。已配对的阈值失败保留；可配对的删失保留 null 和原因。历史原始实验数据及旧版本保留在来源项目和 Git 历史中。
+共同动作报告版本为 `common_v07_20261014`：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。附件为版本 3；报告及既有同步视频需要飞书组织访问权限。
 
 ## 本地预览
 
@@ -19,11 +34,11 @@
 python3 -m http.server 8080 --bind 127.0.0.1
 ```
 
-打开 `http://127.0.0.1:8080/`。既有同步视频和共同动作报告使用飞书组织权限链接；本站不改变权限。
+打开 `http://127.0.0.1:8080/`。
 
 ## 可重复更新
 
-冻结来源经过审阅后，运行标准库投影脚本：
+从冻结来源运行标准库投影脚本：
 
 ```sh
 python3 scripts/update_snapshot.py \
@@ -37,8 +52,6 @@ python3 scripts/verify_public.py
 node --check app.js
 ```
 
-这些 SHA 对应当前冻结科学版本。脚本先核验来源，再以字段白名单和精确配对交集生成公开快照；保留行的指标、CI、分母、失败状态及身份不变。聚合只在原输入群体完整保留时复用，不强配或重算科学值。改变来源版本需要重新审阅科学契约。
+这些 SHA 对应当前冻结科学版本。脚本核验来源，以字段白名单和精确配对交集生成公开快照；保留行的指标、CI、分母、失败状态及身份保持一致。聚合只在原输入群体完整保留时复用，科学版本变更需同步更新版本契约。
 
-完成静态检查、桌面/手机浏览器 QA 后，只提交公开文件。发布源为 GitHub Pages `main / (root)`，沿用现有 SSH 凭证普通 push。内部审计、原始附件、checkpoint、凭证和训练环境不发布。
-
-新视频素材许可仍待确认；当前新片索引为空。本次只修订已有公开摘要与入口，没有新建凭证、改变访问权限或上传新媒体。
+完成静态检查及桌面、手机浏览器 QA 后，提交发布白名单内的公开文件。GitHub Pages 发布源为 `main / (root)`。

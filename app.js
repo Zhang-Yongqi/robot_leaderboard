@@ -64,7 +64,7 @@
     const permissionLabel = requiresPermission ? "（需组织权限）" : "";
     const label = String(link.label || fallback).replace(/版本与文件 SHA256 清单/g, "发布版本清单");
     const displayLabel = label + (requiresPermission && !label.includes("需组织权限") ? permissionLabel : "");
-    const permissionTitle = requiresPermission ? ' title="需组织登录及已有访问权限；本站不改变文件分享权限"' : "";
+    const permissionTitle = requiresPermission ? ' title="需飞书组织权限"' : "";
     // Only the packager's closed registry can issue attachment URLs. safeURL
     // keeps rejecting arbitrary blob:/data: values supplied by page data.
     const registry = window.LeaderboardAttachments;
@@ -191,6 +191,8 @@
   }
   function readerNote(note) {
     const text = String(note);
+    if (text.startsWith("共同时间窗口的本地仿真比较")) return "";
+    if (text.startsWith("回合完整评分不等于跟踪成功")) return "";
     if (text.startsWith("源数据注记")) {
       try {
         const metadata = JSON.parse(text.slice(text.indexOf("{")));
@@ -213,10 +215,10 @@
       const ranking = ranks.get(row.id) || { rank: null, reason: "未核验共同配对" };
       const rankDescription = String(ranking.reason).replace(/SHA256/g, "身份");
       return `<tr><td class="rank-cell"><span class="rank-number">${ranking.rank === null ? "—" : ranking.rank}</span><span class="rank-note" title="${escape(rankDescription)}">${escape(ranking.rank === null ? rankDescription : "同条件配对")}</span></td><td class="row-heading"><div class="record-label">${escape(row.label)}</div>${row.scope === "per_motion" ? `<span class="record-meta">${escape(row.motion_id || "动作 ID 待提供")}</span>` : ""}<span class="record-meta">${escape(datasetLabel(row.dataset))}</span><span class="record-meta">${escape(row.condition)} · ${escape(row.mode)} · seed ${escape(row.seed)}</span><div class="record-badges"><span class="badge">${escape(String(row.robot).toUpperCase())}</span><span class="badge">${escape(phaseLabel(row.phase))}</span>${statusBadge(row.status)}</div>${row.status_reason ? `<span class="record-meta">${escape(row.status_reason)}</span>` : ""}${rowEvidence(row)}</td><td><span class="coverage-primary">${escape(coverageText(row.coverage))}</span><span class="coverage-secondary">共同 ${escape(coverageText(row.paired_coverage))}</span><span class="coverage-secondary">${escape((row.coverage || {}).reason || "")}</span><span class="coverage-secondary">${escape((row.paired_coverage || {}).reason || "")}</span></td>${METRICS.map((metric) => metricHTML(row, metric)).join("")}</tr>`;
-    }).join("") : `<tr><td class="empty-cell" colspan="11"><strong>${state.data.results.length ? "当前筛选没有匹配记录" : "PENDING · 等待实测结果"}</strong><p>${state.data.results.length ? "可切换结果粒度或重置筛选；界面不会从其他条件补入数值。" : "导入带有 checkpoint、有效配置、原始记录和分母的 data.json 后显示。当前未生成任何示例成绩。"}</p></td></tr>`;
+    }).join("") : `<tr><td class="empty-cell" colspan="11"><strong>${state.data.results.length ? "当前筛选没有匹配记录" : "PENDING · 等待实测结果"}</strong><p>${state.data.results.length ? "可切换结果粒度或重置筛选。" : "导入带有 checkpoint、有效配置、原始记录和分母的 data.json 后显示。当前未生成任何示例成绩。"}</p></td></tr>`;
     $("pagination").innerHTML = pages > 1 ? `<span>第 ${state.page} / ${pages} 页 · 每页 ${state.pageSize} 条</span><button type="button" data-page="${state.page - 1}" ${state.page === 1 ? "disabled" : ""}>上一页</button><button type="button" data-page="${state.page + 1}" ${state.page === pages ? "disabled" : ""}>下一页</button>` : "";
     const ranked = rows.filter((row) => (ranks.get(row.id) || {}).rank != null).length;
-    $("result-count").textContent = `${rows.length} 条${state.scope === "aggregate" ? "聚合" : "逐动作"}记录 · ${ranked} 条可作组内排名 · n/a 始终排在末尾 · 名次按完整配对组计算，筛选单个机器人不会重排名次`;
+    $("result-count").textContent = `${rows.length} 条${state.scope === "aggregate" ? "聚合" : "逐动作"}记录 · ${ranked} 条有组内名次 · 缺失值列于末尾`;
     $("download-csv").disabled = !rows.length;
   }
   function renderOverview() {
@@ -231,7 +233,7 @@
       return failure && knownCount(failure.count) ? failure.count.toLocaleString("en-US") : "n/a";
     };
     const denominator = summary.rp1.paired_coverage.denominator;
-    $("overview").innerHTML = `<div class="scope-item"><strong>${motions.size}</strong><p><b>共同动作</b>RP1 与 G1 的共有动作范围</p></div><div class="scope-item"><strong>${cases.length}</strong><p><b>配对条件与 seed 案例</b>包含重复与扰动，不等于独立动作数</p></div><div class="scope-item"><strong>${noThresholdFailure(summary.rp1)} / ${noThresholdFailure(summary.g1)}</strong><p><b>未触发失败阈值</b>主要条件 RP1 / G1，各以 ${denominator} 动作为分母</p></div>`;
+    $("overview").innerHTML = `<div class="scope-item"><strong>${motions.size}</strong><p><b>共同动作</b>RP1 与 G1 的共有动作范围</p></div><div class="scope-item"><strong>${cases.length}</strong><p><b>条件与 seed 配对记录</b>覆盖 ${cases.length * 2} 个机器人回合，含重复与扰动</p></div><div class="scope-item"><strong>${noThresholdFailure(summary.rp1)} / ${noThresholdFailure(summary.g1)}</strong><p><b>未触发失败阈值</b>主要条件 RP1 / G1，各以 ${denominator} 动作为分母</p></div>`;
   }
   function pairedSummaryFor(data) {
     const keys = ["progress_pct", "body_pos_mm", "body_ori_rad", "wrist_ori_rad"];
@@ -264,13 +266,13 @@
       $("paired-summary").innerHTML = ""; $("paired-all-metrics").innerHTML = ""; return;
     }
     const { rp1, g1, comparison, delta, crossesZero } = summary;
-    $("hero-chart").innerHTML = `<p class="eyebrow">COMPLETION / 40 PAIRED MOTIONS</p><h2>完成度接近，差值仍跨零。</h2><p class="chart-context">平均动作推进比例 · 数值越高越好</p>${[rp1,g1].map((row) => `<div class="progress-row"><div class="progress-label"><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,"progress_pct"),2)}<small>%</small></strong></div><div class="progress-track" aria-hidden="true"><div class="progress-fill ${row.robot}" style="width:${valueOf(row,"progress_pct")}%"></div></div></div>`).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value,2)}<small> pp</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp · N = 40</p>${pairedIntervalSVG(delta,2,"pp",true)}<p class="hero-conclusion">${crossesZero ? "区间跨零，无法据此认定完成度稳定优胜。" : "推断范围限于当前固定策略与共同动作。"}</p></div>`;
+    $("hero-chart").innerHTML = `<p class="eyebrow">COMPLETION / 40 PAIRED MOTIONS</p><h2>动作完成度</h2><p class="chart-context">平均动作推进比例 · 数值越高越好</p>${[rp1,g1].map((row) => `<div class="progress-row"><div class="progress-label"><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,"progress_pct"),2)}<small>%</small></strong></div><div class="progress-track" aria-hidden="true"><div class="progress-fill ${row.robot}" style="width:${valueOf(row,"progress_pct")}%"></div></div></div>`).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value,2)}<small> pp</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0],2)}, ${fmt(delta.ci95[1],2)}] pp · 40 个配对动作（N=40）</p>${pairedIntervalSVG(delta,2,"pp",true)}<p class="hero-conclusion">${crossesZero ? "完成度差值的 95% 置信区间跨零。" : "完成度差值的 95% 置信区间与零分离。"}</p></div>`;
     const conclusions = {body_pos_mm:"RP1 均值较低 · 区间上界接近零",body_ori_rad:"RP1 身体姿态误差较低",wrist_ori_rad:"G1 手腕姿态误差较低"};
     $("paired-summary").innerHTML = ["body_pos_mm","body_ori_rad","wrist_ori_rad"].map((key) => {
       const m=metricDefinition(key), d=comparison.paired_deltas[key];
-      return `<article class="finding-card"><h3>${CN_METRICS[key]}</h3><p class="metric-caption">${m.label} · 越低越好 · N = ${d.n_motions}</p><div class="finding-values">${[rp1,g1].map(row=>`<div><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,key),m.digits)}<small>${m.unit}</small></strong></div>`).join("")}</div><p class="delta-label">配对差值 RP1 − G1</p>${pairedIntervalSVG(d,m.digits,m.unit)}<p class="delta-ci">${signed(d.value,m.digits)} ${m.unit} · 95% CI [${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}]</p><p class="finding-interpretation">${conclusions[key]}</p></article>`;
+      return `<article class="finding-card"><h3>${CN_METRICS[key]}</h3><p class="metric-caption">${m.label} · 越低越好 · ${d.n_motions} 个配对动作</p><div class="finding-values">${[rp1,g1].map(row=>`<div><span><i class="dot ${row.robot}"></i>${String(row.robot).toUpperCase()}</span><strong>${fmt(valueOf(row,key),m.digits)}<small>${m.unit}</small></strong></div>`).join("")}</div><p class="delta-label">配对差值 RP1 − G1</p>${pairedIntervalSVG(d,m.digits,m.unit)}<p class="delta-ci">${signed(d.value,m.digits)} ${m.unit} · 95% CI [${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}]</p><p class="finding-interpretation">${conclusions[key]}</p></article>`;
     }).join("");
-    $("paired-all-metrics").innerHTML = `<table class="paired-table"><caption class="sr-only">共同 40 动作，RP1 减 G1 配对差值及 95% 置信区间</caption><thead><tr><th>指标</th><th>单位</th><th>RP1 均值</th><th>G1 均值</th><th>RP1 − G1</th><th>95% CI</th><th>N</th></tr></thead><tbody>${METRICS.filter(m=>comparison.paired_deltas[m.key]).map(m=>{const d=comparison.paired_deltas[m.key];return `<tr><td>${CN_METRICS[m.key]}</td><td>${m.unit}</td><td class="number">${fmt(valueOf(rp1,m.key),m.digits)}</td><td class="number">${fmt(valueOf(g1,m.key),m.digits)}</td><td class="number">${signed(d.value,m.digits)} ${d.unit==="pp"?"pp":""}</td><td class="number">[${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}] ${d.unit==="pp"?"pp":m.unit}</td><td>${d.n_motions}</td></tr>`}).join("")}</tbody></table>`;
+    $("paired-all-metrics").innerHTML = `<table class="paired-table"><caption class="sr-only">共同 40 动作，RP1 减 G1 配对差值及 95% 置信区间</caption><thead><tr><th>指标</th><th>单位</th><th>RP1 均值</th><th>G1 均值</th><th>RP1 − G1</th><th>95% CI</th><th>配对动作数</th></tr></thead><tbody>${METRICS.filter(m=>comparison.paired_deltas[m.key]).map(m=>{const d=comparison.paired_deltas[m.key];return `<tr><td>${CN_METRICS[m.key]}</td><td>${m.unit}</td><td class="number">${fmt(valueOf(rp1,m.key),m.digits)}</td><td class="number">${fmt(valueOf(g1,m.key),m.digits)}</td><td class="number">${signed(d.value,m.digits)} ${d.unit==="pp"?"pp":""}</td><td class="number">[${fmt(d.ci95[0],m.digits)}, ${fmt(d.ci95[1],m.digits)}] ${d.unit==="pp"?"pp":m.unit}</td><td>${d.n_motions}</td></tr>`}).join("")}</tbody></table>`;
   }
   function renderMotionChart() {
     const metric = metricDefinition(state.metric);
@@ -307,7 +309,7 @@
       const valid = knownCount(failure.count) && knownCount(failure.denominator) && failure.count <= failure.denominator;
       const ratio = valid && failure.denominator > 0 ? failure.count / failure.denominator : 0;
       return `<div class="failure-line"><span>${escape(failure.reason)}</span><div class="failure-track" aria-hidden="true"><div class="failure-fill" style="width:${100 * ratio}%"></div></div><span class="failure-count">${valid ? `${failure.count} / ${failure.denominator}` : "n/a"}<span class="metric-detail">${escape(failure.unit || "样本")}</span></span></div>`;
-    }).join("")}</div>`).join("") + `<p class="chart-note">显示 ${Math.min(8, available.length)} / ${available.length} 条有失败分类的记录。分类是否互斥以协议为准；不将不同分类求和解释为总失败率。</p>`;
+    }).join("")}</div>`).join("") + `<p class="chart-note">显示 ${Math.min(8, available.length)} / ${available.length} 条有失败分类的记录。各分类按协议分别报告。</p>`;
   }
   function renderFairness() {
     const selected = filters();
@@ -316,12 +318,23 @@
   }
   function renderEvidence() {
     const statistics = state.data.statistics;
-    $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["推断范围", "ci_scope"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] || "待提供")}</dd>`).join("");
+    const methodText = {
+      aggregation: "相同 seed 集先求每动作均值，再按动作等权；各条件分别报告。",
+      ci_method: "10,000 次配对动作百分位 bootstrap；分别保存机器人均值区间与 RP1−G1 差值区间。",
+      missing_policy: "保留有效、无效、删失与待完成记录；均值要求完整的每动作 seed 集，缺失成绩保留 null 及原因。",
+      rank_policy: "参与者、完成状态、协议、配对身份及指标分母齐全一致时，计算组内名次。"
+    };
+    $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] ? methodText[key] : "待提供")}</dd>`).join("") + `<dt>条件覆盖</dt><dd>主比较：40 动作 / 40 对 / 80 回合；敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。共 85 个条件与 seed 配对，覆盖 40 个独立动作。</dd>`;
     const all=asArray(state.data.downloads), reports=all.filter(d=>/feishu\.cn\/(docx|file)\//.test(d.url)&&/技术报告/.test(d.label));
-    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>共同动作版报告 common_v07 · PDF / DOCX v3，PDF 10 页。来源任务已核验正文与报告对应；飞书链接需组织权限。</p>`;
+    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>共同动作版报告 common_v07 · PDF / DOCX v3，PDF 10 页。资料需飞书组织权限。</p>`;
     const historical=all.filter(d=>!reports.includes(d)&&/feishu\.cn/.test(d.url)&&pairedHistoricalVideo(d));
-    $("historical-links").innerHTML = `<p>以下为共有动作的既有双机器人同步回放，来源回合身份与当前公开比较对应；飞书链接需组织权限。</p>${historical.length ? historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("") : "<p>尚无可核验的既有同步回放。</p>"}`;
-    const notes = [...asArray(statistics.limitations), ...asArray(state.data.notes)].map(readerNote).filter(Boolean);
+    $("historical-links").innerHTML = `<p>共有动作的既有双机器人同步回放。</p>${historical.length ? historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("") : "<p>尚无可核验的既有同步回放。</p>"}`;
+    const notes = [
+      "区间描述固定发布策略与当前仿真动作。训练数据、重定向和控制参数不同；完整历史训练日志、GPU 训练小时及真机验证待补充。",
+      "Common14 使用 ankle-roll 语义映射，跟踪回报使用独立 torso anchor 与 reward 点集。失败前误差存在存活时长选择效应；七项描述性区间未作多重比较校正。",
+      "公开重定向的动作名与时长已对齐，原始 BVH 输入哈希血缘仍有缺口。",
+      "30 个重复回合的结果逐值一致，独立动作数仍为 5；同步视频用于观察已有回合。"
+    ];
     $("limitations").innerHTML = notes.map((note) => `<li>${escape(note)}</li>`).join("");
   }
   function validPublicMedia(input) {
@@ -345,7 +358,7 @@
     document.querySelectorAll(".video-choice").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.motion===item.motion_id)));
   }
   async function renderPublicMedia() {
-    const pending=()=>{document.querySelector(".hero-actions .button").textContent="动作回放计划 ↗";$("video-coverage").textContent="0 / 40 新片已发布";$("public-videos").innerHTML=`<div class="video-pending"><strong>共同 40 动作<br>高分辨率回放待交付。</strong><p>新一批 4K 原生渲染与 1080p 网页视频尚未完成公开交付。当前没有可公开播放的新片。<br>共有动作的既有同步素材可在下方“既有双机器人同步回放”查看。</p></div>`;};
+    const pending=()=>{document.querySelector(".hero-actions .button").textContent="动作回放计划 ↗";$("video-coverage").textContent="0 / 40 新片已发布";$("public-videos").innerHTML=`<div class="video-pending"><strong>共同 40 动作<br>高分辨率回放待交付。</strong><p>新一批 4K 原生渲染与 1080p 网页视频正在制作，公开进度为 0/40。<br>共有动作的既有同步素材可在下方“既有双机器人同步回放”查看。</p></div>`;};
     pending();
     try {
       const response=await fetch("./media.json",{cache:"no-store",credentials:"same-origin"});
