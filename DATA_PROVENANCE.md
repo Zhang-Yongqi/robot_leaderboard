@@ -119,7 +119,7 @@ Common40 主组以 **40 对动作**、Extreme5 以 **5 对动作**为重采样�
 
 当前公开投影：[配对结果 JSON](data.json)、[180 回合 CSV](episodes.csv)、[10 条机器人聚合记录 CSV](comparisons.csv)。模型参数：[JSON](hardware.json) / [CSV](hardware.csv)。科学来源与历史原始实验在来源项目和 Git 历史中保留。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。原链接正在按本次“全程误差与跟踪任务完成率”结果更新；**V6 待云端同步**。相关飞书资料需要组织访问权限。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。《RP1与G1全程跟踪精度与动作完成率》**V6 已同步**，正文、PDF 与 DOCX 均已更新到原地址。相关飞书资料需要组织访问权限。
 
 既有同步视频的两侧来源回合均对应 Common40 共有数据。新公开视频为 **0/40**，索引见 [media.json](media.json)；Extreme5 的 5 个视频尚未制作。
 

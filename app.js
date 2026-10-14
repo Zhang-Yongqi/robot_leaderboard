@@ -21,9 +21,9 @@
   const COMPLETION_COUNT_KEYS = ["completed", "not_completed", "unknown"];
   const COMPLETION_SOURCE_SHA = "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f";
   const REPORTS = [
-    { label: "技术报告正文", url: "https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb" },
-    { label: "技术报告 PDF", url: "https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7" },
-    { label: "技术报告 DOCX", url: "https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce" }
+    { label: "V6 技术报告正文", url: "https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb" },
+    { label: "V6 全程报告 PDF", url: "https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7" },
+    { label: "V6 全程报告 DOCX", url: "https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce" }
   ];
   const EMPTY = { schema_version: 4, results: [], comparisons: [], datasets: [], counts: {}, methods: {}, report_downloads: [], fairness: [], stats: {}, primary_comparison_ids: [], secondary_comparison_ids: [] };
   const state = { data: EMPTY, scope: "aggregate", metric: METRICS[0].key, direction: "asc", page: 1, pageSize: 25, loaded: false };
@@ -309,7 +309,7 @@
   function renderEvidence() {
     $("statistics").innerHTML = `<dt>评分窗口</dt><dd>全部 50 Hz 首物理子步样本，motion_t=1..Ncommon−1，包含失跟后的评分记录。初始化帧与 200 Hz 末端 hold 不增加评分样本。</dd><dt>误差聚合</dt><dd>完整相同 seed 先在动作内平均，再对动作等权；每组独立报告。</dd><dt>误差置信区间</dt><dd>10,000 次配对动作百分位 bootstrap，PCG64 seed 20261013，95% 线性分位数。四项误差的均值与配对差值区间直接读取冻结统计。</dd><dt>完成判据</dt><dd>${escape(state.data.methods.completion?.definition || "任务完成定义暂未载入。")}</dd><dt>完成比例</dt><dd>单 seed 主组按完成动作数 / 动作数报告；三个敏感性组按同动作 seed 判定平均，再对动作等权，报告完成比例与完成动作当量。未知标签保留原动作分母，点估计为 null，另示逻辑上下界；完成率不提供统计置信区间。</dd><dt>判定证据</dt><dd>判定来自参考几何、完整轨迹及有效末端；接触力未直接记录。两条失败时间轴表示最终持续未恢复区间的几何观察起点，参考动作中的翻滚和起身已区别处理。</dd><dt>条件覆盖</dt><dd>Common40 主组：40 动作 / 40 对 / 80 回合；Extreme5：5 / 5 / 10。敏感性：5 / 5 / 10；重复：5 / 15 / 30；初态扰动：5 / 25 / 50。共 45 个不同动作、90 对、180 回合。</dd>`;
     const reports = state.data.report_downloads.length ? state.data.report_downloads : REPORTS;
-    const reportStatus = state.data.stats.report_status || "正式报告沿用现有链接，正在按全程误差与 Motion 跟踪任务完成率口径更新。";
+    const reportStatus = state.data.stats.report_status || "V6 已同步：正文、PDF 和 DOCX 已更新至原地址。";
     $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>${escape(reportStatus)} 资料需飞书组织权限。</p>`;
     const notes = ["区间描述固定发布策略与当前仿真动作。训练数据、重定向和控制参数不同；完整历史训练日志、GPU 训练小时及真机验证待补充。", "Common14 使用 ankle-roll 语义映射。四项全程描述性区间未作多重比较校正。", "公开重定向的动作名与时长已对齐，原始 BVH 输入哈希血缘仍有缺口。", "30 个确定性重复回合逐值一致，独立动作数仍为 5。"];
     $("limitations").innerHTML = notes.map(note => `<li>${escape(note)}</li>`).join("");

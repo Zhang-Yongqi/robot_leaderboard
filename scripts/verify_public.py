@@ -167,7 +167,7 @@ class Audit:
         for item in d['fairness']:
             require(type(item) is dict and set(item) <= {'item', 'rp1', 'g1', 'status', 'evidence'},
                     'Fairness explanation fields differ')
-        require(set(d['stats']) <= {'aggregation', 'ci_method', 'scope', 'limitations'}, 'Statistics fields differ')
+        require(set(d['stats']) <= {'report_status', 'updated_utc', 'notes', 'limitations'}, 'Statistics fields differ')
 
     def rows_and_pairs(self):
         rows = self.data['results']

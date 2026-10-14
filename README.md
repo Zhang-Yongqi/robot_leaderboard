@@ -69,7 +69,7 @@ Common40 的四项全程误差均值均为 RP1 较低，配对差值区间均位
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)。
 - [新公开视频索引](media.json)：当前 0/40。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。原链接正在按本次“全程误差与跟踪任务完成率”结果更新；**V6 待云端同步**。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。《RP1与G1全程跟踪精度与动作完成率》**V6 已同步**，正文、PDF 与 DOCX 均已更新到原地址。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
 ## 本地预览
 

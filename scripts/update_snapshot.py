@@ -231,7 +231,11 @@ def project(full, identities, publication=False, completion=None):
                     'units': '位置误差已为mm，姿态误差为rad；数值直接显示。',
                     'weighting': full['methods']['weighting'], 'bootstrap': deepcopy(full['methods']['bootstrap'])},
         'completion_contract': deepcopy(COMPLETION_CONTRACT),
-        'report_downloads': [], 'fairness': [], 'stats': {}}
+        'report_downloads': [
+            {'label': 'V6 技术报告正文', 'url': 'https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb', 'access': '需飞书组织权限'},
+            {'label': 'V6 全程报告 PDF', 'url': 'https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7', 'access': '需飞书组织权限'},
+            {'label': 'V6 全程报告 DOCX', 'url': 'https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce', 'access': '需飞书组织权限'}],
+        'fairness': [], 'stats': {'report_status': 'V6 已同步：RP1与G1全程跟踪精度与动作完成率，正文、PDF 和 DOCX 已更新至原地址。'}}
     if completion is not None:
         apply_completion(data, full, completion, publication)
     return data
