@@ -12,11 +12,7 @@
     { key: "episode_return", label: "Normalized tracking return", unit: "无量纲", direction: "desc", digits: 2 },
     { key: "progress_pct", label: "Progress", unit: "%", direction: "desc", digits: 2 }
   ];
-  const DATASETS = [
-    ["locomotion", "MotionDecode Locomotion-80"], ["manipulation", "MotionDecode Manipulation-48"],
-    ["ground", "MotionDecode Ground-60"], ["dance", "MotionDecode Dance-40"],
-    ["lafan40", "Legacy LAFAN-40"], ["phuma30", "Legacy PHUMA-30"], ["root90", "Legacy Root-90"]
-  ];
+  const DATASETS = [["lafan40", "LAFAN40"]];
   const STATUS = { complete: "已记录", partial: "部分记录", pending: "待完成", blocked: "受阻", invalid: "无效", matched: "已核验一致", disclosed_difference: "已披露差异", unknown: "未知" };
   const EMPTY = {
     schema_version: 1, status: "pending", updated_utc: null,
@@ -115,6 +111,27 @@
       return !query || [row.label, row.motion_id, row.id, (row.checkpoint || {}).name].some((value) => String(value || "").toLowerCase().includes(query));
     });
   }
+  const pairedCaseKey = (row) => JSON.stringify([row.phase, row.dataset, row.condition, row.mode, row.motion_id, row.seed, (row.provenance || {}).protocol_sha256, (row.provenance || {}).runtime]);
+  function pairedMotionCases(data) {
+    const groups = new Map();
+    asArray(data.results).filter((row) => row.scope === "per_motion").forEach((row) => {
+      const key = pairedCaseKey(row);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(row);
+    });
+    return [...groups.values()].filter((rows) => rows.length === 2 && rows.some((row) => row.robot === "rp1") && rows.some((row) => row.robot === "g1"));
+  }
+  function pairedHistoricalVideo(video) {
+    if (!video || video.synchronized !== true) return false;
+    const sources = asArray(video.source_runs);
+    if (sources.length !== 2 || new Set(sources.map((source) => source.episode_id)).size !== 2) return false;
+    const rows = sources.map((source) => state.data.results.find((row) => row.id === source.episode_id && row.scope === "per_motion"));
+    if (rows.some((row) => !row) || !rows.some((row) => row.robot === "rp1") || !rows.some((row) => row.robot === "g1") || pairedCaseKey(rows[0]) !== pairedCaseKey(rows[1])) return false;
+    return sources.every((source, index) => {
+      const row = rows[index];
+      return source.robot === row.robot && source.dataset === row.dataset && source.motion === row.motion_id && source.condition === row.condition && source.mode === row.mode && String(source.seed) === String(row.seed);
+    });
+  }
   function compareRows(a, b) {
     const aValue = valueOf(a, state.metric), bValue = valueOf(b, state.metric);
     if (aValue === null && bValue !== null) return 1;
@@ -126,7 +143,7 @@
   function ranksForMetric(data, key) {
     const output = new Map();
     const definition = metricDefinition(key);
-    data.results.forEach((row) => output.set(row.id, { rank: null, reason: "未核验共同配对" }));
+    data.results.forEach((row) => output.set(row.id, { rank: null, reason: row.scope === "per_motion" ? "逐回合不排名；配对统计见聚合" : "未核验共同配对" }));
     asArray(data.comparisons).forEach((comparison) => {
       const ids = asArray(comparison.expected_participants);
       const members = ids.map((id) => data.results.find((row) => row.id === id)).filter(Boolean);
@@ -170,7 +187,7 @@
   function rowEvidence(row) {
     const provenance = row.provenance || {}, checkpoint = row.checkpoint || {};
     const notes = asArray(row.notes).map(readerNote).filter(Boolean);
-    return `<details><summary>策略、条件与视频</summary><div class="record-evidence"><p>${escape(checkpoint.name || "策略身份待提供")}</p><p>评测环境：${escape(provenance.runtime || "待提供")}</p>${notes.map((note) => `<p>${escape(note)}</p>`).join("")}${asArray(row.videos).map((video) => `${linkHTML(video, "视频")}<p>${video.synchronized ? "共同时间轴对比" : "单机示例"} · ${escape(String(video.description || "视频仅为个例证据").replace(/SHA 为本地原视频；云端原文件未下载做字节哈希。\s*/g, ""))}</p>`).join("")}</div></details>`;
+    return `<details><summary>策略、条件与同步视频</summary><div class="record-evidence"><p>${escape(checkpoint.name || "策略身份待提供")}</p><p>评测环境：${escape(provenance.runtime || "待提供")}</p>${notes.map((note) => `<p>${escape(note)}</p>`).join("")}${asArray(row.videos).filter(pairedHistoricalVideo).map((video) => `${linkHTML(video, "同步视频")}<p>共同时间轴对比 · ${escape(String(video.description || "视频仅为个例证据").replace(/SHA 为本地原视频；云端原文件未下载做字节哈希。\s*/g, ""))}</p>`).join("")}</div></details>`;
   }
   function readerNote(note) {
     const text = String(note);
@@ -187,7 +204,6 @@
   }
   function renderHeaders() {
     $("results-head").innerHTML = `<tr><th scope="col">组内名次<span class="unit">按所选指标</span></th><th scope="col">策略 / 动作<span class="unit">阶段 · 机器人 · 条件</span></th><th scope="col">覆盖<span class="unit">已评 / 计划；共同 / 母集</span></th>${METRICS.map((metric) => `<th scope="col" aria-sort="${state.metric === metric.key ? (state.direction === "asc" ? "ascending" : "descending") : "none"}"><button type="button" data-sort="${metric.key}" title="按 ${escape(metric.label)} 排序">${metric.label} ${state.metric === metric.key ? state.direction === "asc" ? "↑" : "↓" : "↕"}<span class="unit">${metric.unit} · ${metric.direction === "asc" ? "越低越好 ↓" : "越高越好 ↑"}</span></button></th>`).join("")}</tr>`;
-    $("reference-head").innerHTML = `<tr><th scope="col">官方来源 / 条件</th><th scope="col">来源覆盖</th>${METRICS.map((metric) => `<th scope="col">${metric.label}<span class="unit">${metric.unit}</span></th>`).join("")}</tr>`;
   }
   function renderRows(rows, ranks) {
     const pages = Math.max(1, Math.ceil(rows.length / state.pageSize));
@@ -205,7 +221,17 @@
   }
   function renderOverview() {
     const summary = pairedSummaryFor(state.data);
-    $("overview").innerHTML = summary ? `<div class="scope-item"><strong>40</strong><p><b>共同动作</b>RP1 与 G1 的主要配对范围</p></div><div class="scope-item"><strong>318</strong><p><b>G1 补充动作</b>单系统覆盖，不做双机器人排名</p></div><div class="scope-item"><strong>27 / 26</strong><p><b>未触发失败阈值</b>RP1 / G1，各以 40 动作为分母</p></div>` : emptyHTML("配对结果待核验", "尚未读取可支持结论的完整共同动作组。");
+    if (!summary) {
+      $("overview").innerHTML = emptyHTML("配对结果待核验", "尚未读取可支持结论的完整共同动作组。");
+      return;
+    }
+    const cases = pairedMotionCases(state.data), motions = new Set(cases.map((rows) => JSON.stringify([rows[0].dataset, rows[0].motion_id])));
+    const noThresholdFailure = (row) => {
+      const failure = asArray(row.failures).find((item) => item.reason === "no_threshold_failure");
+      return failure && knownCount(failure.count) ? failure.count.toLocaleString("en-US") : "n/a";
+    };
+    const denominator = summary.rp1.paired_coverage.denominator;
+    $("overview").innerHTML = `<div class="scope-item"><strong>${motions.size}</strong><p><b>共同动作</b>RP1 与 G1 的共有动作范围</p></div><div class="scope-item"><strong>${cases.length}</strong><p><b>配对条件与 seed 案例</b>包含重复与扰动，不等于独立动作数</p></div><div class="scope-item"><strong>${noThresholdFailure(summary.rp1)} / ${noThresholdFailure(summary.g1)}</strong><p><b>未触发失败阈值</b>主要条件 RP1 / G1，各以 ${denominator} 动作为分母</p></div>`;
   }
   function pairedSummaryFor(data) {
     const keys = ["progress_pct", "body_pos_mm", "body_ori_rad", "wrist_ori_rad"];
@@ -269,7 +295,7 @@
       svg += `<g><title>${escape(`${label}; ${row.condition}; ${row.mode}; seed ${row.seed}; ${fmt(value, metric.digits)} ${metric.unit}; ${coverageText((row.metrics[state.metric] || {}).coverage)}`)}</title><text x="0" y="${y + 4}" font-size="11" fill="#50647f">${escape(short)}</text><line x1="${x(0)}" y1="${y}" x2="${x(value)}" y2="${y}" stroke="${color(row)}" stroke-opacity=".25" stroke-width="5"/><circle cx="${x(value)}" cy="${y}" r="4" fill="${color(row)}"/><text x="752" y="${y + 4}" text-anchor="end" font-size="11" fill="#263e5d">${escape(fmt(value, metric.digits))}</text></g>`;
     });
     svg += "</svg>";
-    $("motion-chart").innerHTML = `<div class="legend"><span style="--dot:#4387f5">RP1</span><span style="--dot:#159b80">G1 / 其他</span></div>${svg}<p class="chart-note">显示 ${rows.length} / ${valid.length} 个有效值；另有 ${source.length - valid.length} 条 n/a。${valid.length > rows.length ? "图表截取前 36 条，完整记录可在逐动作表格或 CSV 中查看。" : "悬停点查看动作、条件、模式、seed 和分母；键盘用户可访问上方数据表。"}</p>`;
+    $("motion-chart").innerHTML = `<div class="legend"><span style="--dot:#4387f5">RP1</span><span style="--dot:#159b80">G1</span></div>${svg}<p class="chart-note">显示 ${rows.length} / ${valid.length} 个有效值；另有 ${source.length - valid.length} 条 n/a。${valid.length > rows.length ? "图表截取前 36 条，完整记录可在逐动作表格或 CSV 中查看。" : "悬停点查看动作、条件、模式、seed 和分母；键盘用户可访问上方数据表。"}</p>`;
   }
   function renderFailures(rows) {
     const available = rows.filter((row) => asArray(row.failures).length);
@@ -283,11 +309,6 @@
       return `<div class="failure-line"><span>${escape(failure.reason)}</span><div class="failure-track" aria-hidden="true"><div class="failure-fill" style="width:${100 * ratio}%"></div></div><span class="failure-count">${valid ? `${failure.count} / ${failure.denominator}` : "n/a"}<span class="metric-detail">${escape(failure.unit || "样本")}</span></span></div>`;
     }).join("")}</div>`).join("") + `<p class="chart-note">显示 ${Math.min(8, available.length)} / ${available.length} 条有失败分类的记录。分类是否互斥以协议为准；不将不同分类求和解释为总失败率。</p>`;
   }
-  function renderReferences() {
-    const dataset = $("filter-dataset").value;
-    const rows = state.data.official_references.filter((row) => dataset === "all" || row.dataset === dataset);
-    $("reference-body").innerHTML = rows.length ? rows.map((row) => `<tr><td class="row-heading"><div class="record-label">${escape(row.label)}</div><span class="record-meta">${escape(String(row.robot).toUpperCase())} · ${escape(datasetLabel(row.dataset))}</span>${linkHTML(row.source, "官方原始来源")}<p class="reference-context">${escape(row.context || "来源条件待提供")}</p></td><td><span class="coverage-primary">${escape(coverageText(row.coverage))}</span><span class="coverage-secondary">${escape((row.coverage || {}).reason || "")}</span><span class="badge">不参与复跑排名</span></td>${METRICS.map((metric) => metricHTML(row, metric)).join("")}</tr>`).join("") : `<tr><td class="empty-cell" colspan="10"><strong>官方来源待核验</strong><p>外部官方值在独立区展示。没有来源、条件与覆盖信息时，不填入参考数字。</p></td></tr>`;
-  }
   function renderFairness() {
     const selected = filters();
     const rows = state.data.fairness.filter((row) => ["phase", "condition", "mode"].every((key) => !row[key] || row[key] === "all" || selected[key] === "all" || row[key] === selected[key]));
@@ -297,9 +318,9 @@
     const statistics = state.data.statistics;
     $("statistics").innerHTML = [["聚合口径", "aggregation"], ["CI 方法", "ci_method"], ["推断范围", "ci_scope"], ["缺失处理", "missing_policy"], ["排名条件", "rank_policy"]].map(([label, key]) => `<dt>${label}</dt><dd>${escape(statistics[key] || "待提供")}</dd>`).join("");
     const all=asArray(state.data.downloads), reports=all.filter(d=>/feishu\.cn\/(docx|file)\//.test(d.url)&&/技术报告/.test(d.label));
-    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>专业改写版正文、PDF / DOCX v2（10 页）均已核验更新；飞书链接需组织权限。</p>`;
-    const historical=all.filter(d=>!reports.includes(d)&&/feishu\.cn/.test(d.url));
-    $("historical-links").innerHTML = `<p>以下为既有组织内报告附录与历史素材，不是本次新增的公开高分辨率视频。原始云端附录尚未全部验收。</p>${historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("")}`;
+    $("downloads").innerHTML = `<p>${reports.map(linkHTML).join(" ")}</p><p>共同动作版报告 common_v07 · PDF / DOCX v3，PDF 10 页。来源任务已核验正文与报告对应；飞书链接需组织权限。</p>`;
+    const historical=all.filter(d=>!reports.includes(d)&&/feishu\.cn/.test(d.url)&&pairedHistoricalVideo(d));
+    $("historical-links").innerHTML = `<p>以下为共有动作的既有双机器人同步回放，来源回合身份与当前公开比较对应；飞书链接需组织权限。</p>${historical.length ? historical.map(d=>`<div class="historical-item">${linkHTML(d)}</div>`).join("") : "<p>尚无可核验的既有同步回放。</p>"}`;
     const notes = [...asArray(statistics.limitations), ...asArray(state.data.notes)].map(readerNote).filter(Boolean);
     $("limitations").innerHTML = notes.map((note) => `<li>${escape(note)}</li>`).join("");
   }
@@ -324,7 +345,7 @@
     document.querySelectorAll(".video-choice").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.motion===item.motion_id)));
   }
   async function renderPublicMedia() {
-    const pending=()=>{document.querySelector(".hero-actions .button").textContent="动作回放计划 ↗";$("video-coverage").textContent="0 / 40 新片已发布";$("public-videos").innerHTML=`<div class="video-pending"><strong>共同 40 动作<br>高分辨率回放待交付。</strong><p>新一批 4K 原生渲染与 1080p 网页视频尚未完成。当前没有可公开播放的新片。<br>组织内历史素材可在下方“历史报告与视频”查看。</p></div>`;};
+    const pending=()=>{document.querySelector(".hero-actions .button").textContent="动作回放计划 ↗";$("video-coverage").textContent="0 / 40 新片已发布";$("public-videos").innerHTML=`<div class="video-pending"><strong>共同 40 动作<br>高分辨率回放待交付。</strong><p>新一批 4K 原生渲染与 1080p 网页视频尚未完成公开交付。当前没有可公开播放的新片。<br>共有动作的既有同步素材可在下方“既有双机器人同步回放”查看。</p></div>`;};
     pending();
     try {
       const response=await fetch("./media.json",{cache:"no-store",credentials:"same-origin"});
@@ -340,7 +361,7 @@
   }
   function render() {
     const rows = filteredRows().sort(compareRows), ranks = ranksForMetric(state.data, state.metric);
-    renderHeaders(); renderRows(rows, ranks); renderOverview(); renderPairedSummary(); renderMotionChart(); renderFailures(rows); renderReferences(); renderFairness(); renderEvidence();
+    renderHeaders(); renderRows(rows, ranks); renderOverview(); renderPairedSummary(); renderMotionChart(); renderFailures(rows); renderFairness(); renderEvidence();
     $("view-aggregate").setAttribute("aria-pressed", String(state.scope === "aggregate"));
     $("view-per-motion").setAttribute("aria-pressed", String(state.scope === "per_motion"));
     $("sort-direction").textContent = state.direction === "asc" ? "升序 ↑" : "降序 ↓";
@@ -428,6 +449,6 @@
     populateFilters(); bindEvents(); render(); await renderPublicMedia();
   }
   /* Pure helpers exposed for offline contract checks; no scores or fixtures are bundled. */
-  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, validPublicMedia, pairedIntervalSVG, metrics: METRICS };
+  window.LeaderboardUtils = { ranksForMetric, csvExport, normalizeData, coverageText, valueOf, safeURL, linkHTML, pairedSummaryFor, pairedMotionCases, pairedHistoricalVideo, validPublicMedia, pairedIntervalSVG, metrics: METRICS };
   init();
 })();

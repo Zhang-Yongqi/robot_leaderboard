@@ -26,6 +26,37 @@ AGGREGATE_SHA = '036559d03c4a2a3ec8198c6a703b9a09be096c7181eb62d7c0b91ec06bd4221
 ADAPTER_SHA = 'a199be0fb34219019a07bc16b8f2f91ad4d7c863f6f22522a7b5b033a5e44f04'
 NOMINAL_ID = 'paired_9b95426b30027f7b'
 NOMINAL_SAMPLE_SHA = '185327685ec34743ef24e818f57480664249489746fadfc7ed359a94f952d7aa'
+# Scientific fields of the reviewed 178-row intersection, before changing any
+# public copy or links. This pins every retained value, CI, sample and failure.
+PAIRED_SCIENCE_SHA = '162e44a657d28953694998a72a2e2b1fe1394b06fe9e3e5d46f073746c20decb'
+PAIR_KEY = ('phase', 'dataset', 'condition', 'mode', 'motion_id', 'seed',
+            'protocol_sha256', 'runtime')
+PUBLIC_SCOPE = {
+    'unique_motions': 40, 'paired_cases': 85, 'episodes': 170,
+    'aggregate_rows': 8, 'result_rows': 178, 'comparison_groups': 4,
+    'pairing_key': list(PAIR_KEY),
+    'rule': ('Exact RP1/G1 identity intersection; condition is canonical effective condition; '
+             'no status or success filtering; original raw records preserved.'),
+}
+SCIENTIFIC_COVERAGE = {
+    'unique_common_motions': 40, 'paired_cases': 85, 'paired_episodes': 170,
+    'aggregate_rows': 8, 'comparison_groups': 4,
+}
+# condition / mode -> (comparison ID, exact cases, unique motions, seeds,
+#                      immutable reviewed sample-set SHA)
+COHORTS = {
+    ('nominal', 'native_position'):
+        (NOMINAL_ID, 40, 40, {0}, NOMINAL_SAMPLE_SHA),
+    ('explicit_sensitivity', 'explicit_deploy'):
+        ('paired_c179e42ff26f4ccc', 5, 5, {0},
+         'f21ad5e5d3827cad625cb7b05c6a4376613902c9ba013d6ac0ef726f25af2b69'),
+    ('repeat_nominal', 'native_position'):
+        ('paired_af50da41bd3b816a', 15, 5, {0, 1, 42},
+         'c3607519913703584a2538e879e01de88fe8d341634eba04e253db387e269c84'),
+    ('robust_initial_velocity', 'native_position'):
+        ('paired_826633abc5b0aceb', 25, 5, {0, 1, 2, 3, 4},
+         '8e12de44ff70a24132fc06e9cc6de1fe4ff62c75df73cf0e1176c7a00f761670'),
+}
 METRICS = {'body_pos_mm', 'body_ori_rad', 'root_pos_m', 'gpu_train_hours',
            'wrist_pos_mm', 'wrist_ori_rad', 'episode_return', 'progress_pct'}
 PUBLISH_FILES = {
@@ -71,6 +102,10 @@ COMPARISON_KEYS = {'id', 'label', 'verified', 'expected_participants',
                    'expected_paired_motions', 'paired_deltas', 'cohort_metadata'}
 RESULT_IDENTITY = ('id', 'label', 'phase', 'robot', 'dataset', 'condition', 'mode',
                    'seed', 'scope', 'motion_id', 'status', 'status_reason')
+SCIENTIFIC_FIELDS = RESULT_IDENTITY + ('metrics', 'coverage', 'paired_coverage',
+                                      'pairing', 'failures', 'checkpoint')
+PROVENANCE_FIELDS = ('source_sha256', 'config_sha256', 'protocol_sha256', 'runtime')
+SINGLE_SIDE_APPENDIX_URL = 'https://roboparty.feishu.cn/drive/folder/JReufYd5al9Sfzd2GEkcLGjYnJf'
 
 
 class AuditError(ValueError):
@@ -84,6 +119,25 @@ def require(condition, message):
 
 def sha(raw):
     return hashlib.sha256(raw).hexdigest()
+
+
+def pair_key(row):
+    # The canonical condition is supplied by the reviewed source. Do not infer
+    # matches from names, status, score, or a video's original_condition alias.
+    return tuple(row[name] for name in PAIR_KEY[:6]) + tuple(
+        row['provenance'][name] for name in PAIR_KEY[6:])
+
+
+def scientific_digest(data):
+    protected = {
+        'results': [dict({name: row.get(name) for name in SCIENTIFIC_FIELDS},
+                         provenance={name: row['provenance'].get(name)
+                                     for name in PROVENANCE_FIELDS})
+                    for row in sorted(data['results'], key=lambda item: item['id'])],
+        'comparisons': sorted(data['comparisons'], key=lambda item: item['id']),
+    }
+    return sha(json.dumps(protected, sort_keys=True, ensure_ascii=False,
+                          separators=(',', ':'), allow_nan=False).encode())
 
 
 def read_json(path):
@@ -183,6 +237,8 @@ class Audit:
         self.internal_links = set()
         self.data = read_json(self.root / 'data.json')
         self.manifest = read_json(self.root / 'RELEASE_MANIFEST.json')
+        self.episodes_by_id = {row['id']: row for row in self.data['results']
+                               if row['scope'] == 'per_motion'}
 
     def run_check(self, label, fn):
         try:
@@ -202,7 +258,9 @@ class Audit:
         require(m['data_version'] == 'round2-phaseA-' + AGGREGATE_SHA[:12], 'data version mismatch')
         digest = m.get('public_data_sha256', m.get('data_sha256', m.get('data_sha')))
         require(digest == sha((self.root / 'data.json').read_bytes()), 'public data SHA mismatch')
-        require(m['result_rows'] == 511 and m['comparison_groups'] == 14, 'manifest count mismatch')
+        require(m['result_rows'] == 178 and m['comparison_groups'] == 4, 'manifest count mismatch')
+        require(m['scientific_contract']['coverage'] == SCIENTIFIC_COVERAGE,
+                'manifest scientific coverage must describe only the paired public cohort')
         files = m.get('files')
         if files is not None:
             if isinstance(files, dict):
@@ -230,7 +288,9 @@ class Audit:
         keys(d, {'schema_version', 'title', 'subtitle', 'updated_utc', 'status',
                  'aggregate_sha256', 'adapter_sha256', 'status_message', 'phases',
                  'datasets', 'results', 'comparisons', 'official_references',
-                 'fairness', 'statistics', 'notes', 'downloads'}, 'data')
+                 'fairness', 'statistics', 'notes', 'downloads', 'public_scope'}, 'data')
+        keys(d['public_scope'], set(PUBLIC_SCOPE), 'public_scope')
+        require(d['public_scope'] == PUBLIC_SCOPE, 'paired public scope contract differs')
         for phase, info in d['phases'].items():
             require(phase in {'A', 'B'}, 'unknown phase')
             keys(info, {'label', 'status', 'description'}, 'phase.' + phase)
@@ -250,7 +310,7 @@ class Audit:
             for failure in row['failures']:
                 keys(failure, {'reason', 'count', 'denominator', 'unit'}, loc + '.failure')
             for video in row['videos']:
-                self.video_schema(video)
+                self.video_schema(video, row)
         for item in d['downloads']:
             if 'source_runs' in item:
                 self.video_schema(item)
@@ -299,10 +359,47 @@ class Audit:
                 scanned = content.replace('.hostname', '') if name == 'app.js' else content
                 require(not INFRA.search(scanned), name + ': private infrastructure marker')
 
-    def video_schema(self, video):
+    def video_schema(self, video, row=None):
         keys(video, VIDEO_KEYS, 'video')
-        for run in video.get('source_runs', []):
+        require(video.get('synchronized') is True and video.get('robot') == 'rp1_g1',
+                'public video must show both robots on a synchronized timeline')
+        runs = video.get('source_runs', [])
+        require(isinstance(runs, list) and len(runs) == 2,
+                'paired video must identify exactly two source runs')
+        require({run['robot'] for run in runs} == {'rp1', 'g1'},
+                'paired video source robots differ')
+        episodes = []
+        for run in runs:
             keys(run, SOURCE_RUN_KEYS, 'video.source_run')
+            episode = self.episodes_by_id.get(run.get('episode_id'))
+            require(episode is not None, 'video source episode is outside the retained paired cohort')
+            for source_name, episode_name in [('robot', 'robot'), ('motion', 'motion_id'),
+                                              ('dataset', 'dataset'), ('condition', 'condition'),
+                                              ('mode', 'mode'), ('seed', 'seed')]:
+                require(run.get(source_name) == episode[episode_name],
+                        'video source run differs from retained episode: ' + source_name)
+            require(video.get('clip') == episode['motion_id'], 'video clip differs from source motion')
+            if row is not None:
+                for name in ('phase', 'dataset', 'condition', 'mode'):
+                    require(episode[name] == row[name], 'row video crosses an evaluation condition')
+                if row['scope'] == 'per_motion':
+                    require(episode['motion_id'] == row['motion_id'] and
+                            episode['seed'] == row['seed'], 'row video motion/seed differs')
+                else:
+                    cohort = COHORTS.get((row['condition'], row['mode']))
+                    require(cohort is not None and episode['seed'] in cohort[3],
+                            'aggregate video seed lies outside its reviewed cohort')
+                    seeds = sorted(cohort[3])
+                    aggregate_seed = (str(seeds[0]) if len(seeds) == 1 else
+                                      'pooled_' + '_'.join(str(seed) for seed in seeds))
+                    require(row['seed'] == aggregate_seed,
+                            'aggregate video does not match the row seed pool')
+            episodes.append(episode)
+        require(pair_key(episodes[0]) == pair_key(episodes[1]),
+                'video source runs do not form an exact evaluation pair')
+        if row is not None and row['scope'] == 'per_motion':
+            require(row['id'] in {episode['id'] for episode in episodes},
+                    'row video does not include the row episode')
         require(video.get('cloud_original_sha256_verified') is False,
                 'video must retain unverified cloud byte-hash status')
 
@@ -323,10 +420,18 @@ class Audit:
 
     def counts_and_missing(self):
         rows = self.data['results']
-        require(len(rows) == 511 and len({row['id'] for row in rows}) == 511, 'expected 511 unique result IDs')
-        require(Counter(row['scope'] for row in rows) == {'aggregate': 18, 'per_motion': 493}, 'scope counts changed')
+        # 511 source display rows = 18 aggregate + 493 per-motion. The public
+        # intersection is 178 display rows, not 178 independent experiments.
+        require(len(rows) == 178 and len({row['id'] for row in rows}) == 178,
+                'expected 178 unique paired result IDs')
+        require(Counter(row['scope'] for row in rows) == {'aggregate': 8, 'per_motion': 170},
+                'paired scope counts changed')
         motions = [row for row in rows if row['scope'] == 'per_motion']
-        require(Counter(row['status'] for row in motions) == {'complete': 488, 'partial': 5}, 'per-motion terminal counts changed')
+        require(all(row['dataset'] == 'lafan40' for row in rows), 'unpaired dataset remains public')
+        require(len({row['motion_id'] for row in motions}) == 40, 'expected 40 unique common motions')
+        require(self.data['official_references'] == [], 'single-robot official references remain public')
+        require(len(self.data['datasets']) == 1 and self.data['datasets'][0]['id'] == 'lafan40' and
+                self.data['datasets'][0]['expected_motions'] == 40, 'dataset scope must be common LAFAN40')
         require(all(row['phase'] == 'A' for row in rows), 'Phase B result rows are prohibited before training')
         require(self.data['phases']['B']['status'] == 'blocked', 'Phase B boundary changed')
         for row in rows + self.data['official_references']:
@@ -352,21 +457,72 @@ class Audit:
                 if delta['value'] is None:
                     require(comparison.get('reason') and bounds is None, 'missing paired value/CI reason')
 
+    def exact_episode_pairs(self):
+        episodes = list(self.episodes_by_id.values())
+        pairs = {}
+        for row in episodes:
+            require(row['robot'] in {'rp1', 'g1'}, 'unknown paired robot')
+            require(isinstance(row['motion_id'], str) and row['motion_id'], 'missing paired motion identity')
+            require(type(row['seed']) is int, 'paired episode seed must be an exact integer')
+            require(HASH.fullmatch(row['provenance']['protocol_sha256']) and
+                    isinstance(row['provenance']['runtime'], str) and row['provenance']['runtime'].strip(),
+                    'paired episode protocol/runtime identity is missing')
+            identity = pair_key(row)
+            members = pairs.setdefault(identity, {})
+            require(row['robot'] not in members, 'duplicate robot for the same exact pairing key')
+            members[row['robot']] = row
+        require(len(pairs) == 85 and all(set(members) == {'rp1', 'g1'} for members in pairs.values()),
+                'expected 85 exact RP1/G1 pairs; no forced or one-sided matches')
+        expected_counts = {cohort: spec[1] * 2 for cohort, spec in COHORTS.items()}
+        require(Counter((row['condition'], row['mode']) for row in episodes) == expected_counts,
+                'paired episode cohort counts changed')
+        for cohort, (comparison_id, n_cases, n_motions, seeds, sample) in COHORTS.items():
+            selected = [row for row in episodes if (row['condition'], row['mode']) == cohort]
+            identities = {pair_key(row) for row in selected}
+            require(len(identities) == n_cases, 'cohort exact pair count changed: ' + comparison_id)
+            for robot in ('rp1', 'g1'):
+                members = [row for row in selected if row['robot'] == robot]
+                motion_ids = {row['motion_id'] for row in members}
+                require(len(motion_ids) == n_motions and {row['seed'] for row in members} == seeds,
+                        'cohort motion/seed coverage changed: ' + comparison_id)
+                require({(row['motion_id'], row['seed']) for row in members} ==
+                        {(motion, seed) for motion in motion_ids for seed in seeds},
+                        'cohort must retain its complete reviewed seed set: ' + comparison_id)
+            aggregates = [row for row in self.data['results'] if row['scope'] == 'aggregate' and
+                          (row['condition'], row['mode']) == cohort]
+            require(len(aggregates) == 2 and {row['robot'] for row in aggregates} == {'rp1', 'g1'},
+                    'cohort aggregate participants differ: ' + comparison_id)
+            protocol_runtime = {(row['provenance']['protocol_sha256'], row['provenance']['runtime'])
+                                for row in selected + aggregates}
+            require(len(protocol_runtime) == 1, 'cohort protocol/runtime differs; cannot force pairing')
+
+    def retained_scientific_values(self):
+        require(scientific_digest(self.data) == PAIRED_SCIENCE_SHA,
+                'reviewed paired metrics, CI, sample identities, failures or scientific fields changed')
+
     def pairing_and_nominal(self):
         rows = {row['id']: row for row in self.data['results']}
         comparisons = {item['id']: item for item in self.data['comparisons']}
-        require(len(comparisons) == 14, 'expected 14 unique comparison IDs')
+        require(len(self.data['comparisons']) == len(comparisons) == 4 and
+                set(comparisons) == {spec[0] for spec in COHORTS.values()},
+                'expected four reviewed common comparison IDs')
         for comparison in comparisons.values():
-            if not comparison['verified']:
-                require(not comparison['sample_set_sha256'], 'unpaired group claims sample SHA')
-                continue
+            require(comparison['verified'] is True, 'unverified comparison remains public')
+            cohort, spec = next((cohort, spec) for cohort, spec in COHORTS.items()
+                                if spec[0] == comparison['id'])
             sample = comparison['sample_set_sha256']
-            require(bool(HASH.fullmatch(sample)), 'verified pair lacks sample SHA')
+            require(sample == spec[4] and comparison['expected_paired_motions'] == spec[2],
+                    'reviewed comparison sample identity/motion count differs')
+            require(set(comparison['expected_participants']) ==
+                    {comparison['id'] + '_' + robot for robot in ('rp1', 'g1')},
+                    'reviewed participant IDs differ')
             members = [rows.get(name) for name in comparison['expected_participants']]
             require(len(members) == 2 and all(members), 'verified pair participant missing')
             require({row['robot'] for row in members} == {'rp1', 'g1'}, 'verified pair robot identities')
             for row in members:
                 require(row['scope'] == 'aggregate' and row['status'] == 'complete', 'verified pair is incomplete')
+                require((row['dataset'], row['condition'], row['mode'], row['phase']) ==
+                        ('lafan40', *cohort, 'A'), 'verified participant evaluation condition differs')
                 require(row['pairing']['comparison_id'] == comparison['id'] and
                         row['pairing']['sample_set_sha256'] == sample and row['pairing']['verified'],
                         'verified participant pairing differs')
@@ -410,6 +566,7 @@ class Audit:
 
     def link(self, value, location):
         require(isinstance(value, str) and value.strip(), location + ': empty URL')
+        require(value != SINGLE_SIDE_APPENDIX_URL, location + ': single-robot appendix entry remains public')
         require('\\' not in value and not re.search(r'[\x00-\x20]', value), location + ': unsafe URL characters')
         parsed = urlsplit(value)
         if parsed.scheme or parsed.netloc:
@@ -436,6 +593,9 @@ class Audit:
                             loc + ': Feishu permission boundary missing')
         html = HTMLLinks()
         html.feed((self.root / 'index.html').read_text())
+        require(not html.ids.intersection({'official', 'official-body', 'official-references',
+                                          'appendix', 'single-robot-results', 'unpaired-results'}),
+                'official/single-robot appendix table entry remains public')
         for value in html.links:
             self.link(value, 'index.html')
             if value.startswith('#') and len(value) > 1:
@@ -456,55 +616,33 @@ class Audit:
                 self.link(value, name)
 
     def source_comparison(self):
+        # Compare against the reviewed generator's public intersection, rather
+        # than requiring the excluded 333 display rows to remain public.
+        from update_snapshot import project, validate_projection
+
         raw = self.source_path.read_bytes()
         require(sha(raw) == SOURCE_SHA, 'input is not the reviewed source bytes')
         source = read_json(self.source_path)
         require(source['aggregate_sha256'] == AGGREGATE_SHA, 'source aggregate differs')
         require(source['adapter_sha256'] == ADAPTER_SHA, 'source adapter differs')
-        require(source['updated_utc'] == self.data['updated_utc'], 'source timestamp differs')
-        require(source['datasets'] == self.data['datasets'], 'dataset denominator metadata changed')
-        before = {row['id']: row for row in source['results']}
-        after = {row['id']: row for row in self.data['results']}
-        require(len(before) == len(source['results']) and set(before) == set(after), 'source/result ID set changed')
-        for identity, row in after.items():
-            original = before[identity]
-            for name in RESULT_IDENTITY + ('metrics', 'coverage', 'paired_coverage', 'pairing', 'failures'):
-                require(original.get(name) == row.get(name), 'source drift at ' + identity + '.' + name)
-            for name in ('name', 'sha256'):
-                require(original['checkpoint'].get(name) == row['checkpoint'].get(name), 'checkpoint identity drift')
-            for name in ('source_sha256', 'config_sha256', 'protocol_sha256', 'runtime'):
-                require(original['provenance'].get(name) == row['provenance'].get(name), 'provenance hash/runtime drift')
-            expected = [{'label': item['label'], 'sha256': item['sha256']}
-                        for item in original['provenance'].get('raw_links', [])]
-            require(expected == row['provenance']['evidence_hashes'], 'internal evidence hash drift')
-            require(len(original.get('videos', [])) == len(row['videos']), 'result video count changed')
-            for source_video, public_video in zip(original.get('videos', []), row['videos']):
-                for name in VIDEO_KEYS - {'description', 'access', 'source_runs'}:
-                    require(source_video.get(name) == public_video.get(name), 'result video identity/hash changed')
-                expected_runs = [{name: run[name] for name in SOURCE_RUN_KEYS if name in run}
-                                 for run in source_video.get('source_runs', [])]
-                require(expected_runs == public_video.get('source_runs'), 'video/run mapping changed')
-        before = {item['id']: item for item in source['comparisons']}
-        after = {item['id']: item for item in self.data['comparisons']}
-        require(len(before) == len(source['comparisons']) and set(before) == set(after), 'comparison IDs changed')
-        for identity, item in after.items():
-            for name in COMPARISON_KEYS - {'cohort_metadata'}:
-                require(before[identity].get(name) == item.get(name), 'paired comparison drift: ' + identity + '.' + name)
-        before = {item['id']: item for item in source['official_references']}
-        after = {item['id']: item for item in self.data['official_references']}
-        require(set(before) == set(after), 'official reference identities changed')
-        for identity, item in after.items():
-            for name in ('metrics', 'coverage', 'checkpoint_cost_id', 'cost_scope'):
-                require(before[identity].get(name) == item.get(name), 'official metric/coverage drift')
-            for name in ('label', 'url', 'sha256'):
-                require(before[identity]['source'].get(name) == item['source'].get(name), 'official source link/hash drift')
+        expected = project(source)
+        try:
+            validate_projection(source, expected)
+        except AssertionError as error:
+            raise AuditError('reviewed paired projection failed its scientific validation') from error
+        require(expected == self.data,
+                'public snapshot differs from the exact reviewed paired-only source projection')
+        require(scientific_digest(expected) == PAIRED_SCIENCE_SHA,
+                'source paired projection changed reviewed scientific fields')
         require(self.source_path.read_bytes() == raw, 'source changed during verification')
 
     def run(self):
         for label, fn in [('version_and_manifest_hashes', self.version_and_files),
                           ('public_schema_and_privacy', self.privacy_and_schema),
                           ('row_counts_missing_values_and_phase_boundary', self.counts_and_missing),
+                          ('exact_episode_pair_intersection', self.exact_episode_pairs),
                           ('verified_pair_identities_and_nominal_contract', self.pairing_and_nominal),
+                          ('immutable_retained_scientific_values', self.retained_scientific_values),
                           ('public_media_pending_boundary', self.public_media),
                           ('internal_targets_and_reviewed_https_links', self.links)]:
             self.run_check(label, fn)
@@ -515,6 +653,9 @@ class Audit:
                 'public_data_sha256': sha((self.root / 'data.json').read_bytes()),
                 'source_data_sha256': SOURCE_SHA, 'source_compared': self.source_path is not None,
                 'result_rows': len(self.data.get('results', [])),
+                'paired_cases': self.data.get('public_scope', {}).get('paired_cases'),
+                'paired_episodes': len(self.episodes_by_id),
+                'unique_common_motions': len({row['motion_id'] for row in self.episodes_by_id.values()}),
                 'checked': self.checked, 'errors': self.errors,
                 'unique_external_links': len(self.external_links),
                 'unique_internal_links': len(self.internal_links),
