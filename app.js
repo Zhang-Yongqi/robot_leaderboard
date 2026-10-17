@@ -472,15 +472,7 @@
   function renderMetricScope() {
     const endpointEnabled = state.data.schema_version === 6;
     const rootEnabled = state.data.schema_version === 5 || endpointEnabled;
-    const group = fullGroup("lafan40");
-    if (rootEnabled && group) {
-      const deltas = group.comparison.paired_deltas;
-      const fiveSupportRP1 = [...BASE_METRICS.map(metric => metric.key), "full_root_ori_rad"].every(key => deltas[key].ci95[1] < 0);
-      const rootPositionCrossesZero = deltas.full_root_pos_mm.ci95[0] <= 0 && deltas.full_root_pos_mm.ci95[1] >= 0;
-      $("report-subtitle").textContent = fiveSupportRP1 && rootPositionCrossesZero ? "Common40 的身体、手腕四项及根姿态误差支持 RP1 较低；根位置误差区间跨零。Extreme5 独立报告。" : "Common40 六项全程误差分别依据配对区间解释；Extreme5 独立报告。";
-    } else {
-      $("report-subtitle").textContent = "共同 40 动作中，RP1 的四项全程身体与手腕误差较低。空翻与转体组独立报告。";
-    }
+    $("report-subtitle").textContent = "统一测试条件下的动作跟踪与运动表现对比，依据本页公开的仿真评测协议。";
     const sensitivity = state.data.comparisons.find(item => item.condition === "explicit_sensitivity");
     const rootDelta = rootEnabled && sensitivity?.paired_deltas.full_root_pos_mm;
     $("root-sensitivity-note").textContent = rootDelta ? `显式执行敏感性组（N=${rootDelta.n_motions}）的根位置配对差值 RP1 − G1 的 95% CI 为 [${fmt(rootDelta.ci95[0], 2)}, ${fmt(rootDelta.ci95[1], 2)}] mm。${rootDelta.ci95[0] > 0 ? "支持 G1 误差较低。" : rootDelta.ci95[1] < 0 ? "支持 RP1 误差较低。" : "区间跨零。"}各条件组独立解释。` : "";
