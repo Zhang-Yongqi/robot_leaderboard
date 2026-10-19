@@ -4,6 +4,10 @@ RoboParty 发布的人形机器人性能评测网站，依据公开的仿真评�
 
 RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全程身体、手腕与根部的位置、姿态六项误差，以及独立的根部终点位置误差。Common40 覆盖 **40个配对动作（N=40）**，Extreme5 独立报告 **5个配对动作（N=5）** 的空翻／转体测试；motion 跟踪任务完成率依据几何、参考轨迹与有效末端证据单独报告。网站为 HTML / CSS / JavaScript，无构建步骤或第三方依赖。
 
+页面按“概览、动作表现、机器人参数、方法与数据”组织为四个可切换分区。概览可选两套主数据集与全部七项误差，完整并排结果、敏感性条件与逐动作筛选均保持可达。技术明细按需展开，分区切换不重建筛选或数据。
+
+页面右上角提供 **中文 / EN** 切换，默认中文并在浏览器本地记住选择。翻译只作用于文字、图表说明和无障碍标签，不重新计算或翻译科学数据；切换保留当前筛选、排序和展开状态。JSON / CSV 保持原字段、数值与原有文本，飞书正文、PDF 和 DOCX 均为中文报告。
+
 ## 评测条件
 
 | 数据组 | 条件 / 执行模式 | 配对动作数 | 条件/seed 配对数 | 机器人回合数 |
@@ -130,6 +134,6 @@ python3 scripts/verify_public.py \
 
 `--source-completion`、`--source-root` 与 `--source-endpoint` 的 JSON 同目录分别须包含 `public_completion_episodes.csv`、`public_sixerror_episodes.csv` 与 `public_sevenerror_episodes.csv`，各自按冻结 SHA256 核验。历史全程、完成率及根部输入保留原有回归锚，终点独立接入。`--endpoint-adapter` 可省略，默认使用已注册的 `public_root_endpoint_completion_v8`。
 
-生成目录包含三份公开数据文件。验证与发布的完整候选须包含 **18 个白名单公开文件**及更新后的 `RELEASE_MANIFEST.json`，包括 `scripts/source_contract.py`；三份生成数据本身不构成完整发布包。
+生成目录包含三份公开数据文件。验证与发布的完整候选须包含 **22 个白名单公开文件**及更新后的 `RELEASE_MANIFEST.json`，包括 `scripts/source_contract.py`；三份生成数据本身不构成完整发布包。
 
 公开投影经独立核验及静态、桌面和手机浏览器 QA 后发布。科学来源与公开投影的摘要分别记录，报告云端更新单独核验。GitHub Pages 发布源为 `main / (root)`。

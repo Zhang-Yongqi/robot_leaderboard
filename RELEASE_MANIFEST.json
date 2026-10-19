@@ -53,12 +53,12 @@
       "sha256": "36e0557b9629400a28566f7f7ee4231419b3c41993cfdfd62bd7531d41810892"
     },
     "README.md": {
-      "bytes": 12674,
-      "sha256": "e7cac086abd3e970c3828e3130bab9d219541dd6ca24828846c342d1a89d5f62"
+      "bytes": 13322,
+      "sha256": "7110cde8df130891f06c4deccae0e137cd10d00c6ba55918d670ebc6b25dae71"
     },
     "app.js": {
-      "bytes": 84154,
-      "sha256": "bc520f88c7975d5988b7b23bb2ab1839e70d46bef83240eeec6d15dd5fdde199"
+      "bytes": 85459,
+      "sha256": "00d990676830e2048aafcc70dffe058ef7528870355d90242e0ada1f28f1f7de"
     },
     "comparisons.csv": {
       "bytes": 49670,
@@ -84,9 +84,25 @@
       "bytes": 222643,
       "sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af"
     },
+    "i18n-data.js": {
+      "bytes": 30450,
+      "sha256": "ec7c9f95ffeeb3d4a31884dd563e9a54973a89d1fcda89460aa582a161e3732f"
+    },
+    "i18n-ui.js": {
+      "bytes": 51705,
+      "sha256": "38976f52052a98ed512d2d06e01f591839c51157c43f1dba22cb58475798df8a"
+    },
+    "i18n.js": {
+      "bytes": 7741,
+      "sha256": "46ca95cd1e2ab1ca4ef704d2da959333e99b875ff4585fcdc9c69d94cb971f9a"
+    },
     "index.html": {
-      "bytes": 14728,
-      "sha256": "70c997f660a4d66906d3b2f07ec5ab87b170014656e2e116821709b464a1814e"
+      "bytes": 17602,
+      "sha256": "87ea3522163617bd92e3b60d7f843dfcd71c32a539b2cf01f2ee2fdcb6ba62bc"
+    },
+    "layout.js": {
+      "bytes": 2497,
+      "sha256": "48c817639f25891e294f90eb9dfb172d31c6c1d80157e2f802854d3cbc8b5451"
     },
     "media.json": {
       "bytes": 173,
@@ -101,12 +117,12 @@
       "sha256": "4667fbd4ca588337200a45907b718bfdcaa9477fd9ab843b8208a2036b690bca"
     },
     "scripts/verify_public.py": {
-      "bytes": 55748,
-      "sha256": "e867bd3aebe94b85e5373481b2218d28bbe0f430381498aa1e7838a71d12236d"
+      "bytes": 56306,
+      "sha256": "a1952cf9528ecad25bc5428455029284a187ebf520d9953c7f3623f9a61b505b"
     },
     "style.css": {
-      "bytes": 28735,
-      "sha256": "0ea56168561e21677eef36c433dd63e47f152a6dd3fb957de0cd6a8c2813709e"
+      "bytes": 40873,
+      "sha256": "eba4472fedcd3832d64a8c0954ba904e3299a3842a5023d6dd90ad94cba57019"
     }
   },
   "completion_source_csv_sha256": "7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b",

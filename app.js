@@ -45,7 +45,7 @@
     { label: "V8 技术报告 DOCX", url: "https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce" }
   ];
   const EMPTY = { schema_version: 4, results: [], comparisons: [], datasets: [], counts: {}, methods: {}, report_downloads: [], fairness: [], stats: {}, primary_comparison_ids: [], secondary_comparison_ids: [] };
-  const state = { data: EMPTY, scope: "aggregate", metric: DEFAULT_METRIC, direction: "asc", page: 1, pageSize: 25, comparisonCondition: null, loaded: false };
+  const state = { data: EMPTY, scope: "aggregate", metric: DEFAULT_METRIC, direction: "asc", page: 1, pageSize: 25, comparisonCondition: null, loaded: false, overviewDataset: "lafan40", overviewMetric: DEFAULT_METRIC };
   const $ = id => document.getElementById(id);
   const escape = value => String(value == null ? "" : value).replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
   const asArray = value => Array.isArray(value) ? value : [];
@@ -243,7 +243,7 @@
   function filters() { return Object.fromEntries(["phase", "robot", "dataset", "condition", "mode", "seed", "completion", "search"].map(key => [key, $("filter-" + key).value])); }
   function filteredRows(scope = state.scope) {
     const selected = filters(), query = selected.search.trim().toLowerCase();
-    return state.data.results.filter(row => row.scope === scope && ["phase", "robot", "dataset", "condition", "mode"].every(key => selected[key] === "all" || String(row[key]) === selected[key]) && (selected.seed === "all" || row.matched_seed_set.map(String).includes(selected.seed)) && (selected.completion === "all" || row.scope === "aggregate" || row.completion.status === selected.completion) && (!query || [row.label, row.motion_id, row.id].some(value => String(value || "").toLowerCase().includes(query))));
+    return state.data.results.filter(row => row.scope === scope && ["phase", "robot", "dataset", "condition", "mode"].every(key => selected[key] === "all" || String(row[key]) === selected[key]) && (selected.seed === "all" || row.matched_seed_set.map(String).includes(selected.seed)) && (selected.completion === "all" || row.scope === "aggregate" || row.completion.status === selected.completion) && (!query || [row.label, row.motion_id, row.id, window.RoboI18n?.searchText(row.label)].some(value => String(value || "").toLowerCase().includes(query))));
   }
   function compareRows(a, b) {
     const first = valueOf(a, state.metric), second = valueOf(b, state.metric);
@@ -343,10 +343,16 @@
   }
   function renderPairedSummary() {
     const group = fullGroup("lafan40");
-    if (!group) { $("hero-chart").innerHTML = emptyHTML("全程配对摘要暂未载入", "请检查公开快照及载入状态。"); $("paired-summary").innerHTML = emptyHTML("全程指标暂未载入", "等待正式指标数据。"); return; }
-    const key = DEFAULT_METRIC, delta = group.comparison.paired_deltas[key], maximum = Math.max(...group.rows.map(row => valueOf(row, key))) || 1;
-    $("hero-chart").innerHTML = `<p class="eyebrow">FULL WINDOW / 40 PAIRED MOTIONS</p><h2>全程身体位置误差</h2><p class="chart-context">全部评分序列 · 越低越好</p>${["rp1", "g1"].map(robot => { const value = valueOf(group.rows.find(row => row.robot === robot), key); return `<div class="bar-row"><div class="bar-label"><span><i class="dot ${robot}"></i>${robot.toUpperCase()}</span><strong>${fmt(value, 2)}<small>mm</small></strong></div><div class="bar-track" aria-hidden="true"><div class="bar-fill ${robot}" style="width:${value / maximum * 100}%"></div></div></div>`; }).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value, 2)}<small> mm</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0], 2)}, ${fmt(delta.ci95[1], 2)}] mm · ${delta.n_motions} 个配对动作（N=${delta.n_motions}）</p>${pairedIntervalSVG(delta, 2, "mm", true)}<p class="hero-conclusion">${delta.ci95[1] < 0 ? "RP1 全程身体位置误差较低。" : "结论以全程配对区间为准。"}</p></div>`;
-    $("paired-summary").innerHTML = fullFindingCards(group);
+    $("paired-summary").innerHTML = group ? fullFindingCards(group) : emptyHTML("全程指标暂未载入", "等待正式指标数据。");
+    renderOverviewChart();
+  }
+  function renderOverviewChart() {
+    const group = fullGroup(state.overviewDataset), metric = metricDefinition(state.overviewMetric);
+    if (!group) { $("hero-chart").innerHTML = emptyHTML("全程配对摘要暂未载入", "请检查公开快照及载入状态。"); return; }
+    const key = metric.key, delta = group.comparison.paired_deltas[key], maximum = Math.max(...group.rows.map(row => valueOf(row, key))) || 1;
+    const context = key === "root_endpoint_pos_mm" ? "每回合一个合法末帧 · 越低越好" : key.startsWith("full_root_") ? "参考同刻根误差的全窗均值 · 越低越好" : "全部评分序列 · 越低越好";
+    const interpretation = delta.ci95[1] < 0 ? "RP1 误差较低，配对区间低于零。" : delta.ci95[0] > 0 ? "G1 误差较低，配对区间高于零。" : "配对区间跨零，当前样本未支持明确方向。";
+    $("hero-chart").innerHTML = `<p class="eyebrow">${group.comparison.dataset === "lafan40" ? "COMMON40" : "EXTREME5"} / ${key === "root_endpoint_pos_mm" ? "ENDPOINT" : "FULL WINDOW"} / ${delta.n_motions} PAIRED MOTIONS</p><h2>${escape(metric.label)}</h2><p class="chart-context">${context}</p>${["rp1", "g1"].map(robot => { const value = valueOf(group.rows.find(row => row.robot === robot), key); return `<div class="bar-row"><div class="bar-label"><span><i class="dot ${robot}"></i>${robot.toUpperCase()}</span><strong>${fmt(value, metric.digits)}<small>${metric.unit}</small></strong></div><div class="bar-track" aria-hidden="true"><div class="bar-fill ${robot}" style="width:${value / maximum * 100}%"></div></div></div>`; }).join("")}<div class="hero-delta"><p>RP1 − G1 <strong>${signed(delta.value, metric.digits)}<small> ${metric.unit}</small></strong></p><p class="ci-text">95% CI [${fmt(delta.ci95[0], metric.digits)}, ${fmt(delta.ci95[1], metric.digits)}] ${metric.unit} · ${delta.n_motions} 个配对动作（N=${delta.n_motions}）</p>${pairedIntervalSVG(delta, metric.digits, metric.unit, true)}<p class="hero-conclusion">${interpretation}</p></div>`;
   }
   function renderExtension() {
     const group = fullGroup("extreme5");
@@ -498,6 +504,8 @@
     ["robot", "condition", "mode"].forEach(key => { const values = [...new Set(state.data.results.map(row => row[key]))].sort(); options(key, values.map(value => [value, key === "robot" ? value.toUpperCase() : value]), { robot: "全部机器人", condition: "全部条件", mode: "全部模式" }[key]); });
     options("seed", [...new Set(state.data.results.flatMap(row => row.matched_seed_set))].sort((a, b) => a - b).map(seed => [seed, seed]), "全部 seed");
     $("sort-metric").innerHTML = activeMetrics().map(metric => `<option value="${metric.key}">${metric.label} (${metric.unit})</option>`).join("");
+    $("overview-metric").innerHTML = activeMetrics().map(metric => `<option value="${metric.key}">${metric.label} (${metric.unit})</option>`).join("");
+    $("overview-metric").value = state.overviewMetric;
   }
   function csvCell(value) { let cell = value == null ? "" : String(value); if (/^[\s]*[=+\-@]/.test(cell) && !isNumber(value)) cell = "'" + cell; return '"' + cell.replace(/"/g, '""') + '"'; }
   function csvExport(rows, data = state.data) {
@@ -513,6 +521,8 @@
     const url = URL.createObjectURL(new Blob([contents], { type })), anchor = document.createElement("a"); anchor.href = url; anchor.download = name; document.body.appendChild(anchor); anchor.click(); anchor.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
   function bindEvents() {
+    $("overview-dataset").addEventListener("change", () => { state.overviewDataset = $("overview-dataset").value; renderOverviewChart(); });
+    $("overview-metric").addEventListener("change", () => { state.overviewMetric = $("overview-metric").value; renderOverviewChart(); });
     $("comparison-condition").addEventListener("change", () => { state.comparisonCondition = $("comparison-condition").value; renderComparisonTables(); });
     $("filters").addEventListener("submit", event => event.preventDefault());
     ["input", "change"].forEach(event => $("filters").addEventListener(event, eventObject => { if (eventObject.target.id === "filter-completion" && $("filter-completion").value !== "all") state.scope = "per_motion"; state.page = 1; render(); }));

@@ -37,7 +37,7 @@ PUBLISH_FILES_V4 = {'.gitignore', '.nojekyll', 'README.md', 'DATA_PROVENANCE.md'
     'RELEASE_MANIFEST.json', 'index.html', 'app.js', 'style.css', 'data.json', 'media.json',
     'favicon.svg', 'hardware.json', 'hardware.csv', 'episodes.csv', 'comparisons.csv',
     'scripts/update_snapshot.py', 'scripts/verify_public.py'}
-PUBLISH_FILES = PUBLISH_FILES_V4 | {'scripts/source_contract.py'}
+PUBLISH_FILES = PUBLISH_FILES_V4 | {'scripts/source_contract.py', 'i18n.js', 'i18n-ui.js', 'i18n-data.js', 'layout.js'}
 PUBLISH_FILES_V5 = PUBLISH_FILES
 DATA_FILES = {'data.json', 'episodes.csv', 'comparisons.csv'}
 EXCLUDED_DIRS = {'.git', '.private', '.agents', '.aws', '.codex', 'qa', '__pycache__'}
@@ -694,12 +694,21 @@ class Audit:
         for name in ('README.md', 'DATA_PROVENANCE.md'):
             for value in re.findall(r'\[[^\]]*\]\(([^)]+)\)', (self.root / name).read_text()):
                 self.link(value)
-        for name in ('app.js', 'style.css'):
+        for name in sorted(self.publish_files):
+            if not name.endswith(('.js', '.css')):
+                continue
             content = (self.root / name).read_text()
             for _, value in re.findall(r'(?:fetch\s*\(|url\s*:\s*)(["\x27])([^"\x27]+)\1', content):
                 self.link(value)
             for value in re.findall(r'url\(\s*["\x27]?([^\s)"\x27]+)', content):
                 self.link(value)
+            if name.endswith('.js'):
+                for _, value in re.findall(
+                        r'\b(?:import|export)\s+(?:[^;"\x27\n]*?\s+from\s*)?(["\x27])([^"\x27]+)\1', content):
+                    self.link(value)
+                for _, value in re.findall(
+                        r'\b(?:import|importScripts|Worker|SharedWorker)\s*\(\s*(["\x27])([^"\x27]+)\1', content):
+                    self.link(value)
 
     def publication_gate(self):
         if not self.preview and self.data['schema_version'] in (4, 5, 6):
