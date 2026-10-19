@@ -6,13 +6,13 @@
   <meta name="description" content="RoboParty 发布的人形机器人性能评测，依据公开的仿真评测协议展示动作跟踪误差、任务完成情况与模型参数。">
   <meta name="theme-color" content="#101c30">
   <title>RoboParty｜人形机器人性能评测</title>
-  <link rel="stylesheet" href="./style.css?v=eba4472fedcd">
+  <link rel="stylesheet" href="./style.css?v=b0d20a8fcf70">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <script src="./i18n-ui.js?v=38976f52052a" defer></script>
-  <script src="./i18n-data.js?v=ec7c9f95ffee" defer></script>
-  <script src="./i18n.js?v=46ca95cd1e2a" defer></script>
+  <script src="./i18n-ui.js?v=a51fc6ea660c" defer></script>
+  <script src="./i18n-data.js?v=caf7d14e4d83" defer></script>
+  <script src="./i18n.js?v=abc65971c673" defer></script>
   <script src="./layout.js?v=48c817639f25" defer></script>
-  <script src="./app.js?v=00d990676830" defer></script>
+  <script src="./app.js?v=431fe314d014" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#results">跳到评测结果</a>
@@ -27,7 +27,7 @@
       <div class="hero-copy"><p class="eyebrow">HUMANOID ROBOT EVALUATION</p><h1 id="report-title">人形机器人<br><span>性能评测</span></h1><p id="report-subtitle" class="hero-lede">统一测试条件下的动作跟踪与运动表现对比，依据本页公开的仿真评测协议。</p><div class="robot-tags"><span><i class="dot rp1"></i>RP1 · 28 DoF</span><span><i class="dot g1"></i>G1 · 29 DoF</span><span>发布学生策略 · 仿真评测</span></div></div>
       <div class="overview-chart-panel"><div class="overview-chart-controls"><label for="overview-dataset">比较数据集<select id="overview-dataset"><option value="lafan40">Common40</option><option value="extreme5">Extreme5</option></select></label><label for="overview-metric">图表指标<select id="overview-metric"></select></label></div><div id="hero-chart" class="hero-chart" aria-live="polite"><p>正在读取已核验的配对结果…</p></div></div>
     </section>
-    <div class="wrap"><p id="load-notice" class="sr-only" role="status" aria-live="polite">正在读取评测快照。</p><span id="report-status" class="sr-only"></span><section id="overview" class="scope-band" aria-label="评测覆盖"></section></div>
+    <div class="wrap"><p id="load-notice" class="sr-only" role="status" aria-live="polite">正在读取评测快照。</p><span id="report-status" class="revision-note"></span><section id="overview" class="scope-band" aria-label="评测覆盖"></section></div>
     <section class="completion-section wrap" aria-labelledby="completion-title"><div class="section-heading compact"><div><h3 id="completion-title">任务完成情况</h3></div><span class="scope-label">按固定动作分母</span></div><div id="completion-summary" class="completion-grid" aria-live="polite"></div><details class="disclosure completion-definition"><summary>完成判定说明</summary><div class="detail-content"><p>跟踪时因摔倒而无法继续后续动作记为未完成，未发生则完成；中途摔倒后自行恢复并跟踪到末尾算完成。完成比例与逐动作判定来自完整轨迹核验。</p></div></details></section>
     <div class="overview-links wrap"><div class="hero-actions"><a class="button" href="#videos">查看同步动作 ↗</a><a class="text-link" href="#results">阅读配对结果 ↓</a></div><a href="#method">查看方法与数据 →</a></div>
     </div>
@@ -63,7 +63,7 @@
     <div class="tab-panel" role="tabpanel" id="panel-methods" data-panel="methods" aria-labelledby="tab-methods">
     <section id="method" class="section wrap" aria-labelledby="method-title">
       <div class="section-heading"><div><p class="eyebrow">04 / READING THE EVIDENCE</p><h2 id="method-title">共同协议，逐项比较。</h2><p>采用两套发布学生策略，保留各自的训练数据、重定向与控制参数。</p></div></div>
-      <div class="method-grid"><article><span class="method-number">01</span><h3>同一组动作</h3><p>共同 40 段 LAFAN 动作，CPU ONNX 推理，策略 50 Hz、物理 200 Hz。使用原生位置控制，连续记录完整回合，不做额外干预或重置。</p></article><article><span class="method-number">02</span><h3>全程、终点与任务完成</h3><p id="metric-method-description">四项误差取全部 50 Hz 首物理子步评分记录。任务完成判定检查是否因摔倒无法继续后续跟踪；中途摔倒后自行恢复并跟踪到末尾算完成。参考动作中的翻滚和起身须一并核验。</p><p id="endpoint-method-description" hidden></p></article><article><span class="method-number">03</span><h3>以动作为统计单位</h3><p>Common40 主组为 40 个配对动作、80 回合；Extreme5 为 5 个配对动作、10 回合，独立统计。全程误差采用配对 bootstrap 10,000 次；完成比例按动作等权。三个敏感性组各为 5 个动作，重复 seed 不增加动作分母。</p></article></div>
+      <div class="method-grid"><article><span class="method-number">01</span><h3>同一组动作</h3><p>共同 40 段 LAFAN 动作，CPU ONNX 推理，策略 50 Hz、物理 200 Hz。使用原生位置控制，连续记录完整回合，不做额外干预或重置。</p></article><article><span class="method-number">02</span><h3>全程、终点与任务完成</h3><p id="metric-method-description">本版对既有180回合做同刻离线重评分，没有新增策略推理或物理回放。身体与手腕由原200 Hz状态重建50 Hz参考同刻姿态，替换旧版早20 ms的身体缓存；保留完整有效参考窗及失控后的记录。根部两项、独立终点与任务完成判定保持原口径。</p><p id="endpoint-method-description" hidden></p></article><article><span class="method-number">03</span><h3>以动作为统计单位</h3><p>Common40 主组为 40 个配对动作、80 回合；Extreme5 为 5 个配对动作、10 回合，独立统计。全程误差采用配对 bootstrap 10,000 次；完成比例按动作等权。三个敏感性组各为 5 个动作，重复 seed 不增加动作分母。</p></article></div>
       <div class="boundary"><h3>策略与评测范围</h3><p>RP1 为原版 28 DoF ROA 学生策略，G1 为 29 DoF v1.1；RP1 发布包使用原版名称。发布方声明两者的训练规模为 8 卡 × 每卡 8192 环境。</p><p>各动作、条件与 seed 按真实身份配对，失败与删失保留原因和分母。主基线初速度为零，实际未启用观测／动作噪声、随机延迟、push 或域随机化。初态扰动组仅扰动根部 vx、vy 和局部 yaw 角速度，标准差分别为 0.05 m/s、0.05 m/s、0.05 rad/s。同配置重训尚未开始。</p></div>
       <details class="disclosure"><summary>完整方法与评测条件<span>统计口径 · 适用范围 · 公平条件</span></summary><div class="detail-content"><div class="evidence-grid"><div><h3>聚合与置信区间</h3><dl id="statistics"></dl></div><div><h3>适用范围与局限</h3><ul id="limitations" class="notes"></ul></div></div><div id="fairness"><h3>公平条件与已披露差异</h3><p class="subtle">此表响应“动作表现”分区中的策略、条件与执行模式筛选。 <a href="#explorer">前往筛选 →</a></p><div class="table-scroll" tabindex="0" role="region" aria-label="公平条件表"><table class="fairness-table"><thead><tr><th>条件</th><th>RP1</th><th>G1</th><th>核验状态</th><th>依据</th></tr></thead><tbody id="fairness-body"></tbody></table></div></div></div></details>
     </section>

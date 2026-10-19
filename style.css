@@ -183,3 +183,5 @@ html[lang=en] dl{grid-template-columns:125px 1fr}
 @media(max-width:360px){.site-header .header-inner [role="tablist"]{grid-template-columns:repeat(2,minmax(0,1fr))}}
 
 .overview-links .button{background:var(--navy);color:white;border-color:var(--navy)}
+
+.revision-note{display:block;margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:#f0f4f8;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}.revision-note:empty{display:none}

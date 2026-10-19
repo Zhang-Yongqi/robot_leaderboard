@@ -1,6 +1,6 @@
 {
-  "schema_version": 6,
-  "public_data_sha256": "85d2136ba2d1b34fc894393428cc70e2996dc38d0966ad9f971a267bdab85c4c",
+  "schema_version": 7,
+  "public_data_sha256": "2cbc7846a1ef31e073aa81a33bddc9f6b91e99eb26375aa1d6c8654305342136",
   "counts": {
     "episode_records": 180,
     "paired_cases": 90,
@@ -16,8 +16,8 @@
     "rule_version": "fall_recovery_terminal_tracking_v2",
     "source_sha256": "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f"
   },
-  "publication_state": "fullwindow_semantic_completion_root_endpoint_published",
-  "generated_utc": "2026-10-14T16:48:20.842909+00:00",
+  "publication_state": "fullwindow_semantic_completion_root_endpoint_clock_corrected_published",
+  "generated_utc": "2026-10-19T18:53:59.790135+00:00",
   "media_state": {
     "public_new_common40": 0,
     "public_new_extreme5": 0,
@@ -25,7 +25,7 @@
   },
   "report_state": {
     "version": 8,
-    "status": "V8已同步",
+    "status": "V8已同步，V9修订版待同步",
     "native_version": 8,
     "pdf_version": 8,
     "docx_version": 8,
@@ -49,28 +49,28 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 20197,
-      "sha256": "36e0557b9629400a28566f7f7ee4231419b3c41993cfdfd62bd7531d41810892"
+      "bytes": 24503,
+      "sha256": "7ec731ea4493765bb72b76019aa1db17319c0ec392a33fbbc8243e5ec20ab8b0"
     },
     "README.md": {
-      "bytes": 13322,
-      "sha256": "7110cde8df130891f06c4deccae0e137cd10d00c6ba55918d670ebc6b25dae71"
+      "bytes": 15154,
+      "sha256": "df8d8342cfb7af4c62d37f791aba91936ff33ff20f08aa5b64e53c2efa0f4eb2"
     },
     "app.js": {
-      "bytes": 85459,
-      "sha256": "00d990676830e2048aafcc70dffe058ef7528870355d90242e0ada1f28f1f7de"
+      "bytes": 91535,
+      "sha256": "431fe314d0148268a01efc695c48ee1338dabfd70d4e248bb35368bc1bf9fb6c"
     },
     "comparisons.csv": {
-      "bytes": 49670,
-      "sha256": "3d3f959186fe9f9c90c5ce0e36f128e14a40e249d887cceaf9b9681b286d4197"
+      "bytes": 49874,
+      "sha256": "792ba708de88122577509b32d0fde16e624af91b440256e2d4d927338b3e5844"
     },
     "data.json": {
-      "bytes": 949407,
-      "sha256": "85d2136ba2d1b34fc894393428cc70e2996dc38d0966ad9f971a267bdab85c4c"
+      "bytes": 956420,
+      "sha256": "2cbc7846a1ef31e073aa81a33bddc9f6b91e99eb26375aa1d6c8654305342136"
     },
     "episodes.csv": {
-      "bytes": 173946,
-      "sha256": "18ad30fc68fd3ff8fa4500c27110e638e4af1fe2a7a3fcde0d3e1d8df2e67513"
+      "bytes": 177738,
+      "sha256": "78adeebb7813ab695fa3d328a39dafd08d22305951aa6024ac535a8a2cea10f2"
     },
     "favicon.svg": {
       "bytes": 279,
@@ -85,20 +85,20 @@
       "sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af"
     },
     "i18n-data.js": {
-      "bytes": 30450,
-      "sha256": "ec7c9f95ffeeb3d4a31884dd563e9a54973a89d1fcda89460aa582a161e3732f"
+      "bytes": 38768,
+      "sha256": "caf7d14e4d83d66ee577b63db2448e2e061961c8f578a7987a54bd347685edd1"
     },
     "i18n-ui.js": {
-      "bytes": 51705,
-      "sha256": "38976f52052a98ed512d2d06e01f591839c51157c43f1dba22cb58475798df8a"
+      "bytes": 55046,
+      "sha256": "a51fc6ea660ca81c204d166997dec0d8221ed27e32b32876b22fd34a6daf1475"
     },
     "i18n.js": {
-      "bytes": 7741,
-      "sha256": "46ca95cd1e2ab1ca4ef704d2da959333e99b875ff4585fcdc9c69d94cb971f9a"
+      "bytes": 7991,
+      "sha256": "abc65971c67312f0836952611738f57146677db8a9f561d9028bc9d502a9c69e"
     },
     "index.html": {
-      "bytes": 17602,
-      "sha256": "87ea3522163617bd92e3b60d7f843dfcd71c32a539b2cf01f2ee2fdcb6ba62bc"
+      "bytes": 17689,
+      "sha256": "7deccbbd746dc1d36fbaab1b134fd9a2ed662022f7e3bf1a32ee0029c4e87dc4"
     },
     "layout.js": {
       "bytes": 2497,
@@ -108,21 +108,29 @@
       "bytes": 173,
       "sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
     },
+    "scripts/clock_contract.py": {
+      "bytes": 25957,
+      "sha256": "465a716864ed869a1acf4885e6c9706ca87e220b32ba5418a2e09353dcd73e55"
+    },
     "scripts/source_contract.py": {
       "bytes": 33633,
       "sha256": "016e11fee77c1c3371590d6e37d285e10a50c793323993e9c8ab4312cc5f9c36"
     },
     "scripts/update_snapshot.py": {
-      "bytes": 32889,
-      "sha256": "4667fbd4ca588337200a45907b718bfdcaa9477fd9ab843b8208a2036b690bca"
+      "bytes": 34501,
+      "sha256": "80ada2fd84e08d909f5830f945cfde4d35bae5f1ec527bb01a6f0ebe67914b22"
+    },
+    "scripts/verify_clock_public.py": {
+      "bytes": 11865,
+      "sha256": "90079d278c60678c40049455e54f7c5afa05c658415a08a8e9699b456b152ec0"
     },
     "scripts/verify_public.py": {
-      "bytes": 56306,
-      "sha256": "a1952cf9528ecad25bc5428455029284a187ebf520d9953c7f3623f9a61b505b"
+      "bytes": 56497,
+      "sha256": "b5dbd1cab05f100e5d958e585ff6cecc81abbc8cb2855c9233bf20f3915d893c"
     },
     "style.css": {
-      "bytes": 40873,
-      "sha256": "eba4472fedcd3832d64a8c0954ba904e3299a3842a5023d6dd90ad94cba57019"
+      "bytes": 41111,
+      "sha256": "b0d20a8fcf7006638e4c59b82712c0c978b00d783086d66c298d9069add38246"
     }
   },
   "completion_source_csv_sha256": "7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b",
@@ -151,5 +159,22 @@
       "window": "last_valid_same_time_reference_root_endpoint"
     }
   },
-  "endpoint_source_csv_sha256": "93aeea60a60c93b302b2e9bb035fe822841e42214f1b589dcd8c7c1ea22114b7"
+  "endpoint_source_csv_sha256": "93aeea60a60c93b302b2e9bb035fe822841e42214f1b589dcd8c7c1ea22114b7",
+  "clock_extension": {
+    "status": "verified",
+    "source_sha256": "8531f0cb539d6e713334efcbc6211ae3896f42bd000cd793cb896933a65b061f",
+    "source_csv_sha256": "ee64fb6c35d368fd6913f29baecb9f63c8b19e8252fe0f81a7207e0b2af2162c",
+    "baseline_source_sha256": "f932d85e4583544eeb942cd8eecf9804fda26dc849cc96d7d713f481044604f2",
+    "baseline_schema_version": 6,
+    "metrics": [
+      "full_body_pos_mm",
+      "full_body_ori_rad",
+      "full_wrist_pos_mm",
+      "full_wrist_ori_rad"
+    ],
+    "window": "full_replay_50hz_same_time_raw_body_fk_at_reference",
+    "old_root_endpoint_method_flags_scope": "V8 root/endpoint extension declarations describe their historical V8 scope; V9 corrects only body/wrist scoring clocks.",
+    "new_physical_episodes": 0
+  },
+  "clock_source_csv_sha256": "ee64fb6c35d368fd6913f29baecb9f63c8b19e8252fe0f81a7207e0b2af2162c"
 }

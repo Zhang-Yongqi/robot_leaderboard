@@ -764,6 +764,9 @@ class Audit:
 
 
 def main():
+    if any(value == '--source-clock' or value.startswith('--source-clock=') for value in sys.argv[1:]):
+        from verify_clock_public import main as clock_main
+        return clock_main()
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--repo-root', type=Path, default=Path(__file__).resolve().parents[1])
     parser.add_argument('--preview', action='store_true', help='audit an internal pending/null preview; never publish')

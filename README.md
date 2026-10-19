@@ -22,30 +22,32 @@ RP1 与 G1 固定发布学生策略的离线仿真比较，公开结果包含全
 
 配对依据实际动作、有效条件、模式、seed 和协议身份的交集，入选不根据任务结局筛选。缺失或删失成绩保留 null 与原因。历史原始实验数据及旧版本保留在来源项目和 Git 历史中。
 
-两个主组使用参考初态与零初速；本次主评测未启用观测噪声、域随机化、外力 push 或随机动作延迟。初态扰动组向根节点 vx、vy 及本地 yaw 角速度施加扰动，标准差分别为 0.05 m/s、0.05 m/s、0.05 rad/s。
+两个主组使用参考初态与零初速；既有主组回放未启用观测噪声、域随机化、外力 push 或随机动作延迟。初态扰动组向根节点 vx、vy 及本地 yaw 角速度施加扰动，标准差分别为 0.05 m/s、0.05 m/s、0.05 rad/s。
 
 ## 全程误差结果与分析
 
-身体与手腕四项误差使用既有轨迹全部 **50 Hz 首次物理子步**评分样本，`motion_t=1..N_common−1`；`N_common` 为共同参考帧数。frame0 用于初始化，200 Hz 末端 hold 不增加评分样本。原四项评分窗口、数值与区间保持不变。
+本版为既有轨迹的评分时刻修订，不能据此声称新策略物理复测完成或20 ms偏移已解释失控原因。原根部两项、独立根部终点、完成率与失败诊断钟保持；仍为180回合、90条件／seed配对、45不同动作和5组。旧V8原件保留于[原发布提交](https://github.com/Zhang-Yongqi/robot_leaderboard/tree/3821ae073f784ca41bb9af5da8cfab198085adfc)，原始实验不删除。
+
+本版对既有 **180个回合**做同刻离线重评分，没有新增策略推理或物理回放。身体与手腕四项从原 **200 Hz qpos** 重建 **50 Hz参考同刻**的身体姿态：参考帧 `m=1..N_common−1` 对应原状态索引 `4m−1`、时刻 `0.02m`。旧版身体缓存对应 `0.02(m−1)`，相对参考早20 ms；本版修正该评分时差，重新计算四项均值和区间。原参考窗、Common14与双腕集合、逐帧各自根XY／投影yaw局部对齐、绝对Z及原FP32算式保持；参考四元数未额外归一化。初始化frame0和参考末后的hold不评分，失控后的有效记录保留。
 
 根部两项使用原 200 Hz 物理轨迹中与 **50 Hz 参考时刻同刻**的根状态，完整保留有效参考帧 `1..N_common−1`，包含失控后样本，末后 hold 不计入。首个共同有效同刻样本 **0.02 s** 为固定 XY/yaw 对齐锚点，Z 不平移；随后不逐帧重新拟合。根位置为三维距离的全窗算术均值（mm）；根姿态将实际与参考 wxyz 四元数单位化，用同一固定 yaw 左乘实际姿态，再对相对姿态的最短旋转角取全窗算术均值（rad），保留 roll/pitch 误差，q 与 −q 等价。位置误差按 mm 保留三位小数，姿态按 rad 保留四位；数值越低越好。显示精度下并列仅表示显示值相同，配对差异及其区间按未舍入来源解释，不由显示名次推断。
 
 | 组 / 指标 | RP1 | G1 | RP1−G1 | 95% 配对区间 | 单位 |
 | --- | ---: | ---: | ---: | --- | --- |
-| Common40 / 身体位置误差 | 121.598 | 156.490 | -34.891 | [-76.304, -3.484] | mm |
-| Common40 / 身体姿态误差 | 0.4041 | 0.5477 | -0.1435 | [-0.2675, -0.0391] | rad |
-| Common40 / 手腕位置误差 | 128.573 | 166.508 | -37.935 | [-88.584, -0.302] | mm |
-| Common40 / 手腕姿态误差 | 0.4276 | 0.5680 | -0.1404 | [-0.2701, -0.0245] | rad |
-| Common40 / 根三维位置误差 | 950.378 | 1070.920 | -120.542 | [-310.509, 57.987] | mm |
-| Common40 / 根姿态误差 | 0.4332 | 0.5516 | -0.1184 | [-0.2461, -0.0206] | rad |
-| Extreme5 / 身体位置误差 | 318.475 | 307.636 | 10.839 | [-5.097, 32.489] | mm |
-| Extreme5 / 身体姿态误差 | 0.9061 | 0.9713 | -0.0652 | [-0.1968, 0.1038] | rad |
-| Extreme5 / 手腕位置误差 | 322.826 | 307.383 | 15.442 | [-37.720, 68.052] | mm |
-| Extreme5 / 手腕姿态误差 | 0.9850 | 1.1266 | -0.1416 | [-0.3103, -0.0098] | rad |
-| Extreme5 / 根三维位置误差 | 432.780 | 447.002 | -14.222 | [-98.297, 62.866] | mm |
-| Extreme5 / 根姿态误差 | 0.9740 | 1.0937 | -0.1197 | [-0.3059, 0.0489] | rad |
+| Common40 主组 / 身体位置误差 | 126.201 | 160.045 | -33.845 | [-74.960, -2.657] | mm |
+| Common40 主组 / 身体姿态误差 | 0.4266 | 0.5683 | -0.1417 | [-0.2640, -0.0384] | rad |
+| Common40 主组 / 手腕位置误差 | 136.096 | 172.089 | -35.993 | [-86.072, 1.288] | mm |
+| Common40 主组 / 手腕姿态误差 | 0.4618 | 0.6053 | -0.1435 | [-0.2704, -0.0298] | rad |
+| Common40 主组 / 根三维位置误差 | 950.378 | 1070.920 | -120.542 | [-310.509, 57.987] | mm |
+| Common40 主组 / 根姿态误差 | 0.4332 | 0.5516 | -0.1184 | [-0.2461, -0.0206] | rad |
+| Extreme5 主组 / 身体位置误差 | 320.465 | 310.726 | 9.739 | [-6.554, 31.706] | mm |
+| Extreme5 主组 / 身体姿态误差 | 0.9108 | 0.9785 | -0.0677 | [-0.2008, 0.1041] | rad |
+| Extreme5 主组 / 手腕位置误差 | 326.680 | 313.128 | 13.552 | [-40.163, 66.933] | mm |
+| Extreme5 主组 / 手腕姿态误差 | 0.9936 | 1.1449 | -0.1512 | [-0.3192, -0.0190] | rad |
+| Extreme5 主组 / 根三维位置误差 | 432.780 | 447.002 | -14.222 | [-98.297, 62.866] | mm |
+| Extreme5 主组 / 根姿态误差 | 0.9740 | 1.0937 | -0.1197 | [-0.3059, 0.0489] | rad |
 
-Common40 的身体、手腕四项误差与根姿态误差均值为 RP1 较低，配对差值区间均位于零以下；根位置均值为 RP1 较低，但差值区间跨零。Extreme5 的身体与手腕位置均值为 G1 较低，身体、手腕、根部的姿态误差与根位置误差均值为 RP1 较低；仅手腕姿态差值区间位于零以下，其余五项跨零。三个敏感性组各以 5 个动作为统计单位，身体与手腕四项差值区间均跨零；名义重复、根初态扰动的根姿态区间位于零以下，部署敏感性的根位置区间位于零以上，其余根部区间跨零。
+Common40 主组：身体位置误差、身体姿态误差、手腕姿态误差、根姿态误差区间支持RP1误差较低；手腕位置误差、根三维位置误差区间跨零。 Extreme5 主组：手腕姿态误差区间支持RP1误差较低；身体位置误差、身体姿态误差、手腕位置误差、根三维位置误差、根姿态误差区间跨零。 显式部署敏感性：根三维位置误差区间支持G1误差较低；身体位置误差、身体姿态误差、手腕位置误差、手腕姿态误差、根姿态误差区间跨零。 名义重复：根姿态误差区间支持RP1误差较低；身体位置误差、身体姿态误差、手腕位置误差、手腕姿态误差、根三维位置误差区间跨零。 根初态扰动：根姿态误差区间支持RP1误差较低；身体位置误差、身体姿态误差、手腕位置误差、手腕姿态误差、根三维位置误差区间跨零。
 
 统计先在同动作的完整相同 seed 集内平均，再对动作等权；95% 区间采用 10,000 次配对动作 bootstrap。完整均值、区间、逐回合数值与评分窗口见[公开 JSON](data.json)及[评测说明](DATA_PROVENANCE.md)。
 
@@ -95,7 +97,7 @@ Common40 终点误差均值为 RP1 较低，但配对差值区间跨零。Extrem
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)。
 - [新公开视频索引](media.json)：当前 0/40。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。《RP1与G1全程跟踪精度与动作完成率》**V8 已同步**，正文、PDF 与 DOCX 均已更新到原地址，包含六项全程误差、独立根部终点位置误差与任务完成率。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。网页已完成既有180回合同刻离线重评分；飞书修订版待同步，原正文、PDF、DOCX最后核验为V8。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
 共同失败动作与 Extreme5 已列为后续复测重录范围；本版继续采用当前冻结结果。
 
@@ -116,7 +118,8 @@ python3 scripts/update_snapshot.py \
   --fullwindow-source /path/to/archived/public_fullwindow.json \
   --source-completion /path/to/reviewed/public_completion_fullwindow.json \
   --source-root /path/to/reviewed/public_sixerror_completion.json \
-  --source-endpoint /path/to/reviewed/public_sevenerror_completion.json \
+  --source-endpoint /path/to/archived/v8/public_sevenerror_completion.json \
+  --source-clock /path/to/reviewed/v9/public_sevenerror_completion.json \
   --identity-map /path/to/private/identity-map.json \
   --output-dir .private/publication_staging \
   --publication
@@ -126,14 +129,15 @@ python3 scripts/verify_public.py \
   --source-fullwindow /path/to/archived/public_fullwindow.json \
   --source-completion /path/to/reviewed/public_completion_fullwindow.json \
   --source-root /path/to/reviewed/public_sixerror_completion.json \
-  --source-endpoint /path/to/reviewed/public_sevenerror_completion.json \
+  --source-endpoint /path/to/archived/v8/public_sevenerror_completion.json \
+  --source-clock /path/to/reviewed/v9/public_sevenerror_completion.json \
   --identity-map /path/to/private/identity-map.json
 ```
 
-当前正式复合科学来源为 `public_sevenerror_completion.json` 与 `public_sevenerror_episodes.csv`；文件包含六项全程误差、独立终点值、每机器人均值与区间、配对差值区间及完成率。终点每回合一个样本，原六项全程窗口、数值、CI 与完成率保持冻结来源。各输入的冻结 SHA256 见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)。schema 6 公开输出为 `data.json`、`episodes.csv`、`comparisons.csv`，自身摘要见发布清单。JSON 与 CSV 保留科学协议、执行协议、配置和来源摘要；原未记录字段为 null。私有身份映射不进入公开目录。
+当前正式科学来源为同刻重评分V9的JSON与180回合CSV；原 `public_sevenerror_completion.json` 与 `public_sevenerror_episodes.csv` 作为不变根部、终点和完成率的V8来源保留；文件包含六项全程误差、独立终点值、每机器人均值与区间、配对差值区间及完成率。终点每回合一个样本；四项身体／手腕值和区间使用同刻修订源，根部两项、终点与完成率保持原冻结来源。各输入的冻结 SHA256 见[来源附录](DATA_PROVENANCE.md#附录冻结来源与-sha256)。schema 7 公开输出为 `data.json`、`episodes.csv`、`comparisons.csv`，自身摘要见发布清单。JSON 与 CSV 保留科学协议、执行协议、配置和来源摘要；原未记录字段为 null。私有身份映射不进入公开目录。
 
-`--source-completion`、`--source-root` 与 `--source-endpoint` 的 JSON 同目录分别须包含 `public_completion_episodes.csv`、`public_sixerror_episodes.csv` 与 `public_sevenerror_episodes.csv`，各自按冻结 SHA256 核验。历史全程、完成率及根部输入保留原有回归锚，终点独立接入。`--endpoint-adapter` 可省略，默认使用已注册的 `public_root_endpoint_completion_v8`。
+`--source-completion`、`--source-root` 与 `--source-endpoint` 的 JSON 同目录分别须包含 `public_completion_episodes.csv`、`public_sixerror_episodes.csv` 与 `public_sevenerror_episodes.csv`，各自按冻结 SHA256 核验。历史全程、完成率及根部输入保留原有回归锚，终点独立接入。`--endpoint-adapter` 可省略，默认使用已注册的 `public_root_endpoint_completion_v8`。新 `--source-clock` 指向另一目录中的V9同名JSON/CSV双文件，只接受已注册的同刻重评分摘要；旧V8双文件与旧回归锚保持。先生成完整schema6，再严格左连接四项修订，输出schema7。`--report-state` 默认保留V8最后核验、修订版待同步；仅在原飞书三地址真实更新并完整回读后选择 `v9_synced`。
 
-生成目录包含三份公开数据文件。验证与发布的完整候选须包含 **22 个白名单公开文件**及更新后的 `RELEASE_MANIFEST.json`，包括 `scripts/source_contract.py`；三份生成数据本身不构成完整发布包。
+生成目录包含三份公开数据文件。验证与发布的完整候选须包含 **24 个白名单公开文件（含更新后的 `RELEASE_MANIFEST.json`）**，包括原来源合同与新增 `scripts/clock_contract.py`、`scripts/verify_clock_public.py`；三份生成数据本身不构成完整发布包。
 
 公开投影经独立核验及静态、桌面和手机浏览器 QA 后发布。科学来源与公开投影的摘要分别记录，报告云端更新单独核验。GitHub Pages 发布源为 `main / (root)`。

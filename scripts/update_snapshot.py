@@ -392,6 +392,9 @@ def completion_columns(completion):
 
 
 def csv_columns(data, scope):
+    if data['schema_version'] == 7:
+        from clock_contract import clock_csv_columns
+        return clock_csv_columns(data, scope)
     if data['schema_version'] == 6:
         return EPISODE_COLUMNS_V6 if scope == 'per_motion' else COMPARISON_COLUMNS_V6
     if data['schema_version'] == 5:
@@ -402,6 +405,9 @@ def csv_columns(data, scope):
 
 
 def csv_records(data, scope):
+    if data['schema_version'] == 7:
+        from clock_contract import clock_csv_records
+        return clock_csv_records(data, scope)
     comparisons = {c['id']: c for c in data['comparisons']}
     metrics = FULL4 + ROOT_METRICS + ENDPOINT_METRICS if data['schema_version'] == 6 else (
               FULL4 + ROOT_METRICS if data['schema_version'] == 5 else FULL4)
@@ -478,9 +484,21 @@ def main():
     parser.add_argument('--source-endpoint', type=Path,
                         help='reviewed endpoint JSON with its SHA-bound public_sevenerror_episodes.csv sibling')
     parser.add_argument('--endpoint-adapter', help='code-registered endpoint adapter ID; no arbitrary module loading')
+    parser.add_argument('--source-clock', type=Path,
+                        help='reviewed V9 same-time body/wrist re-scoring JSON with its SHA-bound episode CSV')
+    parser.add_argument('--clock-adapter', help='code-registered clock adapter ID; preserves the schema6 complement')
+    parser.add_argument('--report-state', choices=('v8_pending_revision', 'v9_synced'), default='v8_pending_revision',
+                        help='editorial report state; select v9_synced only after real cloud readback')
     args = parser.parse_args()
     require(not args.root_adapter or args.source_root, '--root-adapter requires --source-root')
     require(not args.endpoint_adapter or args.source_endpoint, '--endpoint-adapter requires --source-endpoint')
+    require(not args.clock_adapter or args.source_clock, '--clock-adapter requires --source-clock')
+    require(args.report_state == 'v8_pending_revision' or args.source_clock,
+            '--report-state applies only to the reviewed schema7 clock revision')
+    if args.source_clock:
+        require(args.source_endpoint is not None, '--source-clock requires the intact reviewed schema6 source chain')
+        from clock_contract import reviewed_clock_adapter
+        reviewed_clock_adapter(args.clock_adapter)
     if args.source_endpoint:
         require(args.source_root is not None and args.source_completion is not None,
                 '--source-endpoint requires the intact reviewed six-error and completion inputs')
@@ -500,6 +518,11 @@ def main():
         data = prepare_schema5(data, args.source_root, args.root_adapter, args.publication)
     if args.source_endpoint:
         data = prepare_schema6(data, args.source_endpoint, args.endpoint_adapter, args.publication)
+    if args.source_clock:
+        from clock_contract import apply_clock_rescore, set_report_state
+        data = apply_clock_rescore(data, args.source_clock, args.publication, args.clock_adapter,
+                                   source_v8=args.source_endpoint)
+        data = set_report_state(data, args.report_state)
     outputs = {'data.json': (json.dumps(data, ensure_ascii=False, indent=2, allow_nan=False) + '\n').encode(),
                'episodes.csv': csv_bytes(data, 'per_motion'), 'comparisons.csv': csv_bytes(data, 'aggregate')}
     require(args.fullwindow_source.read_bytes() == raw and args.identity_map.read_bytes() == identity_raw,
@@ -510,7 +533,7 @@ def main():
     for name, content in outputs.items():
         (dest / name).write_bytes(content)
     print(json.dumps({'schema_version': data['schema_version'], 'publication_contract_eligible': args.publication,
-        'completion_ready': data['schema_version'] in (4, 5, 6), 'publication_state': data['publication_state'], 'counts': COUNTS,
+        'completion_ready': data['schema_version'] in (4, 5, 6, 7), 'publication_state': data['publication_state'], 'counts': COUNTS,
         'files': {name: {'bytes': len(content), 'sha256': sha(content)} for name, content in outputs.items()},
         'framework': framework_status()},
         ensure_ascii=False))
