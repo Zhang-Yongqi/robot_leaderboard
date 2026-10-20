@@ -3,7 +3,7 @@
   "use strict";
   const tabs = [...document.querySelectorAll("[data-panel-target]")];
   const panels = [...document.querySelectorAll("[data-panel]")];
-  const anchors = { overview: "top", performance: "results", hardware: "hardware", methods: "method" };
+  const anchors = { overview: "top", performance: "results", hardware: "hardware", methods: "data" };
   if (!tabs.length || panels.length !== tabs.length) return;
   function activate(name) {
     const selected = panels.some(panel => panel.dataset.panel === name) ? name : "overview";

@@ -187,12 +187,12 @@ html[lang=en] dl{grid-template-columns:125px 1fr}
 
 .revision-note{display:block;margin:0 0 14px;padding:10px 14px;border:1px solid var(--line);border-radius:8px;background:#f0f4f8;color:var(--muted);font-size:12px;line-height:1.6;overflow-wrap:anywhere}.revision-note:empty{display:none}
 
-/* Compact presentation for the paired motion section. */
-#videos .section-heading{margin-bottom:16px}
-#videos details.video-notes{margin:0 0 20px;border:1px solid var(--line);border-radius:10px;overflow:hidden}
-#videos details.video-notes>summary{padding:11px 42px 11px 14px;font-size:12px;font-weight:600;background:#f0f3f8}
-#videos details.video-notes>summary:after{right:14px;top:8px;font-size:18px}
-#videos details.video-notes>.detail-content{padding:12px 14px;font-size:12px;line-height:1.7;color:var(--muted);overflow-wrap:anywhere}
-#videos .video-notes p{margin:0 0 10px}
-#videos .video-notes p:last-child{margin-bottom:0}
+/* Minimal paired-motion player. */
+#panel-performance #videos{margin:28px auto 0;padding:24px 0 0;border-top:1px solid var(--line)}
+#videos .section-heading{margin-bottom:18px}
 #videos .video-side-labels{display:flex;justify-content:space-between;gap:12px;margin-bottom:7px;font-size:11px;font-weight:600;line-height:1.5;color:var(--muted)}
+#videos .video-actions{display:flex;flex-wrap:wrap;align-items:center;gap:12px 22px}
+#videos .video-actions a{margin-top:0}
+
+footer{flex-wrap:wrap}
+footer .source-attribution{display:block;flex-basis:100%;margin:0;font-size:11px;line-height:1.6;color:var(--muted)}

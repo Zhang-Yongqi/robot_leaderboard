@@ -256,5 +256,21 @@ window.ROBO_I18N_DATA = {
   "画面对照": "Video panel labels",
   "左侧 · RP1": "Left · RP1",
   "右侧 · Unitree G1": "Right · Unitree G1",
-  "视频中的 Fail 沿用旧版参考阈值诊断；网页完成率按当前完成判据统计。": "The on-video Fail label follows the legacy reference-threshold diagnostic; website completion rates use the current completion criteria."
+  "视频中的 Fail 沿用旧版参考阈值诊断；网页完成率按当前完成判据统计。": "The on-video Fail label follows the legacy reference-threshold diagnostic; website completion rates use the current completion criteria.",
+  "回放链接暂不可用。": "Replay links are temporarily unavailable.",
+  "Fail 为旧版诊断标签，非当前完成率。": "Fail is a legacy diagnostic label, not the current completion rate.",
+  "所选回放：": "Selected replay:",
+  "视频方法与来源": "Video Methods and Sources",
+  "Common40 视频于 2026-10-14 使用 V06 从既有保存轨迹渲染，保留英文画面标签、共同时间轴和相机尺度，以及失跟后的记录。V9 对同一批轨迹做同刻离线重评分，未新增物理回放。": "The Common40 videos were rendered from existing saved trajectories on 2026-10-14 using V06, retaining English overlays, a shared timeline and camera scale, and records after tracking is lost. V9 rescores the same trajectories offline at matching timestamps; no new physics replay was performed.",
+  "视频中的 Fail 沿用旧版参考阈值诊断，不等同于网页当前完成率。": "The on-video Fail label follows the legacy reference-threshold diagnostic and is distinct from the current website completion rate.",
+  "原视频来源包含 70 个 nominal 和 10 个 aligned_nominal 机器人回合，均对应 Common40 有效主选择。Extreme5 的 5 个视频尚未制作。": "The original video sources comprise 70 nominal and 10 aligned_nominal robot episodes, all corresponding to the effective Common40 primary selection. The five Extreme5 videos have not been produced.",
+  "动作来源：LAFAN1，© 2018 Ubisoft Entertainment，许可为 CC BY-NC-ND 4.0。模型与策略遵循其原有条款。本项目发布已获项目方授权，不改变上游许可或权利归属。": "Motion source: LAFAN1, © 2018 Ubisoft Entertainment, licensed under CC BY-NC-ND 4.0. Models and policies retain their original terms. Project publication approval does not reassign upstream licenses or rights.",
+  "数据与报告": "Data & Reports",
+  "查看数据与报告 →": "View Data & Reports →",
+  "数据来源": "Data Sources",
+  "数据集、指标与来源记录。": "Datasets, metrics and source records.",
+  "动作来源：LAFAN1 · © 2018 Ubisoft Entertainment · CC BY-NC-ND 4.0。模型与策略保留原有条款及权利归属。": "Motion source: LAFAN1 · © 2018 Ubisoft Entertainment · CC BY-NC-ND 4.0. Models and policies retain their original terms and rights.",
+  "LAFAN1（40条动作）": "LAFAN1 (40 motions)",
+  "LAFAN1（40条动作）· 逐指标区间": "LAFAN1 (40 motions) · Metric intervals",
+  "LAFAN1 · 40 个配对动作 · 位置 mm · 姿态 rad": "LAFAN1 · 40 paired motions · Position mm · Orientation rad"
 };
