@@ -1,6 +1,6 @@
 {
   "schema_version": 7,
-  "public_data_sha256": "2cbc7846a1ef31e073aa81a33bddc9f6b91e99eb26375aa1d6c8654305342136",
+  "public_data_sha256": "f897c9ea92361d30733773eb02a0188eed2f9d5255bdbc484f2d538b7d51ed56",
   "counts": {
     "episode_records": 180,
     "paired_cases": 90,
@@ -17,19 +17,19 @@
     "source_sha256": "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f"
   },
   "publication_state": "fullwindow_semantic_completion_root_endpoint_clock_corrected_published",
-  "generated_utc": "2026-10-19T18:53:59.790135+00:00",
+  "generated_utc": "2026-10-20T02:10:39.758897+00:00",
   "media_state": {
     "public_new_common40": 0,
     "public_new_extreme5": 0,
     "source_media_sha256": "5fefaecdd12099425e4a815a90f75125818fb75c6a977e211f12b0fb49fb7f75"
   },
   "report_state": {
-    "version": 8,
-    "status": "V8已同步，V9修订版待同步",
-    "native_version": 8,
-    "pdf_version": 8,
-    "docx_version": 8,
-    "pdf_preview_pages": 15,
+    "version": 9,
+    "status": "V9已同步",
+    "native_version": 9,
+    "pdf_version": 9,
+    "docx_version": 9,
+    "pdf_preview_pages": null,
     "docx_preview_pages": null
   },
   "hardware": {
@@ -49,12 +49,12 @@
       "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     "DATA_PROVENANCE.md": {
-      "bytes": 24503,
-      "sha256": "7ec731ea4493765bb72b76019aa1db17319c0ec392a33fbbc8243e5ec20ab8b0"
+      "bytes": 24537,
+      "sha256": "b8b4b99a40b546f101a3eb170759d5c05df14625e34f0f766a48bfec12fd1865"
     },
     "README.md": {
-      "bytes": 15154,
-      "sha256": "df8d8342cfb7af4c62d37f791aba91936ff33ff20f08aa5b64e53c2efa0f4eb2"
+      "bytes": 15188,
+      "sha256": "19925bea244024d7f1aa03e7437af5469c513eb32c41a6d630d94f79ecd72bc3"
     },
     "app.js": {
       "bytes": 91535,
@@ -65,8 +65,8 @@
       "sha256": "792ba708de88122577509b32d0fde16e624af91b440256e2d4d927338b3e5844"
     },
     "data.json": {
-      "bytes": 956420,
-      "sha256": "2cbc7846a1ef31e073aa81a33bddc9f6b91e99eb26375aa1d6c8654305342136"
+      "bytes": 956337,
+      "sha256": "f897c9ea92361d30733773eb02a0188eed2f9d5255bdbc484f2d538b7d51ed56"
     },
     "episodes.csv": {
       "bytes": 177738,

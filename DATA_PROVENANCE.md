@@ -208,7 +208,7 @@ Common40 主组以 **40 对动作**、Extreme5 以 **5 对动作**为重采样�
 
 当前公开投影：[配对结果 JSON](data.json)、[180 回合 CSV](episodes.csv)、[10 条机器人聚合记录 CSV](comparisons.csv)。模型参数：[JSON](hardware.json) / [CSV](hardware.csv)。科学来源与历史原始实验在来源项目和 Git 历史中保留。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。网页已完成既有180回合同刻离线重评分；飞书修订版待同步，原正文、PDF、DOCX最后核验为V8。相关飞书资料需要组织访问权限。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。V9 已同步：既有180回合身体与手腕同刻离线重评分，原正文、PDF 和 DOCX 已更新；根部、终点与动作完成判定保持不变。相关飞书资料需要组织访问权限。
 
 共同失败动作与Extreme5的新物理复测尚未执行；本版仅更正既有轨迹的身体／手腕采样时刻。
 

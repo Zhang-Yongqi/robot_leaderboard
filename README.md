@@ -97,7 +97,7 @@ Common40 终点误差均值为 RP1 较低，但配对差值区间跨零。Extrem
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)。
 - [新公开视频索引](media.json)：当前 0/40。
 
-统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。网页已完成既有180回合同刻离线重评分；飞书修订版待同步，原正文、PDF、DOCX最后核验为V8。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
+统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。V9 已同步：既有180回合身体与手腕同刻离线重评分，原正文、PDF 和 DOCX 已更新；根部、终点与动作完成判定保持不变。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
 共同失败动作与 Extreme5 已列为后续复测重录范围；本版继续采用当前冻结结果。
 
