@@ -17,7 +17,7 @@
     "source_sha256": "8607a1403d9fbc846a741cb141cd65b07ce7805c7fb0df11cf1f22ecb119905f"
   },
   "publication_state": "fullwindow_semantic_completion_root_endpoint_clock_corrected_published",
-  "generated_utc": "2026-10-20T03:16:45.801231+00:00",
+  "generated_utc": "2026-10-20T03:59:46.552232+00:00",
   "media_state": {
     "public_new_common40": 40,
     "public_new_extreme5": 0,
@@ -57,8 +57,8 @@
       "sha256": "dce34f499ee26e9dd1f6bee9969bea39bf18c934d9950ccf656b79b2a3136654"
     },
     "app.js": {
-      "bytes": 96290,
-      "sha256": "02ab31cc2269c9a30a9c438697741b939790896da687d8f37a5c76da913155c9"
+      "bytes": 96232,
+      "sha256": "79a1014297fe3feab36abee1c440887d114b41d8674ddd8ed16fbddac5ded26c"
     },
     "comparisons.csv": {
       "bytes": 49874,
@@ -85,20 +85,20 @@
       "sha256": "5815d8d7e1a28305124849990dc682c85f6e6eb49b7bc78a91ae9adfa270a6af"
     },
     "i18n-data.js": {
-      "bytes": 40603,
-      "sha256": "1acebc1c2d92b2ae02f30d05176118a1546137aebf4cd64dcbf472e037d3aa2d"
+      "bytes": 41950,
+      "sha256": "4be6fd7a3a8710cee4b079cf91b6f20979c3cb96ed1b465eba7e789a376d1c94"
     },
     "i18n-ui.js": {
-      "bytes": 56881,
-      "sha256": "69c1b268608fff07a163f5981caa7246d005de68454f3c9c5183028f0313f35c"
+      "bytes": 58228,
+      "sha256": "41e487a1d3c9cfd0258377ea6b1fa5718e483ba03e5e3a92c2334b47539a0940"
     },
     "i18n.js": {
       "bytes": 7991,
       "sha256": "abc65971c67312f0836952611738f57146677db8a9f561d9028bc9d502a9c69e"
     },
     "index.html": {
-      "bytes": 17689,
-      "sha256": "080b131729cffc46c433580f13e4e174bfc71467c909aecfb399f73d3711d590"
+      "bytes": 18048,
+      "sha256": "9b9ef95e9c0fab37902622577b5690e3fabc452e9a71e7ff5890aaaf6100aba4"
     },
     "layout.js": {
       "bytes": 2497,
@@ -293,8 +293,8 @@
       "sha256": "56465fd5e5179bf67f3098ddae1a8de475e22e08e0cc651e55e718fbce7909d7"
     },
     "style.css": {
-      "bytes": 41334,
-      "sha256": "2b79bbae17d3463d9f5c3632fe5bc314f83a8fe1f2e00891df2676becd58ca62"
+      "bytes": 42130,
+      "sha256": "310109307082f573f81eb068474a4e04c71635b5a535ae66a42c2747f533c5da"
     }
   },
   "completion_source_csv_sha256": "7c818403e107c380e9fdccddaf4214fce789df9a9a92ea49d40d322d102d038b",

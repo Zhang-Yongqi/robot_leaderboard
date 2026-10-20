@@ -6,13 +6,13 @@
   <meta name="description" content="RoboParty 发布的人形机器人性能评测，依据公开的仿真评测协议展示动作跟踪误差、任务完成情况与模型参数。">
   <meta name="theme-color" content="#101c30">
   <title>RoboParty｜人形机器人性能评测</title>
-  <link rel="stylesheet" href="./style.css?v=2b79bbae17d3">
+  <link rel="stylesheet" href="./style.css?v=310109307082">
   <link rel="icon" href="./favicon.svg" type="image/svg+xml">
-  <script src="./i18n-ui.js?v=69c1b268608f" defer></script>
-  <script src="./i18n-data.js?v=1acebc1c2d92" defer></script>
+  <script src="./i18n-ui.js?v=41e487a1d3c9" defer></script>
+  <script src="./i18n-data.js?v=4be6fd7a3a87" defer></script>
   <script src="./i18n.js?v=abc65971c673" defer></script>
   <script src="./layout.js?v=48c817639f25" defer></script>
-  <script src="./app.js?v=02ab31cc2269" defer></script>
+  <script src="./app.js?v=79a1014297fe" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#results">跳到评测结果</a>
@@ -47,8 +47,9 @@
       </div></details>
     </section>
     <details class="disclosure video-disclosure wrap"><summary>同步动作回放<span id="video-coverage" class="video-summary-status">新视频准备中</span></summary><section id="videos" class="video-section" aria-labelledby="videos-title"><div class="wrap">
-      <div class="section-heading"><div><p class="eyebrow">02 / SYNCHRONIZED MOTION</p><h2 id="videos-title">让动作本身说话。</h2><p id="video-intro">新一批计划采用左侧 RP1、右侧 G1 的完整同步回放，共用时间轴与相机尺度，并保留真实失败后的过程。</p></div></div>
-      <div id="public-videos"></div><p class="video-footnote">同步回放复用已保存的完整状态，保留失败后的过程，便于观察动作表现。</p>
+      <div class="section-heading"><div><p class="eyebrow">02 / MOTION TRACKING</p><h2 id="videos-title">动作跟踪对比</h2><p id="video-intro">RP1 与 Unitree G1 · 同步轨迹回放</p></div></div>
+      <details id="video-notes" class="disclosure video-notes"><summary>评测与视频说明</summary><div class="detail-content"><p>视频基于既有保存轨迹，于 2026-10-14 使用 V06 渲染，保留英文画面标签；左右画面共用时间轴与相机尺度，并保留失跟后的记录。</p><p>网页 V9 指标使用同一批轨迹进行同刻离线重评分，未新增物理回放。</p><p>视频中的 Fail 沿用旧版参考阈值诊断；网页完成率按当前完成判据统计。</p><p id="video-selection-provenance"></p><p id="video-attribution"></p></div></details>
+      <div id="public-videos"></div>
     </div></section></details>
     </div>
     <div class="tab-panel" role="tabpanel" id="panel-hardware" data-panel="hardware" aria-labelledby="tab-hardware">

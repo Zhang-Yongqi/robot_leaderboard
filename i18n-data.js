@@ -246,5 +246,15 @@ window.ROBO_I18N_DATA = {
   "秒": "s",
   "动作来源": "Motion source",
   "原保存轨迹回放（2026-10-14 V06）。": "Replay of the original saved trajectories (2026-10-14 V06).",
-  "影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。": "The on-video Fail label is a legacy reference-threshold diagnostic, not the current motion-completion result."
+  "影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。": "The on-video Fail label is a legacy reference-threshold diagnostic, not the current motion-completion result.",
+  "动作跟踪对比": "Motion Tracking Comparison",
+  "RP1 与 Unitree G1 · 同步轨迹回放": "RP1 and Unitree G1 · Synchronized Trajectory Replay",
+  "评测与视频说明": "Evaluation and Video Notes",
+  "视频基于既有保存轨迹，于 2026-10-14 使用 V06 渲染，保留英文画面标签；左右画面共用时间轴与相机尺度，并保留失跟后的记录。": "The videos were rendered from the existing saved trajectories on 2026-10-14 using V06, with English overlays. Both panels share the same timeline and camera scale, including records after tracking is lost.",
+  "网页 V9 指标使用同一批轨迹进行同刻离线重评分，未新增物理回放。": "The V9 website metrics rescore the same trajectories offline at matching timestamps; no new physics replay was performed.",
+  "视频中的 Fail 为旧版诊断标签，不等同于当前完成率。": "The on-video Fail label is a legacy diagnostic, not the current completion rate.",
+  "画面对照": "Video panel labels",
+  "左侧 · RP1": "Left · RP1",
+  "右侧 · Unitree G1": "Right · Unitree G1",
+  "视频中的 Fail 沿用旧版参考阈值诊断；网页完成率按当前完成判据统计。": "The on-video Fail label follows the legacy reference-threshold diagnostic; website completion rates use the current completion criteria."
 };

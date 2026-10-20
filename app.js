@@ -505,12 +505,13 @@
     const duration = Math.round(item.duration_s), time = `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}`;
     const playable = publicMediaPlayable(item), label = publicMotionLabel(item);
     const visual = playable ? `<video id="paired-video" class="video-player" controls preload="none" playsinline poster="${escape(item.poster)}"><source src="${escape(item.url)}" type="video/mp4">此浏览器无法播放视频。请使用下方 MP4 下载。</video>` : `<img class="video-player video-poster" src="${escape(item.poster)}" alt="${escape(label)}，RP1 与 G1 同时刻画面" width="1920" height="1080">`;
-    $("video-feature").innerHTML = `${visual}<div class="video-info"><p class="eyebrow">RP1 / G1 · V06 · 2026-10-14</p><h3>${escape(label)}</h3><p>影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。</p><p class="video-meta">1920 × 1080 · ${escape(fmt(item.fps, 0))} fps · ${time} · 1×</p><p>${playable ? "浏览器播放已核验" : "此影片提供已核下载链接，网页播放待核验。"}</p><p>来源：Common40 主基线 · seed 0 · 原保存状态</p><p class="video-source-id"><span>动作来源</span> <code>${escape(item.motion_id)}</code></p><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">下载 MP4 ↗</a><p class="video-credits">${escape(item.credits)} ${escape(item.restrictions)}</p><p id="media-error" class="media-error" role="status"></p></div>`;
+    $("video-feature").innerHTML = `<div class="video-visual"><div class="video-side-labels" role="group" aria-label="画面对照"><span>左侧 · RP1</span><span>右侧 · Unitree G1</span></div>${visual}</div><div class="video-info"><p class="eyebrow">COMMON40 / PAIRED REPLAY</p><h3>${escape(label)}</h3><p>视频中的 Fail 为旧版诊断标签，不等同于当前完成率。</p><p class="video-meta">1920 × 1080 · ${escape(fmt(item.fps, 0))} fps · ${time} · 1×</p><p>${playable ? "浏览器播放已核验" : "此影片提供已核下载链接，网页播放待核验。"}</p><p>来源：Common40 主基线 · seed 0 · 原保存状态</p><p class="video-source-id"><span>动作来源</span> <code>${escape(item.motion_id)}</code></p><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">下载 MP4 ↗</a><p id="media-error" class="media-error" role="status"></p></div>`;
+    $("video-selection-provenance").textContent = `${item.credits} ${item.restrictions}`;
     if (playable) $("paired-video").addEventListener("error", () => { $("media-error").textContent = "视频暂时无法加载，可尝试下载 MP4。"; });
     document.querySelectorAll(".video-choice").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.motion === item.motion_id)));
   }
   async function renderPublicMedia() {
-    const notice = "原保存轨迹渲染，2026-10-14 V06；左 RP1、右 G1。影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。V9 复用同一轨迹做离线重评分，没有新增物理复测。";
+    const notice = "RP1 与 Unitree G1 · 同步轨迹回放";
     const pending = () => { document.querySelector(".hero-actions .button").textContent = "查看动作回放 ↗"; $("video-coverage").textContent = "0 / 40 已核回放链接"; $("video-intro").textContent = notice; $("public-videos").innerHTML = `<div class="video-pending"><strong>Common40 V06 回放链接待核验。</strong><p>已验收影片的公开链接核验后在此展示。<br>Extreme5 的 5 个视频待制作。</p></div>`; };
     pending();
     try {
@@ -519,7 +520,8 @@
       const media = validPublicMedia(await response.json()); if (!media.items.length) return;
       const playable = media.items.filter(publicMediaPlayable).length;
       $("video-coverage").textContent = `${playable} / 40 已核浏览器播放 · ${media.items.length} / 40 已核回放链接`;
-      $("public-videos").innerHTML = `<div id="video-feature" class="video-main"></div><form class="video-filter" id="video-filter"><label>查找共同动作<input id="video-search" type="search" placeholder="输入动作名称" autocomplete="off"></label></form><div id="video-grid" class="video-grid"></div><p class="video-credits">V06 英文配字 · 完整回放</p><p class="video-credits">Extreme5 的 5 个视频待制作。</p><p class="video-credits">${escape(media.credits || "")}</p>`;
+      $("public-videos").innerHTML = `<div id="video-feature" class="video-main"></div><form class="video-filter" id="video-filter"><label>查找共同动作<input id="video-search" type="search" placeholder="输入动作名称" autocomplete="off"></label></form><div id="video-grid" class="video-grid"></div><p class="video-credits">Extreme5 的 5 个视频待制作。</p>`;
+      $("video-attribution").textContent = media.credits || "";
       const gallery = () => {
         const query = $("video-search").value.trim().toLowerCase();
         const items = media.items.filter(item => (publicMotionLabel(item) + " " + item.motion_id).toLowerCase().includes(query));
