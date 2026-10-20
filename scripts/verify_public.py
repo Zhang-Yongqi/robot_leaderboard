@@ -18,6 +18,8 @@ from pathlib import Path, PurePosixPath
 import re
 import sys
 from urllib.parse import unquote, urlsplit
+from media_contract import (MEDIA_SCRIPT, prepare_media, additional_public_files,
+    assert_media_unchanged, verify_binary_file)
 from source_contract import (protect_baseline, framework_status, reviewed_root_adapter, prepare_schema5,
     ROOT_METRICS, ROOT_SOURCE_SHA, ROOT_CSV_SHA, ROOT_WINDOW, ROOT_WINDOW_LABEL,
     ROOT_PUBLIC_STATE, ROOT_PREVIEW_STATE, ROOT_METHOD_FIELDS, ROOTWINDOW_FIELDS, rootwindow_from_baseline,
@@ -145,7 +147,9 @@ class Audit:
         self.has_root = self.data.get('schema_version') in (5, 6)
         self.metrics = FULL4 + ROOT_METRICS + ENDPOINT_METRICS if self.has_endpoint else (
                        FULL4 + ROOT_METRICS if self.has_root else FULL4)
-        self.publish_files = PUBLISH_FILES if self.has_root else PUBLISH_FILES_V4
+        self.media_review = prepare_media(self.root, self.data) if not preview else None
+        self.publish_files = set(PUBLISH_FILES if self.has_root else PUBLISH_FILES_V4) | (
+            set(self.media_review.additional_files) if self.media_review else {MEDIA_SCRIPT})
         self.root_source_verified = False
         self.endpoint_source_verified = False
         self.checked, self.errors = [], []
@@ -615,9 +619,12 @@ class Audit:
                         continue
                     require(not (address.is_private or address.is_loopback), 'Internal IP in public projection')
         for name in (DATA_FILES if self.preview else self.publish_files):
+            if self.media_review is not None and name in self.media_review.binary_files:
+                verify_binary_file(self.root, name, self.media_review)
+                continue
             content = (self.root / name).read_text(encoding='utf-8')
             require(not SECRET.search(content), 'Possible credential in public file')
-            if name not in {'scripts/verify_public.py', 'scripts/update_snapshot.py', 'scripts/source_contract.py', 'README.md'}:
+            if name not in {'scripts/verify_public.py', 'scripts/update_snapshot.py', 'scripts/source_contract.py', MEDIA_SCRIPT, 'README.md'}:
                 require(not LOCAL_PATH.search(content), 'Absolute path in public file')
                 scanned = content.replace('.hostname', '') if name == 'app.js' else content
                 require(not INFRA.search(scanned), 'Private infrastructure in public file')
@@ -638,6 +645,8 @@ class Audit:
                 'Link target is outside the publication allowlist')
 
     def bundle(self):
+        if self.media_review is not None:
+            assert_media_unchanged(self.root, self.media_review)
         for name in (DATA_FILES if self.preview else self.publish_files):
             path = self.root / name
             require(path.is_file() and not path.is_symlink(), 'Missing or symlink public file: ' + name)
@@ -678,10 +687,11 @@ class Audit:
         hardware = read_json(self.root / 'hardware.json')
         require(hardware['schema'] == 'rp1-g1-public-hardware-comparison-v1'
                 and len(hardware['joint_rows']) == 29, 'Hardware schema/count differs')
-        media = read_json(self.root / 'media.json')
-        require(media['schema'] == 'rp1-g1-public-media-v1' and media['status'] == 'awaiting_new_render'
-                and media['expected_common_motions'] == 40 and media['items'] == [],
-                'New media requires its own reviewed publication contract')
+        require(self.media_review is not None and same_json(manifest['media_state'], self.media_review.media_state),
+                'Manifest media state differs from the reviewed exact media contract')
+        for item in self.media_review.media['items']:
+            self.link(item['url'])
+            self.link(item['poster'])
         for item in self.data['report_downloads']:
             require(set(item) <= {'label', 'url', 'access'}, 'Report download fields differ')
             self.link(item['url'])

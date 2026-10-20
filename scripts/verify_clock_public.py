@@ -16,10 +16,11 @@ import sys
 
 from clock_contract import (ALL_METRICS, CLOCK_METHOD_FIELDS, CLOCK_PUBLIC_STATE, CLOCK_PREVIEW_STATE,
     COUNTS, EXTENSION_FIELDS, V8_CSV_SHA, CLOCK_SNAPSHOT_DATE, REPORT_STATES,
-    REPORT_MANIFEST_STATES, MEDIA_STATE, apply_clock_rescore, canonical, changed_paths,
+    REPORT_MANIFEST_STATES, apply_clock_rescore, canonical, changed_paths,
     clock_csv_bytes, exact, framework_status, normalize_clock_source, parse_json,
     protect_schema6, read_stable, reviewed_clock_adapter, sha, strip_public_mutable,
     strip_source_mutable, load_v8_source)
+from media_contract import prepare_media, assert_media_unchanged, verify_binary_file
 
 EXTRA_FILES = {'scripts/clock_contract.py', 'scripts/verify_clock_public.py'}
 MANIFEST_FIELDS = {'schema_version', 'public_data_sha256', 'counts', 'fullwindow_source_sha256',
@@ -81,7 +82,9 @@ def bundle_and_privacy(args, data, adapter, report_state):
     audit.data = data
     audit.has_root = audit.has_endpoint = True
     audit.metrics = ALL_METRICS
-    audit.publish_files = set(PUBLISH_FILES) | EXTRA_FILES
+    media_review = audit.media_review or prepare_media(args.repo_root, data)
+    audit.media_review = media_review
+    audit.publish_files = set(PUBLISH_FILES) | EXTRA_FILES | set(media_review.additional_files)
     # Reject public symlinks/directories outside the named bundle before rglob
     # checks; excluded local worktree metadata never forms part of publication.
     for path in args.repo_root.rglob('*'):
@@ -95,7 +98,7 @@ def bundle_and_privacy(args, data, adapter, report_state):
     manifest = parse_json(read_stable(args.repo_root / 'RELEASE_MANIFEST.json'))
     require(set(manifest) == MANIFEST_FIELDS, 'Schema7 manifest fields differ from explicit whitelist')
     require(exact(manifest['report_state'], REPORT_MANIFEST_STATES[report_state]) and
-            exact(manifest['media_state'], MEDIA_STATE), 'Manifest report/media state differs from actual metadata')
+            exact(manifest['media_state'], media_review.media_state), 'Manifest report/media state differs from actual metadata')
     require(exact(manifest['clock_extension'], data['clock_extension']) and
             manifest['clock_source_csv_sha256'] == adapter.csv_sha256,
             'Manifest V9 JSON/CSV closure differs')
@@ -122,6 +125,9 @@ def bundle_and_privacy(args, data, adapter, report_state):
                 continue
             require(not (address.is_private or address.is_loopback), 'Internal IP in public data')
     for name in audit.publish_files:
+        if name in media_review.binary_files:
+            verify_binary_file(args.repo_root, name, media_review)
+            continue
         content = (args.repo_root / name).read_text(encoding='utf-8')
         require(not SECRET.search(content), 'Possible credential in public file')
         if not name.startswith('scripts/') and name != 'README.md':
@@ -130,6 +136,7 @@ def bundle_and_privacy(args, data, adapter, report_state):
                     'Private infrastructure in public file')
     for name, digest in HARDWARE_SHA.items():
         require(sha(read_stable(args.repo_root / name)) == digest, 'Hardware bytes changed')
+    assert_media_unchanged(args.repo_root, media_review)
     return sorted(audit.publish_files)
 
 

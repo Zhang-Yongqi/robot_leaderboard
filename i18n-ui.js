@@ -539,5 +539,21 @@ window.ROBO_I18N_UI = {
   "旧版早20 ms身体缓存": "Legacy body-state cache that was 20 ms early",
   "无新物理回放": "No new physics replay",
   "身体／手腕对齐": "Body / wrist alignment",
-  "历史窗口说明": "Historical window notes"
+  "历史窗口说明": "Historical window notes",
+  "原保存轨迹渲染，2026-10-14 V06；左 RP1、右 G1。影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。V9 复用同一轨迹做离线重评分，没有新增物理复测。": "Rendered from the original saved trajectories (2026-10-14 V06), with RP1 on the left and G1 on the right. The Fail label in the video is a legacy reference-threshold diagnostic and does not represent the current task completion rate. V9 reuses the same trajectories for offline rescoring, with no additional physics replay.",
+  "Common40 V06 回放链接待核验。": "Common40 V06 replay links await verification.",
+  "已验收影片的公开链接核验后在此展示。": "Accepted videos will appear here once their public links have been verified.",
+  "已核浏览器播放": "Browser playback verified",
+  "已核回放链接": "Replay link verified",
+  "查看动作回放 ↗": "View motion replay ↗",
+  "此影片提供已核下载链接，网页播放待核验。": "This video has a verified download link; in-page playback awaits verification.",
+  "下载 MP4 ↗": "Download MP4 ↗",
+  "浏览器播放已核验": "Browser playback verified",
+  "下载可用，播放待核验": "Download available; playback awaits verification",
+  "来源：Common40 主基线 · seed 0 · 原保存状态": "Source: Common40 primary baseline · seed 0 · original saved states",
+  "V06 英文配字 · 完整回放": "V06 English overlays · Full replay",
+  "秒": "s",
+  "动作来源": "Motion source",
+  "原保存轨迹回放（2026-10-14 V06）。": "Replay of the original saved trajectories (2026-10-14 V06).",
+  "影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。": "The on-video Fail label is a legacy reference-threshold diagnostic, not the current motion-completion result."
 };

@@ -95,7 +95,7 @@ Common40 终点误差均值为 RP1 较低，但配对差值区间跨零。Extrem
 - 硬件模型与控制参数：[JSON](hardware.json) / [CSV](hardware.csv)。
 - [条件、指标与结果分析](DATA_PROVENANCE.md)。
 - [版本与 SHA256 清单](RELEASE_MANIFEST.json)。
-- [新公开视频索引](media.json)：当前 0/40。
+- [Common40 公开视频索引](media.json)：40/40 条 1080p 对照视频，保留英文动作、机器人和时钟标签，复用既有轨迹；[视频下载](https://github.com/Zhang-Yongqi/robot_leaderboard/releases/tag/common40-v06-20261014)。
 
 统一报告：[飞书正文](https://roboparty.feishu.cn/docx/KRsrdYUJXo16iuxPtMpc1JoznOb)、[PDF](https://roboparty.feishu.cn/file/DzWzbyTyho37zKxYdT5cDZgjnC7)、[DOCX](https://roboparty.feishu.cn/file/SihQbYLFJoUKyuxkmJ2cQ0dLnce)。V9 已同步：既有180回合身体与手腕同刻离线重评分，原正文、PDF 和 DOCX 已更新；根部、终点与动作完成判定保持不变。相关飞书资料需要组织访问权限。Extreme5 的 5 个视频尚未制作。
 
@@ -138,6 +138,6 @@ python3 scripts/verify_public.py \
 
 `--source-completion`、`--source-root` 与 `--source-endpoint` 的 JSON 同目录分别须包含 `public_completion_episodes.csv`、`public_sixerror_episodes.csv` 与 `public_sevenerror_episodes.csv`，各自按冻结 SHA256 核验。历史全程、完成率及根部输入保留原有回归锚，终点独立接入。`--endpoint-adapter` 可省略，默认使用已注册的 `public_root_endpoint_completion_v8`。新 `--source-clock` 指向另一目录中的V9同名JSON/CSV双文件，只接受已注册的同刻重评分摘要；旧V8双文件与旧回归锚保持。先生成完整schema6，再严格左连接四项修订，输出schema7。`--report-state` 默认保留V8最后核验、修订版待同步；仅在原飞书三地址真实更新并完整回读后选择 `v9_synced`。
 
-生成目录包含三份公开数据文件。验证与发布的完整候选须包含 **24 个白名单公开文件（含更新后的 `RELEASE_MANIFEST.json`）**，包括原来源合同与新增 `scripts/clock_contract.py`、`scripts/verify_clock_public.py`；三份生成数据本身不构成完整发布包。
+生成目录包含三份公开数据文件。验证与发布的完整候选须包含 **65 个白名单公开文件（含更新后的 `RELEASE_MANIFEST.json`、40 张已核验封面与媒体合同）**，包括原来源合同与新增 `scripts/clock_contract.py`、`scripts/verify_clock_public.py`；三份生成数据本身不构成完整发布包。
 
 公开投影经独立核验及静态、桌面和手机浏览器 QA 后发布。科学来源与公开投影的摘要分别记录，报告云端更新单独核验。GitHub Pages 发布源为 `main / (root)`。

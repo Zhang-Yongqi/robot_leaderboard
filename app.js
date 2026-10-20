@@ -461,37 +461,73 @@
   }
   function validPublicMedia(input) {
     if (!input || input.schema !== "rp1-g1-public-media-v1" || input.expected_common_motions !== 40 || !Array.isArray(input.items)) throw new Error("媒体索引格式待核验");
-    const common = new Set(state.data.results.filter(r=>r.scope==="per_motion"&&r.robot==="rp1"&&r.dataset==="lafan40"&&r.condition==="nominal"&&r.mode==="native_position"&&r.seed===0).map(r=>r.motion_id));
-    const seen=new Set();
-    input.items.forEach(item=>{
-      if(!common.has(item.motion_id)||seen.has(item.motion_id)||item.public_release_approved!==true||item.is_new_render!==true||item.full_episode!==true||item.width!==1920||item.height!==1080||!isNumber(item.duration_s)||item.duration_s<=0||!isNumber(item.fps)||!sha256(item.sha256)) throw new Error("媒体身份、授权或完整回放待核验");
+    if (!input.items.length && input.status === "awaiting_new_render") return input;
+    assertExactKeys(input, ["schema", "render_revision", "expected_common_motions", "status", "credits", "items", "authorization"], "媒体索引格式待核验");
+    const authorization = { basis: "explicit_user_authorization", approved_utc: "2026-10-20T02:27:24Z", scope: "accepted_common40_rendered_videos_and_posters_only", upstream_license_status: "not_relicensed", accepted_source_sha256: "deb9a05e60df1f3fa7fe50d395b4ca305792101a56c3e1fc7423147b20d69309", approval_evidence_sha256: "ccc1e8711a0841f044d4a4c3b0a7e26e79fc9ccef19f0632a18149db055abe49" };
+    assertExactKeys(input.authorization, Object.keys(authorization), "媒体身份、授权或完整回放待核验");
+    if (Object.keys(authorization).some(key => input.authorization[key] !== authorization[key])) throw new Error("媒体身份、授权或完整回放待核验");
+    const commonRows = state.data.results.filter(row => row.scope === "per_motion" && row.dataset === "lafan40" && row.condition === "nominal" && row.mode === "native_position" && row.seed === 0);
+    const common = new Set(commonRows.map(row => row.motion_id));
+    const publication = { published40: "published", download_only40: "download_only" }[input.status];
+    if (!publication || input.items.length !== 40 || common.size !== 40 || input.render_revision !== "public_native4k_v06_floor_shadow_mobile_20261014") throw new Error("媒体身份、授权或完整回放待核验");
+    const seen = new Set(), sourceConditions = { nominal: 0, aligned_nominal: 0 };
+    input.items.forEach(item => {
+      if (!common.has(item.motion_id) || seen.has(item.motion_id) || item.public_release_approved !== true || item.is_new_render !== true || item.full_episode !== true || item.width !== 1920 || item.height !== 1080 || !isNumber(item.duration_s) || item.duration_s <= 0 || !isNumber(item.fps) || item.fps <= 0 || !sha256(item.sha256) || !Number.isSafeInteger(item.bytes) || item.bytes <= 0 || item.asset_id !== null && (!Number.isSafeInteger(item.asset_id) || item.asset_id <= 0) || item.publication_status !== publication || item.render_revision !== input.render_revision) throw new Error("媒体身份、授权或完整回放待核验");
       seen.add(item.motion_id);
-      const url=new URL(item.url,window.location.href), poster=new URL(item.poster,window.location.href);
-      if(url.protocol!=="https:"||url.hostname!=="github.com"||!url.pathname.startsWith("/Zhang-Yongqi/robot_leaderboard/releases/download/")||poster.origin!==window.location.origin||!poster.pathname.includes("/media/posters/")||!item.poster.match(/^\.\/media\/posters\/[a-zA-Z0-9_.-]+\.(?:jpg|webp|png)$/)) throw new Error("媒体公开地址待核验");
-      if(typeof item.label!=="string"||typeof item.credits!=="string"||typeof item.restrictions!=="string"||!Array.isArray(item.source_result_ids)||item.source_result_ids.length!==2)throw new Error("媒体来源或署名待核验");
-      const rows=item.source_result_ids.map(id=>state.data.results.find(r=>r.id===id));
-      if(rows.some(r=>!r||r.motion_id!==item.motion_id||r.scope!=="per_motion"||r.dataset!=="lafan40"||r.mode!=="native_position"||!["nominal","aligned_nominal"].includes(r.condition)||r.seed!==0)||new Set(rows.map(r=>r.robot)).size!==2)throw new Error("媒体源回合不属于共同主选择");
-    });return input;
+      const assetName = `Common40_v06_${item.motion_id}_1080p.mp4`;
+      const expectedURL = `https://github.com/Zhang-Yongqi/robot_leaderboard/releases/download/common40-v06-20261014/${assetName}`;
+      const poster = new URL(item.poster, window.location.href);
+      if (item.asset_name !== assetName || item.url !== expectedURL || poster.origin !== window.location.origin || typeof item.poster !== "string" || !/^\.\/media\/posters\/[a-zA-Z0-9_.-]+\.(?:jpg|webp|png)$/.test(item.poster) || !sha256(item.poster_sha256) || !Number.isSafeInteger(item.poster_bytes) || item.poster_bytes <= 0) throw new Error("媒体公开地址待核验");
+      const proof = item.playback_verification;
+      assertExactKeys(proof, ["status", "url", "sha256", "desktop", "mobile", "seek"], "媒体公开地址待核验");
+      const passed = publication === "published";
+      if (proof.status !== (passed ? "passed" : "not_verified") || proof.url !== item.url || proof.sha256 !== item.sha256 || ["desktop", "mobile", "seek"].some(key => proof[key] !== passed)) throw new Error("媒体公开地址待核验");
+      assertExactKeys(item.source_selected_conditions, ["rp1", "g1"], "媒体来源或署名待核验");
+      if (item.source_recorded_trajectory_reused !== true || item.new_physical_retest !== false || item.legacy_fail_label_is_current_completion !== false || ["rp1", "g1"].some(robot => !Object.hasOwn(sourceConditions, item.source_selected_conditions[robot]))) throw new Error("媒体来源或署名待核验");
+      ["rp1", "g1"].forEach(robot => { sourceConditions[item.source_selected_conditions[robot]] += 1; });
+      if (typeof item.label !== "string" || typeof item.credits !== "string" || typeof item.restrictions !== "string" || !Array.isArray(item.source_result_ids) || item.source_result_ids.length !== 2 || new Set(item.source_result_ids).size !== 2) throw new Error("媒体来源或署名待核验");
+      const rows = item.source_result_ids.map(id => commonRows.find(row => row.id === id));
+      if (rows.some(row => !row || row.motion_id !== item.motion_id) || new Set(rows.map(row => row.robot)).size !== 2) throw new Error("媒体源回合不属于共同主选择");
+    });
+    if (sourceConditions.nominal !== 70 || sourceConditions.aligned_nominal !== 10) throw new Error("媒体来源或署名待核验");
+    return input;
+  }
+  function publicMediaPlayable(item) {
+    const proof = item.playback_verification;
+    return item.publication_status === "published" && proof?.status === "passed" && proof.url === item.url && proof.sha256 === item.sha256 && ["desktop", "mobile", "seek"].every(key => proof[key] === true);
+  }
+  function publicMotionLabel(item) {
+    const match = /^([a-zA-Z]+)(\d+)_subject(\d+)$/.exec(item.motion_id);
+    const names = { dance: "Dance", fallAndGetUp: "Fall and get up", fight: "Fighting", fightAndSports: "Fighting and sports", jumps: "Jumps", run: "Run", sprint: "Sprint", walk: "Walk" };
+    return match && names[match[1]] ? `${names[match[1]]} ${match[2]} · Subject ${match[3]}` : item.label;
   }
   function selectPublicVideo(item) {
-    const time=`${Math.floor(item.duration_s/60)}:${String(Math.round(item.duration_s%60)).padStart(2,"0")}`;
-    $("video-feature").innerHTML = `<video id="paired-video" class="video-player" controls preload="none" playsinline poster="${escape(item.poster)}"><source src="${escape(item.url)}" type="video/mp4">此浏览器无法播放视频。请使用下方 MP4 下载。</video><div class="video-info"><p class="eyebrow">RP1 / G1 · FULL EPISODE</p><h3>${escape(item.label)}</h3><p class="video-meta">1920 × 1080 · ${escape(fmt(item.fps,0))} fps · ${time} · 1×</p><p>${escape(item.description||"左 RP1 / 右 G1；共同时间轴的完整状态回放。")}</p><a href="${escape(item.url)}">下载完整 MP4 ↗</a><p class="video-credits">${escape(item.credits)} ${escape(item.restrictions)}</p><p id="media-error" class="media-error" role="status"></p></div>`;
-    $("paired-video").addEventListener("error",()=>{$("media-error").textContent="视频暂时无法加载，可尝试下载 MP4。";});
-    document.querySelectorAll(".video-choice").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.motion===item.motion_id)));
+    const duration = Math.round(item.duration_s), time = `${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")}`;
+    const playable = publicMediaPlayable(item), label = publicMotionLabel(item);
+    const visual = playable ? `<video id="paired-video" class="video-player" controls preload="none" playsinline poster="${escape(item.poster)}"><source src="${escape(item.url)}" type="video/mp4">此浏览器无法播放视频。请使用下方 MP4 下载。</video>` : `<img class="video-player video-poster" src="${escape(item.poster)}" alt="${escape(label)}，RP1 与 G1 同时刻画面" width="1920" height="1080">`;
+    $("video-feature").innerHTML = `${visual}<div class="video-info"><p class="eyebrow">RP1 / G1 · V06 · 2026-10-14</p><h3>${escape(label)}</h3><p>影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。</p><p class="video-meta">1920 × 1080 · ${escape(fmt(item.fps, 0))} fps · ${time} · 1×</p><p>${playable ? "浏览器播放已核验" : "此影片提供已核下载链接，网页播放待核验。"}</p><p>来源：Common40 主基线 · seed 0 · 原保存状态</p><p class="video-source-id"><span>动作来源</span> <code>${escape(item.motion_id)}</code></p><a href="${escape(item.url)}" target="_blank" rel="noopener noreferrer">下载 MP4 ↗</a><p class="video-credits">${escape(item.credits)} ${escape(item.restrictions)}</p><p id="media-error" class="media-error" role="status"></p></div>`;
+    if (playable) $("paired-video").addEventListener("error", () => { $("media-error").textContent = "视频暂时无法加载，可尝试下载 MP4。"; });
+    document.querySelectorAll(".video-choice").forEach(button => button.setAttribute("aria-pressed", String(button.dataset.motion === item.motion_id)));
   }
   async function renderPublicMedia() {
-    const pending=()=>{document.querySelector(".hero-actions .button").textContent="动作回放计划 ↗";$("video-coverage").textContent="0 / 40 新片已发布";$("public-videos").innerHTML=`<div class="video-pending"><strong>共同 40 动作<br>高分辨率回放待交付。</strong><p>新一批 4K 原生渲染与 1080p 网页视频正在制作，公开进度为 0/40。<br>Extreme5 的 5 个视频待制作。</p></div>`;};
+    const notice = "原保存轨迹渲染，2026-10-14 V06；左 RP1、右 G1。影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。V9 复用同一轨迹做离线重评分，没有新增物理复测。";
+    const pending = () => { document.querySelector(".hero-actions .button").textContent = "查看动作回放 ↗"; $("video-coverage").textContent = "0 / 40 已核回放链接"; $("video-intro").textContent = notice; $("public-videos").innerHTML = `<div class="video-pending"><strong>Common40 V06 回放链接待核验。</strong><p>已验收影片的公开链接核验后在此展示。<br>Extreme5 的 5 个视频待制作。</p></div>`; };
     pending();
     try {
-      const response=await fetch("./media.json",{cache:"no-store",credentials:"same-origin"});
-      if(!response.ok)throw new Error("媒体索引读取失败");
-      const media=validPublicMedia(await response.json()); if(!media.items.length)return;
-      $("video-coverage").textContent=`${media.items.length} / 40 新片已发布`;document.querySelector(".hero-actions .button").textContent="查看同步动作 ↗";$("video-intro").textContent="左侧 RP1，右侧 G1。同一动作、共同时间轴与相机尺度；完整回放保留真实失败后的过程。";
-      $("public-videos").innerHTML=`<div id="video-feature" class="video-main"></div><form class="video-filter" id="video-filter"><label>查找共同动作<input id="video-search" type="search" placeholder="输入动作名称" autocomplete="off"></label></form><div id="video-grid" class="video-grid"></div><p class="video-credits">${escape(media.credits||"")}</p>`;
-      const gallery=()=>{const q=$("video-search").value.trim().toLowerCase();const items=media.items.filter(i=>(i.label+" "+i.motion_id).toLowerCase().includes(q));$("video-grid").innerHTML=items.map(i=>`<button type="button" class="video-choice" data-motion="${escape(i.motion_id)}" aria-pressed="false"><img src="${escape(i.poster)}" alt="${escape(i.label)}，RP1 与 G1 同时刻画面" loading="lazy" width="1920" height="1080"><span>${escape(i.label)}<small>${Math.floor(i.duration_s/60)} 分 ${Math.round(i.duration_s%60)} 秒</small></span></button>`).join("")||"<p>没有匹配动作。</p>";};
-      gallery();selectPublicVideo(media.items[0]);
-      $("video-filter").addEventListener("submit",e=>e.preventDefault());$("video-search").addEventListener("input",gallery);
-      $("video-grid").addEventListener("click",e=>{const b=e.target.closest("button[data-motion]");if(b)selectPublicVideo(media.items.find(i=>i.motion_id===b.dataset.motion));});
+      const response = await fetch("./media.json", { cache: "no-store", credentials: "same-origin" });
+      if (!response.ok) throw new Error("媒体索引读取失败");
+      const media = validPublicMedia(await response.json()); if (!media.items.length) return;
+      const playable = media.items.filter(publicMediaPlayable).length;
+      $("video-coverage").textContent = `${playable} / 40 已核浏览器播放 · ${media.items.length} / 40 已核回放链接`;
+      $("public-videos").innerHTML = `<div id="video-feature" class="video-main"></div><form class="video-filter" id="video-filter"><label>查找共同动作<input id="video-search" type="search" placeholder="输入动作名称" autocomplete="off"></label></form><div id="video-grid" class="video-grid"></div><p class="video-credits">V06 英文配字 · 完整回放</p><p class="video-credits">Extreme5 的 5 个视频待制作。</p><p class="video-credits">${escape(media.credits || "")}</p>`;
+      const gallery = () => {
+        const query = $("video-search").value.trim().toLowerCase();
+        const items = media.items.filter(item => (publicMotionLabel(item) + " " + item.motion_id).toLowerCase().includes(query));
+        $("video-grid").innerHTML = items.map(item => `<button type="button" class="video-choice" data-motion="${escape(item.motion_id)}" aria-pressed="false"><img src="${escape(item.poster)}" alt="${escape(publicMotionLabel(item))}，RP1 与 G1 同时刻画面" loading="lazy" width="1920" height="1080"><span>${escape(publicMotionLabel(item))}<small>${Math.round(item.duration_s)} 秒 · ${publicMediaPlayable(item) ? "浏览器播放已核验" : "下载可用，播放待核验"}</small></span></button>`).join("") || "<p>没有匹配动作。</p>";
+      };
+      gallery(); selectPublicVideo(media.items[0]);
+      $("video-filter").addEventListener("submit", event => event.preventDefault()); $("video-search").addEventListener("input", gallery);
+      $("video-grid").addEventListener("click", event => { const button = event.target.closest("button[data-motion]"); if (button) selectPublicVideo(media.items.find(item => item.motion_id === button.dataset.motion)); });
     } catch(error) {pending();console.warn("公共视频尚未通过索引核验：",error.message);}
   }
   async function renderHardware() {

@@ -230,5 +230,21 @@ window.ROBO_I18N_DATA = {
   "V9 全程与终点报告 DOCX": "V9 full-window and endpoint report — DOCX (Chinese)",
   "V9 已同步：既有180回合身体与手腕同刻离线重评分，原正文、PDF 和 DOCX 已更新；根部、终点与动作完成判定保持不变。": "V9 synchronized: the body and wrist metrics for the 180 existing episodes have been rescored offline at matching reference times. The original main document, PDF and DOCX (Chinese) have been updated; the root metrics, endpoint and motion-completion decisions remain unchanged.",
   "V9 已同步：既有180回合身体与手腕同刻离线重评分，原正文、PDF 和 DOCX 已更新；根部、终点与动作完成判定保持不变。 资料需飞书组织权限。": "V9 synchronized: the body and wrist metrics for the 180 existing episodes have been rescored offline at matching reference times. The original main document, PDF and DOCX (Chinese) have been updated; the root metrics, endpoint and motion-completion decisions remain unchanged. These materials require access to the Feishu organization.",
-  "六项全程误差、根部终点位置误差与任务完成判定共用既有 180 回合、90 个条件／seed 配对和 45 个不同动作 ID，分为 5 个独立条件组。详细报告需原有访问权限。": "The six full-window errors, separate root endpoint position error and motion-completion decisions use the same 180 existing episodes, 90 condition/seed pairs and 45 distinct motion IDs across 5 independent condition groups. The detailed Chinese report requires existing organization access."
+  "六项全程误差、根部终点位置误差与任务完成判定共用既有 180 回合、90 个条件／seed 配对和 45 个不同动作 ID，分为 5 个独立条件组。详细报告需原有访问权限。": "The six full-window errors, separate root endpoint position error and motion-completion decisions use the same 180 existing episodes, 90 condition/seed pairs and 45 distinct motion IDs across 5 independent condition groups. The detailed Chinese report requires existing organization access.",
+  "原保存轨迹渲染，2026-10-14 V06；左 RP1、右 G1。影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。V9 复用同一轨迹做离线重评分，没有新增物理复测。": "Rendered from the original saved trajectories (2026-10-14 V06), with RP1 on the left and G1 on the right. The Fail label in the video is a legacy reference-threshold diagnostic and does not represent the current task completion rate. V9 reuses the same trajectories for offline rescoring, with no additional physics replay.",
+  "Common40 V06 回放链接待核验。": "Common40 V06 replay links await verification.",
+  "已验收影片的公开链接核验后在此展示。": "Accepted videos will appear here once their public links have been verified.",
+  "已核浏览器播放": "Browser playback verified",
+  "已核回放链接": "Replay link verified",
+  "查看动作回放 ↗": "View motion replay ↗",
+  "此影片提供已核下载链接，网页播放待核验。": "This video has a verified download link; in-page playback awaits verification.",
+  "下载 MP4 ↗": "Download MP4 ↗",
+  "浏览器播放已核验": "Browser playback verified",
+  "下载可用，播放待核验": "Download available; playback awaits verification",
+  "来源：Common40 主基线 · seed 0 · 原保存状态": "Source: Common40 primary baseline · seed 0 · original saved states",
+  "V06 英文配字 · 完整回放": "V06 English overlays · Full replay",
+  "秒": "s",
+  "动作来源": "Motion source",
+  "原保存轨迹回放（2026-10-14 V06）。": "Replay of the original saved trajectories (2026-10-14 V06).",
+  "影片中的 Fail 是旧参考阈值诊断，不代表当前任务完成率。": "The on-video Fail label is a legacy reference-threshold diagnostic, not the current motion-completion result."
 };
